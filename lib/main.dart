@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import 'views/HomeIndex.dart';
+import 'views/ProductIndex.dart';
+import 'views/StudyIndex.dart';
+import 'views/UserIndex.dart';
 
 void main() => runApp(MyApp());
 
@@ -49,16 +52,33 @@ class _MyHomePageState extends State<MyHomePage> {
 
   List<Widget> pages = List<Widget>();
 
-  int _currentIndex = 0;   // 当前 tab 页 索引
+  int _currentIndex = 0; // 当前 tab 页 索引
 
-  void init(){
-      pages.add(HomeIndex());
+  void init() {
+    print('init');
+    pages..add(HomeIndex())..add(ProductIndex())..add(StudyIndex())..add(
+        UserIndex());
+    print('$pages');
+  }
+
+  var _pageController = PageController(initialPage: 0);
+
+  void _pageChange(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    init();
   }
 
   @override
   Widget build(BuildContext context) {
 
-    init();
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
     //
@@ -66,7 +86,16 @@ class _MyHomePageState extends State<MyHomePage> {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
     return Scaffold(
-      body: pages[_currentIndex],
+      body: PageView.builder(
+        onPageChanged: _pageChange,
+        controller: _pageController,
+        itemBuilder: (BuildContext context, int index) {
+          print('currentPage: $index');
+          _currentIndex = index;
+          return pages.elementAt(index);
+        },
+        itemCount: 4,
+      ),
       bottomNavigationBar: BottomNavigationBar(
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -112,13 +141,13 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
         currentIndex: _currentIndex,
         type: BottomNavigationBarType.fixed,
-        onTap: (int index){
+        onTap: (int index) {
           setState(() {
             _currentIndex = index;
+            _pageController.jumpToPage(_currentIndex);
           });
         },
       ),
     );
   }
 }
-
