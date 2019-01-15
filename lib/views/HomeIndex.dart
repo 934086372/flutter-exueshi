@@ -130,7 +130,7 @@ class Page extends State<HomeIndex> {
                       }
                     });
               } else {
-                return Text('loading');
+                return Center(child: Text('loading...'),);
               }
             }),
         onRefresh: _getData,
