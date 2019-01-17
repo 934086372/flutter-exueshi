@@ -10,7 +10,8 @@ class StudyIndex extends StatefulWidget {
   }
 }
 
-class Page extends State<StudyIndex> with SingleTickerProviderStateMixin {
+class Page extends State<StudyIndex>
+    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   TabController _tabController;
 
   @override
@@ -83,6 +84,10 @@ class Page extends State<StudyIndex> with SingleTickerProviderStateMixin {
       ),
     );
   }
+
+  @override
+  // TODO: implement wantKeepAlive
+  bool get wantKeepAlive => true;
 }
 
 Widget _renderCourseItem(item) {

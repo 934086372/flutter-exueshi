@@ -8,7 +8,7 @@ class UserIndex extends StatefulWidget {
   }
 }
 
-class Page extends State<UserIndex> {
+class Page extends State<UserIndex> with AutomaticKeepAliveClientMixin {
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
@@ -88,6 +88,10 @@ class Page extends State<UserIndex> {
       ),
     );
   }
+
+  @override
+  // TODO: implement wantKeepAlive
+  bool get wantKeepAlive => true;
 }
 
 Widget _rowItem(index) {

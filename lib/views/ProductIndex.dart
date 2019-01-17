@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import "package:flutter/material.dart";
-import 'package:flutter_exueshi/entity/Course.dart';
 
 class ProductIndex extends StatefulWidget {
   @override
@@ -11,8 +10,8 @@ class ProductIndex extends StatefulWidget {
   }
 }
 
-class Page extends State<ProductIndex> with SingleTickerProviderStateMixin {
-  List<Course> _courseList = new List();
+class Page extends State<ProductIndex>
+    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
 
   TabController _tabController;
   ScrollController _scrollController = ScrollController();
@@ -111,6 +110,10 @@ class Page extends State<ProductIndex> with SingleTickerProviderStateMixin {
       ),
     );
   }
+
+  @override
+  // TODO: implement wantKeepAlive
+  bool get wantKeepAlive => true;
 }
 
 Future _getProductList() async {

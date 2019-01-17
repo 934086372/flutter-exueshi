@@ -1,29 +1,47 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_swiper/flutter_swiper.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'views/HomeIndex.dart';
 import 'views/ProductIndex.dart';
 import 'views/StudyIndex.dart';
 import 'views/UserIndex.dart';
 
-void main() => runApp(MyApp());
+void main() {
+  runApp(MyApp());
+}
+
+/*
+* 针对andorid 设置状态栏全透明
+*
+* 在android的主入口文件处设置
+*
+* public class MainActivity extends FlutterActivity {
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+    {
+         // api大于21设置状态栏透明
+        getWindow().setStatusBarColor(0);
+    }
+    GeneratedPluginRegistrant.registerWith(this);
+  }
+}
+*
+* */
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
+  final Color _themeColor = Colors.blue;
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: '易学仕在线',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
+        brightness: Brightness.light,
+        primarySwatch: _themeColor,
       ),
       home: MyHomePage(title: 'Flutter Demo Home Page'),
     );
@@ -33,35 +51,28 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  State<StatefulWidget> createState() {
+    // TODO: implement createState
+    return _MyHomePageState();
+  }
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  int _currentBootPageIndex = 0; // 引导页的当前序号
 
-  List<Widget> pages = List<Widget>();
-
+  List<Widget> pages = List<Widget>(); // 主页页面
   int _currentIndex = 0; // 当前 tab 页 索引
+  var _pageController = PageController(initialPage: 0);
+
+  String alreadyUse;
 
   void init() {
-    print('init');
     pages..add(HomeIndex())..add(ProductIndex())..add(StudyIndex())..add(
         UserIndex());
-    print('$pages');
   }
-
-  var _pageController = PageController(initialPage: 0);
 
   void _pageChange(int index) {
     setState(() {
@@ -78,20 +89,139 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
     //
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
+    return FutureBuilder(
+        future: _getPreference(),
+        builder: (context, snapshot) {
+          print('alreadyUse: $alreadyUse');
+          // 判断是否已经使用
+          if (alreadyUse == 'yes') {
+            return _mainView();
+          } else {
+            return _bootView();
+          }
+        });
+  }
+
+  // 获取用户是否已经使用过的状态
+  _getPreference() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    alreadyUse = prefs.getString('AlreadyUse') ?? 'no';
+    return prefs.getString('AlreadyUse') ?? 'no';
+  }
+
+  _setPreference() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('AlreadyUse', 'yes');
+  }
+
+  // 跳转
+  Widget _useBtn() {
+    if (_currentBootPageIndex == 3) {
+      return Center(
+        child: GestureDetector(
+          child: Container(
+            padding:
+            EdgeInsets.only(left: 20.0, top: 8.0, right: 20.0, bottom: 8.0),
+            child: Text(
+              '马上使用',
+              style: TextStyle(color: Colors.white),
+            ),
+            decoration: BoxDecoration(
+              color: Color.fromRGBO(0, 145, 233, 0.85),),
+          ),
+          onTap: () {
+            _navigationToMain();
+          },
+        ),
+      );
+    } else {
+      return Text('');
+    }
+  }
+
+  // 导航到主页
+  _navigationToMain() {
+    _setPreference();
+    setState(() {
+      alreadyUse = 'yes';
+    });
+  }
+
+  // 首次使用的宣传页
+  Widget _bootView() {
+    return Scaffold(
+        body: Container(
+          width: MediaQuery
+              .of(context)
+              .size
+              .width,
+          height: MediaQuery
+              .of(context)
+              .size
+              .height,
+          child: Stack(children: <Widget>[
+            Swiper(
+                loop: false,
+                itemCount: 4,
+                itemBuilder: (BuildContext context, int index) {
+                  String imagePath =
+                      'images/boot/start_0' + (index + 1).toString() + '.jpg';
+                  return Image.asset(
+                    imagePath,
+                    fit: BoxFit.fill,
+                  );
+                },
+                onIndexChanged: (int index) {
+                  setState(() {
+                    _currentBootPageIndex = index;
+                  });
+                }),
+            Positioned(
+              child: GestureDetector(
+                child: Container(
+                  padding: EdgeInsets.only(
+                      left: 10.0, top: 2.0, right: 10.0, bottom: 2.0),
+                  child: Text(
+                    '跳过',
+                    style: TextStyle(color: Colors.white, fontSize: 12.0),
+                  ),
+                  decoration: BoxDecoration(
+                      color: Color.fromRGBO(0, 0, 0, 0.5),
+                      borderRadius: BorderRadius.all(Radius.circular(30.0))),
+                ),
+                onTap: () {
+                  _navigationToMain();
+                },
+              ),
+              top: 40.0,
+              right: 30.0,
+            ),
+            Positioned(
+              child: _useBtn(),
+              bottom: 80.0,
+              width: MediaQuery
+                  .of(context)
+                  .size
+                  .width,
+            )
+          ]),
+        ));
+  }
+
+  // 主页
+  Widget _mainView() {
     return Scaffold(
       body: PageView.builder(
+        pageSnapping: true,
         onPageChanged: _pageChange,
         controller: _pageController,
         itemBuilder: (BuildContext context, int index) {
-          print('currentPage: $index');
-          _currentIndex = index;
           return pages.elementAt(index);
         },
         itemCount: 4,

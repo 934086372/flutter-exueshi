@@ -21,6 +21,7 @@ dependencies:
   cupertino_icons: ^0.1.2
   flutter_swiper: ^1.1.4
   dio: ^1.0.13
+  shared_preferences: ^0.4.3
 
 dev_dependencies:
   flutter_test:
@@ -44,6 +45,11 @@ flutter:
   #  - images/a_dot_ham.jpeg
   assets:
   - images/avator.jpg
+  - images/news.png
+  - images/boot/start_01.jpg
+  - images/boot/start_02.jpg
+  - images/boot/start_03.jpg
+  - images/boot/start_04.jpg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.io/assets-and-images/#resolution-aware.
