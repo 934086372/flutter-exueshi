@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_exueshi/login.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -32,6 +33,7 @@ void main() {
 * */
 
 class MyApp extends StatelessWidget {
+
   final Color _themeColor = Colors.blue;
 
   @override
@@ -46,6 +48,7 @@ class MyApp extends StatelessWidget {
       home: MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
+
 }
 
 class MyHomePage extends StatefulWidget {

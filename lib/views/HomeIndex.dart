@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_exueshi/login.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:dio/dio.dart';
 
@@ -9,26 +10,6 @@ class HomeIndex extends StatefulWidget {
   State<StatefulWidget> createState() {
     // TODO: implement createState
     return new Page();
-  }
-}
-
-class Ad {
-  final int adId;
-  final String adName;
-  final String adPicUrl;
-  final String adPicName;
-  final String adLink;
-
-  Ad({this.adId, this.adName, this.adPicUrl, this.adPicName, this.adLink});
-
-  factory Ad.fromJson(Map<String, dynamic> json) {
-    return Ad(
-      adId: json['ID'],
-      adName: json['adName'],
-      adPicUrl: json['adPicUrl'],
-      adPicName: json['adPicName'],
-      adLink: json['adLink'],
-    );
   }
 }
 
@@ -96,13 +77,33 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
           ),
         ),
         actions: <Widget>[
-          IconButton(
-              icon: Icon(
-                Icons.shopping_cart,
+          Stack(
+            alignment: Alignment(0.5, -0.5),
+            children: <Widget>[
+              IconButton(
+                  icon: Icon(
+                    Icons.shopping_cart,
+                  ),
+                  onPressed: () {
+                    print('购物车');
+                    Navigator.of(context).push(
+                        MaterialPageRoute(builder: (BuildContext context) {
+                          return Login();
+                        }));
+                  }),
+              Container(
+                child: Center(
+                    child: Text(
+                      '99+',
+                      style: TextStyle(fontSize: 10.0),
+                    )),
+                decoration:
+                BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                width: 18.0,
+                height: 18.0,
               ),
-              onPressed: () {
-                print('购物车');
-              })
+            ],
+          )
         ],
       ),
       body: RefreshIndicator(
@@ -121,11 +122,11 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
               if (_livings.length > 0) {
                 otherCount += 1;
               }
-              print(otherCount);
               switch (snapshot.connectionState) {
                 case ConnectionState.waiting:
+                // 加载中
                   return Center(
-                    child: Text('loading...'),
+                    child: Image.asset('images/loading.gif'),
                   );
                   break;
                 case ConnectionState.active:
@@ -134,7 +135,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                   return ListView.builder(
                       itemCount: productsCount + otherCount,
                       itemBuilder: (BuildContext text, int index) {
-                        if (index == 0) {
+                        if (index == 0 && _banners.length > 0) {
                           return Container(
                             child: Swiper(
                               itemBuilder: (BuildContext context, int index) {
@@ -150,9 +151,9 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                             width: clientWidth,
                             height: clientWidth * 159 / 375,
                           );
-                        } else if (index == 1) {
+                        } else if (index == 1 && _bulletions.length > 0) {
                           return _noticeBar();
-                        } else if (index == 2) {
+                        } else if (index == 2 && _livings.length > 0) {
                           return _livingContainer();
                         } else if (index >= otherCount) {
                           return _courseContainer(index - otherCount);
@@ -203,7 +204,6 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
     return completer.future;
   }
 
-
   // 课程列表
   Widget _courseContainer(index) {
     if (index == 0) {
@@ -228,7 +228,8 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                   ),
                 ],
               )),
-          Container(margin: EdgeInsets.only(top: 15.0),
+          Container(
+              margin: EdgeInsets.only(top: 15.0),
               child: _buildCourseItem(index)),
         ],
       );
@@ -245,12 +246,31 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           Container(
-            child: Image.network(
-              _products[index]['logo'],
-              fit: BoxFit.fill,
+            child: Stack(
+              alignment: Alignment.bottomLeft,
+              children: <Widget>[
+                ClipRRect(
+                  borderRadius: BorderRadius.all(Radius.circular(2.5)),
+                  child: FadeInImage.assetNetwork(
+                    placeholder: 'images/loading.gif',
+                    image: _products[index]['logo'],
+                    fit: BoxFit.fill,
+                  ),
+                ),
+                Container(
+                  padding: EdgeInsets.only(
+                      left: 6.5, top: 4.0, right: 6.5, bottom: 4.0),
+                  child: Text(
+                    _products[index]['status'],
+                    style: TextStyle(fontSize: 11.0, color: Colors.white),
+                  ),
+                  decoration: BoxDecoration(
+                      color: Color.fromRGBO(0, 0, 0, 0.9),
+                      borderRadius:
+                      BorderRadius.only(bottomLeft: Radius.circular(2.5))),
+                ),
+              ],
             ),
-            width: 160.0,
-            height: 100.0,
           ),
           Expanded(
             child: Container(
@@ -442,12 +462,11 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                     children: <Widget>[
                       Container(
                         child: ClipRRect(
-                          borderRadius: BorderRadius.all(Radius.circular(2.5)),
-                          child: Image.network(
-                            _livings[0]['logo'],
-                            fit: BoxFit.fill,
-                          ),
-                        ),
+                            borderRadius: BorderRadius.all(
+                                Radius.circular(2.5)),
+                            child: FadeInImage.assetNetwork(
+                                placeholder: 'images/loading.gif',
+                                image: _livings[0]['logo'])),
                       ),
                       Text(
                         _livings[0]['liveName'],
@@ -474,10 +493,9 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                       Container(
                         child: ClipRRect(
                           borderRadius: BorderRadius.all(Radius.circular(2.5)),
-                          child: Image.network(
-                            _livings[1]['logo'],
-                            fit: BoxFit.fill,
-                          ),
+                          child: FadeInImage.assetNetwork(
+                              placeholder: 'images/loading.gif',
+                              image: _livings[1]['logo']),
                         ),
                       ),
                       Text(_livings[1]['liveName']),
@@ -527,8 +545,9 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                     Container(
                       child: ClipRRect(
                         borderRadius: BorderRadius.all(Radius.circular(2.5)),
-                        child: Image.network(
-                          _livings[index]['logo'],
+                        child: FadeInImage.assetNetwork(
+                          placeholder: 'images/loading.gif',
+                          image: _livings[index]['logo'],
                           fit: BoxFit.fill,
                         ),
                       ),
@@ -547,7 +566,8 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                             child: Text(
                               '主讲老师:' +
                                   _livings[index]['mainLecturer'].toString(),
-                              style: TextStyle(fontSize: 14.0,
+                              style: TextStyle(
+                                  fontSize: 14.0,
                                   color: Color.fromRGBO(51, 51, 51, 1)),
                             ),
                           ),
