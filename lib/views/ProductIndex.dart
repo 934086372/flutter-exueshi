@@ -39,6 +39,9 @@ class Page extends State<ProductIndex>
     return Scaffold(
       appBar: AppBar(
         title: Text('选课中心'),
+        elevation: 1.0,
+        brightness: Brightness.light,
+        backgroundColor: Color.fromRGBO(0, 170, 255, 1),
         centerTitle: true,
         actions: <Widget>[
           IconButton(icon: Icon(Icons.search), onPressed: () {}),

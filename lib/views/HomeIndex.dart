@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/login.dart';
+import 'package:flutter_exueshi/product/ProdItem.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter_exueshi/custom_router.dart';
 
 class HomeIndex extends StatefulWidget {
   @override
@@ -40,6 +42,9 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
     // TODO: implement build
     return Scaffold(
       appBar: AppBar(
+        elevation: 1.0,
+        brightness: Brightness.light,
+        backgroundColor: Color.fromRGBO(0, 170, 255, 1),
         title: Container(
           child: Row(
             children: <Widget>[
@@ -86,10 +91,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                   ),
                   onPressed: () {
                     print('购物车');
-                    Navigator.of(context).push(
-                        MaterialPageRoute(builder: (BuildContext context) {
-                          return Login();
-                        }));
+                    Navigator.of(context).push(CustomRoute(Login()));
                   }),
               Container(
                 child: Center(
@@ -239,105 +241,111 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
   }
 
   Widget _buildCourseItem(index) {
-    return Container(
-      height: 100.0,
-      padding: EdgeInsets.only(left: 10.0, right: 10.0, bottom: 10.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          Container(
-            child: Stack(
-              alignment: Alignment.bottomLeft,
-              children: <Widget>[
-                ClipRRect(
-                  borderRadius: BorderRadius.all(Radius.circular(2.5)),
-                  child: FadeInImage.assetNetwork(
-                    placeholder: 'images/loading.gif',
-                    image: _products[index]['logo'],
-                    fit: BoxFit.fill,
-                  ),
-                ),
-                Container(
-                  padding: EdgeInsets.only(
-                      left: 6.5, top: 4.0, right: 6.5, bottom: 4.0),
-                  child: Text(
-                    _products[index]['status'],
-                    style: TextStyle(fontSize: 11.0, color: Colors.white),
-                  ),
-                  decoration: BoxDecoration(
-                      color: Color.fromRGBO(0, 0, 0, 0.9),
-                      borderRadius:
-                      BorderRadius.only(bottomLeft: Radius.circular(2.5))),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Container(
-              padding: EdgeInsets.only(left: 10.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+    return InkResponse(
+      child: Container(
+        height: 100.0,
+        padding: EdgeInsets.only(left: 10.0, right: 10.0, bottom: 10.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Container(
+              child: Stack(
+                alignment: Alignment.bottomLeft,
                 children: <Widget>[
-                  Expanded(
-                      child: Text(
-                        _products[index]['prodName'],
-                        style: TextStyle(color: Colors.black, fontSize: 14.0),
-                        maxLines: 2,
-                        softWrap: false,
-                        overflow: TextOverflow.ellipsis,
-                      )),
-                  Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: <Widget>[
-                        Text(
-                          "￥" + _products[index]['realPrice'].toString(),
-                          style: TextStyle(
-                              color: Color.fromRGBO(255, 102, 0, 1),
-                              fontSize: 18,
-                              fontFamily: 'PingFang-SC-Bold'),
-                        ),
-                        Text(
-                          '原价:￥' + _products[index]['price'],
-                          style: TextStyle(
-                              decoration: TextDecoration.lineThrough,
-                              fontSize: 11.0,
-                              color: Color.fromRGBO(153, 153, 153, 1)),
-                        ),
-                      ]),
-                  Row(children: <Widget>[
-                    Expanded(
-                      child: Row(
-                        children: List.generate(5, (int i) {
-                          if (i < _products[index]['avgRating']) {
-                            return Icon(
-                              Icons.star,
-                              size: 10.5,
-                              color: Color.fromRGBO(255, 204, 0, 1),
-                            );
-                          } else {
-                            return Icon(
-                              Icons.star_border,
-                              size: 10.5,
-                              color: Color.fromRGBO(255, 204, 0, 1),
-                            );
-                          }
-                        }),
-                      ),
+                  ClipRRect(
+                    borderRadius: BorderRadius.all(Radius.circular(2.5)),
+                    child: FadeInImage.assetNetwork(
+                      placeholder: 'images/loading.gif',
+                      image: _products[index]['logo'],
+                      fit: BoxFit.fill,
                     ),
-                    Text(
-                        '已有' +
-                            _products[index]['learnPeopleCount'].toString() +
-                            '人学习',
-                        style: TextStyle(
-                            fontSize: 10.0,
-                            color: Color.fromRGBO(153, 153, 153, 1)))
-                  ]),
+                  ),
+                  Container(
+                    padding: EdgeInsets.only(
+                        left: 6.5, top: 4.0, right: 6.5, bottom: 4.0),
+                    child: Text(
+                      _products[index]['status'],
+                      style: TextStyle(fontSize: 11.0, color: Colors.white),
+                    ),
+                    decoration: BoxDecoration(
+                        color: Color.fromRGBO(0, 0, 0, 0.9),
+                        borderRadius: BorderRadius.only(
+                            bottomLeft: Radius.circular(2.5))),
+                  ),
                 ],
               ),
             ),
-          ),
-        ],
+            Expanded(
+              child: Container(
+                padding: EdgeInsets.only(left: 10.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    Expanded(
+                        child: Text(
+                          _products[index]['prodName'],
+                          style: TextStyle(color: Colors.black, fontSize: 14.0),
+                          maxLines: 2,
+                          softWrap: false,
+                          overflow: TextOverflow.ellipsis,
+                        )),
+                    Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          Text(
+                            "￥" + _products[index]['realPrice'].toString(),
+                            style: TextStyle(
+                                color: Color.fromRGBO(255, 102, 0, 1),
+                                fontSize: 18,
+                                fontFamily: 'PingFang-SC-Bold'),
+                          ),
+                          Text(
+                            '原价:￥' + _products[index]['price'],
+                            style: TextStyle(
+                                decoration: TextDecoration.lineThrough,
+                                fontSize: 11.0,
+                                color: Color.fromRGBO(153, 153, 153, 1)),
+                          ),
+                        ]),
+                    Row(children: <Widget>[
+                      Expanded(
+                        child: Row(
+                          children: List.generate(5, (int i) {
+                            if (i < _products[index]['avgRating']) {
+                              return Icon(
+                                Icons.star,
+                                size: 10.5,
+                                color: Color.fromRGBO(255, 204, 0, 1),
+                              );
+                            } else {
+                              return Icon(
+                                Icons.star_border,
+                                size: 10.5,
+                                color: Color.fromRGBO(255, 204, 0, 1),
+                              );
+                            }
+                          }),
+                        ),
+                      ),
+                      Text(
+                          '已有' +
+                              _products[index]['learnPeopleCount'].toString() +
+                              '人学习',
+                          style: TextStyle(
+                              fontSize: 10.0,
+                              color: Color.fromRGBO(153, 153, 153, 1)))
+                    ]),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
+      onTap: () {
+        Navigator.of(context).push(
+            CustomRoute(ProdItem(product: _products[index])));
+      },
     );
   }
 

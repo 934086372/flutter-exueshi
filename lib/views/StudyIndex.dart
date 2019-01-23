@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_exueshi/custom_router.dart';
+import 'package:flutter_exueshi/study/ProductContent.dart';
 
 class StudyIndex extends StatefulWidget {
   @override
@@ -26,16 +28,45 @@ class Page extends State<StudyIndex>
     // TODO: implement build
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true,
-        title: Text('我的学习'),
-        actions: <Widget>[
-          FlatButton(
+        backgroundColor: Color.fromRGBO(0, 170, 255, 1),
+        elevation: 0.0,
+        leading: Container(
+          width: 100,
+          child: MaterialButton(
+            child: Row(
+              children: <Widget>[
+                Text(
+                  '全部',
+                  style: TextStyle(color: Colors.white),
+                ),
+                Icon(
+                  Icons.keyboard_arrow_down,
+                  size: 14.0,
+                  color: Colors.white,
+                )
+              ],
+            ),
+            padding: EdgeInsets.only(left: 10.0),
             onPressed: () {
               print('点击了管理');
             },
-            child: Text('管理'),
-            padding: EdgeInsets.only(right: 10.0, left: 10.0),
-          )
+          ),
+        ),
+        centerTitle: true,
+        title: Text('我的学习'),
+        actions: <Widget>[
+          InkWell(
+            child: Container(
+              padding: EdgeInsets.only(left: 10.0, right: 10.0),
+              child: Center(
+                child: Text(
+                  '管理',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ),
+            onTap: () {},
+          ),
         ],
       ),
       body: Column(
@@ -65,7 +96,7 @@ class Page extends State<StudyIndex>
                         padding: EdgeInsets.only(top: 10.0),
                         itemCount: 20,
                         itemBuilder: (context, index) {
-                          return _renderCourseItem(index);
+                          return _renderCourseItem(index, context);
                         }),
                     onRefresh: _refreshList),
                 RefreshIndicator(
@@ -73,7 +104,7 @@ class Page extends State<StudyIndex>
                       padding: EdgeInsets.only(top: 10.0),
                       itemCount: 5,
                       itemBuilder: (context, index) {
-                        return _renderCourseItem(index);
+                        return _renderCourseItem(index, context);
                       }),
                   onRefresh: _refreshList,
                 ),
@@ -90,7 +121,7 @@ class Page extends State<StudyIndex>
   bool get wantKeepAlive => true;
 }
 
-Widget _renderCourseItem(item) {
+Widget _renderCourseItem(item, context) {
   return Container(
     height: 100.0,
     padding: EdgeInsets.only(left: 10.0, right: 10.0, bottom: 10.0),
@@ -98,6 +129,7 @@ Widget _renderCourseItem(item) {
         padding: EdgeInsets.all(0),
         onPressed: () {
           print('点击课程');
+          Navigator.of(context).push(CustomRoute(ProductContent()));
         },
         child: Row(
           children: <Widget>[
