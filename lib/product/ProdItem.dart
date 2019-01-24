@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/components/MyIcons.dart';
+import 'package:flutter_exueshi/components/SliverAppBarDelegate.dart';
+import 'package:flutter_exueshi/custom_router.dart';
 import 'package:flutter_exueshi/plugin/Ajax.dart';
-import 'package:flutter_exueshi/plugin/Html.dart';
+import 'package:flutter_exueshi/product/Cart.dart';
 import 'package:flutter_html_view/flutter_html_view.dart';
 
 class ProdItem extends StatefulWidget {
@@ -18,9 +20,11 @@ class ProdItem extends StatefulWidget {
   }
 }
 
-class Page extends State<ProdItem> with SingleTickerProviderStateMixin {
+class Page extends State<ProdItem> with TickerProviderStateMixin {
   final product;
   String prodType;
+
+  var _chapter;
 
   var _commentList;
   var _commentStar;
@@ -28,6 +32,7 @@ class Page extends State<ProdItem> with SingleTickerProviderStateMixin {
   Page({@required this.product}) : super();
 
   TabController _controller;
+  TabController _controllerChild;
 
   @override
   void initState() {
@@ -35,6 +40,7 @@ class Page extends State<ProdItem> with SingleTickerProviderStateMixin {
     super.initState();
 
     _controller = TabController(length: 3, vsync: this);
+    _controllerChild = TabController(length: 3, vsync: this);
 
     switch (product['prodType']) {
       case '视频':
@@ -59,7 +65,7 @@ class Page extends State<ProdItem> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     _getProdDetail(product);
 
-    _getChapter(product);
+    _getChapter();
 
     // TODO: implement build
     return Scaffold(
@@ -69,64 +75,28 @@ class Page extends State<ProdItem> with SingleTickerProviderStateMixin {
           title: Text('产品详情'),
           centerTitle: true,
           actions: <Widget>[
-            IconButton(icon: Icon(Icons.shopping_cart), onPressed: () {})
+            IconButton(icon: Icon(Icons.shopping_cart), onPressed: () {
+              Navigator.of(context).push(CustomRoute(Cart()));
+            })
           ],
         ),
         body: FutureBuilder(
             future: _getProdDetail(product),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.done) {
-                var product = snapshot.data;
-                print(product['prodDetail']);
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    Container(
-                      color: Colors.red,
-                      child: Stack(
-                        fit: StackFit.passthrough,
-                        children: <Widget>[
-                          Image.network(
-                            product['logo'],
-                            fit: BoxFit.fill,
-                          ),
-                        ],
-                      ),
-                    ),
-                    TabBar(
-                        controller: _controller,
-                        unselectedLabelColor: Color.fromRGBO(51, 51, 51, 1),
-                        labelColor: Color.fromRGBO(0, 145, 219, 1),
-                        indicatorWeight: 1.0,
-                        tabs: <Tab>[
-                          Tab(
-                            text: '详情',
-                          ),
-                          Tab(
-                            text: '目录',
-                          ),
-                          Tab(
-                            text: '评价',
-                          )
-                        ]),
-                    Expanded(
-                      child: TabBarView(
-                          controller: _controller,
-                          children: <Widget>[
-                            _tabPage1(product),
-                            Text('目录'),
-                            _tabPage3(),
-                          ]),
-                    ),
-                    _bottomBar(),
-                  ],
-                );
+                return _body();
               } else {
                 return Center(
                   child: Text('加载中...'),
                 );
               }
             }));
+  }
+
+  Widget _body() {
+    return Column(
+      children: <Widget>[Expanded(child: _header()), _bottomBar()],
+    );
   }
 
   Widget _bottomBar() {
@@ -140,7 +110,7 @@ class Page extends State<ProdItem> with SingleTickerProviderStateMixin {
           child: Row(
             children: <Widget>[
               Container(
-                padding: EdgeInsets.only(left: 20.0, right: 20.0),
+                padding: EdgeInsets.only(left: 10.0, right: 10.0),
                 child: Row(
                   children: <Widget>[
                     Icon(
@@ -157,7 +127,7 @@ class Page extends State<ProdItem> with SingleTickerProviderStateMixin {
                 color: Color.fromRGBO(226, 226, 226, 1),
               ),
               Container(
-                padding: EdgeInsets.only(left: 20.0, right: 20.0),
+                padding: EdgeInsets.only(left: 10.0, right: 10.0),
                 child: Row(
                   children: <Widget>[
                     Icon(
@@ -224,9 +194,58 @@ class Page extends State<ProdItem> with SingleTickerProviderStateMixin {
     );
   }
 
+  Widget _header() {
+    return DefaultTabController(
+        length: 3,
+        child: NestedScrollView(
+            headerSliverBuilder:
+                (BuildContext context, bool innerBoxIsScrolled) {
+              return <Widget>[
+                SliverToBoxAdapter(
+                  child: Image.network(product['logo']),
+                ),
+                SliverPersistentHeader(
+                    pinned: true,
+                    delegate: SliverAppBarDelegate(
+                        minHeight: 50.0,
+                        maxHeight: 50.0,
+                        child: Container(
+                          child: TabBar(
+                              controller: _controller,
+                              unselectedLabelColor:
+                              Color.fromRGBO(51, 51, 51, 1),
+                              labelColor: Color.fromRGBO(0, 145, 219, 1),
+                              indicatorWeight: 1.0,
+                              tabs: <Tab>[
+                                Tab(
+                                  text: '详情',
+                                ),
+                                Tab(
+                                  text: '目录',
+                                ),
+                                Tab(
+                                  text: '评价',
+                                ),
+                              ]),
+                          decoration: BoxDecoration(
+                              color: Color.fromRGBO(255, 255, 255, 1),
+                              border: Border(
+                                  bottom: BorderSide(
+                                      color: Color.fromRGBO(226, 226, 226, 1),
+                                      width: 0.5))),
+                        ))),
+              ];
+            },
+            body: TabBarView(controller: _controller, children: <Widget>[
+              _tabPage1(product),
+              _tabPage2(),
+              _tabPage3()
+            ])));
+  }
+
+  // 详情页
   Widget _tabPage1(product) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return ListView(
       children: <Widget>[
         Container(
           padding:
@@ -294,7 +313,7 @@ class Page extends State<ProdItem> with SingleTickerProviderStateMixin {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
-              Text(product['learnPeopleCount'].toString() + '在学习',
+              Text(product['learnPeopleCount'].toString() + '人在学习',
                   style: TextStyle(
                     color: Color.fromRGBO(102, 102, 102, 1),
                   )),
@@ -312,54 +331,182 @@ class Page extends State<ProdItem> with SingleTickerProviderStateMixin {
             ],
           ),
         ),
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-                border: Border(
-                    top: BorderSide(
-                        width: 10.0, color: Color.fromRGBO(241, 241, 241, 1)))),
-            child: ListView(
-              children: <Widget>[
-                Html(
-                  data:
-                      '<p><img src="http://exueshi.oss-cn-hangzhou.aliyuncs.com/productLogo/2018-11-14-1542161011598.jpg"/></p>',
-                ),
-                HtmlView(
-                  //data: product['prodDetail'],
-                  data:
-                      '<body><p>hello <p>world</p> </p><img src="http://exueshi.oss-cn-hangzhou.aliyuncs.com/productLogo/2018-11-14-1542161011598.jpg"/></body>',
-                  baseURL: '',
-                  onLaunchFail: (url) {
-                    print('fail');
-                  },
-                )
-              ],
-            ),
-          ),
+        Container(
+          decoration: BoxDecoration(
+              border: Border(
+                  top: BorderSide(
+                      width: 10.0, color: Color.fromRGBO(241, 241, 241, 1)))),
         ),
+        HtmlView(
+          //data: product['prodDetail'].toString(),
+          data:
+          '<img src="http://ns.seevin.com/ueditor/php/upload/image/20180725/1532503996245109.jpg" title="1532503996245109.jpg" alt="0e1961c5-24b4-4797-9be0-edb6bdfc9965.jpg"/>',
+          baseURL: '',
+          onLaunchFail: (url) {
+            print('fail');
+          },
+        )
       ],
     );
   }
 
-  Widget _tabPage2(prodType, chapter) {
+  // 章节目录页
+  Widget _tabPage2() {
     // 判断产品类型
     if (prodType == 'package') {
       // 套餐产品
-
+      List<Tab> _tabs = new List<Tab>();
+      List<Widget> _tabViews = new List<Widget>();
+      var tabLength = 0;
+      if (_chapter['videos'] != false) {
+        tabLength++;
+        _tabs.add(Tab(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Icon(MyIcons.video),
+              Text('视频'),
+            ],
+          ),
+        ));
+        _tabViews.add(ListView(
+          children: _getChapterItem(_chapter['videos']),
+        ));
+      }
+      if (_chapter['papers'] != false) {
+        tabLength++;
+        _tabs.add(Tab(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Icon(MyIcons.paper),
+              Text('试卷'),
+            ],
+          ),
+        ));
+        _tabViews.add(ListView(
+          children: _getChapterItem(_chapter['papers']),
+        ));
+      }
+      if (_chapter['documents'] != false) {
+        tabLength++;
+        _tabs.add(Tab(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Icon(MyIcons.document),
+              Text('资料'),
+            ],
+          ),
+        ));
+        _tabViews.add(ListView(
+          children: _getChapterItem(_chapter['documents']),
+        ));
+      }
+      return DefaultTabController(
+          length: tabLength,
+          child: NestedScrollView(
+              headerSliverBuilder:
+                  (BuildContext context, bool innerBoxIsScrolled) {
+                return <Widget>[
+                  SliverPersistentHeader(
+                      pinned: true,
+                      delegate: SliverAppBarDelegate(
+                          minHeight: 50.0,
+                          maxHeight: 50.0,
+                          child: Container(
+                            child: TabBar(
+                                controller: _controllerChild,
+                                unselectedLabelColor:
+                                Color.fromRGBO(102, 102, 102, 1),
+                                labelColor: Color.fromRGBO(51, 51, 51, 1),
+                                indicatorWeight: 1.0,
+                                indicatorColor: Colors.white,
+                                labelStyle:
+                                TextStyle(fontWeight: FontWeight.bold),
+                                unselectedLabelStyle:
+                                TextStyle(fontWeight: FontWeight.normal),
+                                tabs: _tabs),
+                            color: Color.fromRGBO(255, 255, 255, 1),
+                          ))),
+                ];
+              },
+              body: TabBarView(
+                  controller: _controllerChild, children: _tabViews)));
     } else {
       // 其它类型产品
-    }
-
-    // 判断章节是否有分组
-    bool isGrouped = chapter[0]['groupName'].toString() != '未分类';
-    return ListView.builder(itemBuilder: (BuildContext context, int index) {
-      return ListTile(
-        leading: Icon(Icons.videocam),
-        title: chapter[index][''],
+      return ListView(
+        children: _getChapterItem(_chapter),
       );
-    });
+    }
   }
 
+  // 设置目录列表
+  List<Widget> _getChapterItem(data) {
+    List<Widget> _list = new List<Widget>();
+    for (int i = 0; i < data.length; i++) {
+      var groupName = data[i]['groupName'].toString();
+      bool isGrouped = groupName != '未分类';
+
+      if (isGrouped) {
+        // 有正常分组
+        _list.add(ExpansionTile(
+            title: Text(groupName),
+            initiallyExpanded: true,
+            children: List.generate(data[i].length, (int index) {
+              var item = data[i]['list'][index];
+              var itemName = '';
+              var itemIcon;
+              switch (item['type']) {
+                case '视频':
+                  itemIcon = Icon(MyIcons.video);
+                  itemName = item['videoName'];
+                  break;
+                case '试卷':
+                  itemIcon = Icon(MyIcons.paper);
+                  itemName = item['paperName'];
+                  break;
+                case '资料':
+                  itemIcon = Icon(MyIcons.document);
+                  itemName = item['docAlias'];
+                  break;
+              }
+              return ListTile(
+                leading: itemIcon,
+                title: Text(itemName),
+              );
+            })));
+      } else {
+        // 无分组
+        for (int j = 0; j < data[i]['list'].length; j++) {
+          var item = data[i]['list'][j];
+          var itemName = '';
+          var itemIcon;
+          switch (item['type']) {
+            case '视频':
+              itemIcon = Icon(MyIcons.video);
+              itemName = item['videoName'];
+              break;
+            case '试卷':
+              itemIcon = Icon(MyIcons.paper);
+              itemName = item['paperName'];
+              break;
+            case '资料':
+              itemIcon = Icon(MyIcons.document);
+              itemName = item['docAlias'];
+              break;
+          }
+          _list.add(ListTile(
+            leading: itemIcon,
+            title: Text(itemName),
+          ));
+        }
+      }
+    }
+    return _list;
+  }
+
+  // 评价页
   Widget _tabPage3() {
     return FutureBuilder(
         future: _getComments(),
@@ -711,12 +858,14 @@ class Page extends State<ProdItem> with SingleTickerProviderStateMixin {
     return completer.future;
   }
 
-  Future _getChapter(product) async {
+  Future _getChapter() async {
     Ajax ajax = new Ajax();
     Response response = await ajax.post('/api/Product/getProductLists',
         data: {'prodID': product['prodID'], 'type': prodType});
     if (response.statusCode == 200) {
       var ret = response.data;
+      print(ret);
+      _chapter = ret['data'];
     }
   }
 
@@ -729,7 +878,6 @@ class Page extends State<ProdItem> with SingleTickerProviderStateMixin {
         data: {'prodID': prodID, 'page': 1});
     if (response.statusCode == 200) {
       var ret = response.data;
-      print(ret['star']);
       _commentList = ret['data'];
       _commentStar = ret['star'];
       completer.complete(_commentList);
