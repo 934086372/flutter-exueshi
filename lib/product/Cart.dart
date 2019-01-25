@@ -9,7 +9,18 @@ class Cart extends StatefulWidget {
 }
 
 class Page extends State<Cart> {
+  List<String> items = List.generate(50, (int index) {
+    return 'items $index';
+  });
   var _selectAll = false;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    print(items);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,9 +48,31 @@ class Page extends State<Cart> {
 
   Widget _body() {
     return Expanded(
-      child: ListView.builder(itemBuilder: (BuildContext context, int index) {
-        return ListTile(title: Text('index: $index'));
-      }),
+      child: ListView.builder(
+          itemCount: items.length,
+          itemBuilder: (BuildContext context, int index) {
+            return GestureDetector(
+              onHorizontalDragStart: (direction) {
+                print(direction);
+              },
+              onHorizontalDragDown: (pos) {
+
+              },
+              onHorizontalDragUpdate: (offset) {
+                print(offset.delta.dx);
+              },
+              child: Stack(
+                children: <Widget>[
+                  Container(
+                    color: Colors.red,
+                  ),
+                  ListTile(
+                    title: Text('title $index'),
+                  )
+                ],
+              ),
+            );
+          }),
     );
   }
 

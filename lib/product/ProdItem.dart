@@ -4,8 +4,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/components/MyIcons.dart';
 import 'package:flutter_exueshi/components/SliverAppBarDelegate.dart';
-import 'package:flutter_exueshi/custom_router.dart';
-import 'package:flutter_exueshi/plugin/Ajax.dart';
+import 'package:flutter_exueshi/common/custom_router.dart';
+import 'package:flutter_exueshi/common/Ajax.dart';
 import 'package:flutter_exueshi/product/Cart.dart';
 import 'package:flutter_html_view/flutter_html_view.dart';
 

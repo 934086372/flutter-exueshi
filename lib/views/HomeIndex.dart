@@ -1,11 +1,14 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_exueshi/login.dart';
+import 'package:flutter_exueshi/product/Cart.dart';
+import 'package:flutter_exueshi/sign/login.dart';
 import 'package:flutter_exueshi/product/ProdItem.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter_exueshi/custom_router.dart';
+import 'package:flutter_exueshi/common/custom_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeIndex extends StatefulWidget {
   @override
@@ -21,15 +24,24 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
   var _livings = [];
   var _products = [];
 
+  var loginData;
+
   @override
   // TODO: implement wantKeepAlive
   bool get wantKeepAlive => true;
+
+  // 获取登录数据
+  _getPreference() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    loginData = prefs.getString('loginData') ?? ''; // 首次使用记录数据
+  }
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     _getHomeData();
+    _getPreference();
   }
 
   @override
@@ -90,8 +102,12 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                     Icons.shopping_cart,
                   ),
                   onPressed: () {
-                    print('购物车');
-                    Navigator.of(context).push(CustomRoute(Login()));
+                    print(loginData);
+                    if (loginData == '') {
+                      Navigator.of(context).push(CustomRoute(Login()));
+                    } else {
+                      Navigator.of(context).push(CustomRoute(Cart()));
+                    }
                   }),
               Container(
                 child: Center(
@@ -128,7 +144,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                 case ConnectionState.waiting:
                 // 加载中
                   return Center(
-                    child: Image.asset('images/loading.gif'),
+                    child: CupertinoActivityIndicator(),
                   );
                   break;
                 case ConnectionState.active:
@@ -255,7 +271,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                   ClipRRect(
                     borderRadius: BorderRadius.all(Radius.circular(2.5)),
                     child: FadeInImage.assetNetwork(
-                      placeholder: 'images/loading.gif',
+                      placeholder: 'assets/images/loading.gif',
                       image: _products[index]['logo'],
                       fit: BoxFit.fill,
                     ),
@@ -343,8 +359,8 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
         ),
       ),
       onTap: () {
-        Navigator.of(context).push(
-            CustomRoute(ProdItem(product: _products[index])));
+        Navigator.of(context)
+            .push(CustomRoute(ProdItem(product: _products[index])));
       },
     );
   }
@@ -368,7 +384,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
           Container(
             width: 45.0,
             child: Image.asset(
-              'images/news.png',
+              'assets/images/news.png',
               fit: BoxFit.fitWidth,
             ),
           ),
@@ -473,7 +489,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                             borderRadius: BorderRadius.all(
                                 Radius.circular(2.5)),
                             child: FadeInImage.assetNetwork(
-                                placeholder: 'images/loading.gif',
+                                placeholder: 'assets/images/loading.gif',
                                 image: _livings[0]['logo'])),
                       ),
                       Text(
@@ -502,7 +518,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                         child: ClipRRect(
                           borderRadius: BorderRadius.all(Radius.circular(2.5)),
                           child: FadeInImage.assetNetwork(
-                              placeholder: 'images/loading.gif',
+                              placeholder: 'assets/images/loading.gif',
                               image: _livings[1]['logo']),
                         ),
                       ),
@@ -554,7 +570,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                       child: ClipRRect(
                         borderRadius: BorderRadius.all(Radius.circular(2.5)),
                         child: FadeInImage.assetNetwork(
-                          placeholder: 'images/loading.gif',
+                          placeholder: 'assets/images/loading.gif',
                           image: _livings[index]['logo'],
                           fit: BoxFit.fill,
                         ),

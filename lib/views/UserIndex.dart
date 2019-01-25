@@ -30,7 +30,7 @@ class Page extends State<UserIndex> with AutomaticKeepAliveClientMixin {
             child: Row(
               children: <Widget>[
                 CircleAvatar(
-                  backgroundImage: AssetImage('images/avator.jpg'),
+                  backgroundImage: AssetImage('assets/images/avator.jpg'),
                   minRadius: 37.5,
                 ),
                 Container(

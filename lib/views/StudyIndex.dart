@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_exueshi/custom_router.dart';
+import 'package:flutter_exueshi/common/custom_router.dart';
 import 'package:flutter_exueshi/study/ProductContent.dart';
 
 class StudyIndex extends StatefulWidget {

@@ -89,16 +89,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return FutureBuilder(
         future: _getPreference(),
         builder: (context, snapshot) {
-          print('alreadyUse: $alreadyUse');
           // 判断是否已经使用
           if (alreadyUse == 'yes') {
             return _mainView();
@@ -111,8 +104,7 @@ class _MyHomePageState extends State<MyHomePage> {
   // 获取用户是否已经使用过的状态
   _getPreference() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    alreadyUse = prefs.getString('AlreadyUse') ?? 'no';
-    return prefs.getString('AlreadyUse') ?? 'no';
+    alreadyUse = prefs.getString('AlreadyUse') ?? 'no'; // 首次使用记录数据
   }
 
   _setPreference() async {
@@ -172,7 +164,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 itemCount: 4,
                 itemBuilder: (BuildContext context, int index) {
                   String imagePath =
-                      'images/boot/start_0' + (index + 1).toString() + '.jpg';
+                      'assets/images/boot/start_0' + (index + 1).toString() +
+                          '.jpg';
                   return Image.asset(
                     imagePath,
                     fit: BoxFit.fill,
