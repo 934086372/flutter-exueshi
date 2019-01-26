@@ -20,6 +20,7 @@ class Page extends State<Login> {
   String _loginText = '密码登录';
   int _countdown = 60;
   String _countdownText = '获取验证码';
+  Color _countdownTextColor = Colors.white;
 
   void _updateCountdown(_this) {
     print(_this);
@@ -164,6 +165,22 @@ class Page extends State<Login> {
     );
   }
 
+  // 监听电话号码是否存在
+  void _telephoneListener(telephone) {
+    print(telephone);
+    Color _color = Color.fromRGBO(153, 153, 153, 1);
+    String _telephone = telephone.toString();
+    Pattern _pattern = new RegExp('1[3|4|5|7|8|9][0-9]{9}');
+    bool isTelephone = _telephone.startsWith(_pattern);
+    print(isTelephone);
+    if (telephone.length == 11) {
+      _color = Color.fromRGBO(0, 190, 255, 1);
+    }
+    setState(() {
+      _countdownTextColor = _color;
+    });
+  }
+
   Widget _loginForm() {
     if (this._loginType == 'code') {
       return Container(
@@ -189,6 +206,7 @@ class Page extends State<Login> {
                               hintText: '请输入手机号',
                               hintStyle: TextStyle(fontSize: 14.0),
                               border: InputBorder.none),
+                          onChanged: _telephoneListener,
                         )),
                   ),
                 )
@@ -223,7 +241,8 @@ class Page extends State<Login> {
                 ),
                 GestureDetector(
                   child: Container(
-                    child: Text(_countdownText),
+                    child: Text(_countdownText,
+                      style: TextStyle(color: _countdownTextColor),),
                     decoration: BoxDecoration(
                         border: Border(
                             left: BorderSide(
@@ -233,7 +252,6 @@ class Page extends State<Login> {
                     margin: EdgeInsets.only(top: 4.0, bottom: 4.0),
                   ),
                   onTap: () {
-                    print('获取验证码');
                     _updateCountdown('');
                     Timer.periodic(Duration(seconds: 1), (_this) {
                       _updateCountdown(_this);
