@@ -1,10 +1,13 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_exueshi/common/Ajax.dart';
 import 'package:flutter_exueshi/components/MyIcons.dart';
 import 'package:flutter_exueshi/common/custom_router.dart';
 
 import 'package:flutter_exueshi/sign/SignUp.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Login extends StatefulWidget {
   @override
@@ -15,15 +18,17 @@ class Login extends StatefulWidget {
 }
 
 class Page extends State<Login> {
-
   String _loginType = 'code';
   String _loginText = '密码登录';
   int _countdown = 60;
   String _countdownText = '获取验证码';
-  Color _countdownTextColor = Colors.white;
+  Color _countdownTextColor = Color.fromRGBO(51, 51, 51, 1);
+  bool _loginBtnStatus = false; // 默认登录按钮不可用
+  var _telephone;
+  var _password;
+  var _deviceid = 'androidTest';
 
   void _updateCountdown(_this) {
-    print(_this);
     setState(() {
       _countdown--;
       _countdownText = _countdown.toString() + 's后重发';
@@ -68,22 +73,7 @@ class Page extends State<Login> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               _loginForm(),
-              Container(
-                  alignment: Alignment.center,
-                  margin: EdgeInsets.only(left: 15.0, right: 15.0),
-                  padding: EdgeInsets.only(top: 15.0, bottom: 15.0),
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.all(Radius.circular(2.5)),
-                      color: Color.fromRGBO(204, 204, 204, 1)),
-                  child: GestureDetector(
-                    onTap: () {
-                      print('login');
-                    },
-                    child: Text(
-                      '登录',
-                      style: TextStyle(color: Colors.white, fontSize: 17.0),
-                    ),
-                  )),
+              _loginBtn(),
               Container(
                 child: Center(
                   child: GestureDetector(
@@ -106,60 +96,71 @@ class Page extends State<Login> {
                 ),
                 margin: EdgeInsets.only(top: 15.0),
               ),
-              Container(
-                  margin: EdgeInsets.only(left: 15.0, top: 80.0, right: 15.0),
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.vertical,
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
-                      Row(
-                        children: <Widget>[
-                          Expanded(
-                              child: Container(
-                                margin: EdgeInsets.only(right: 15.0),
-                                height: 0.5,
-                                color: Color.fromRGBO(204, 204, 204, 1),
-                              )),
-                          Text(
-                            '使用其它登录方式',
-                            style: TextStyle(
-                                fontSize: 12.0,
-                                color: Color.fromRGBO(153, 153, 153, 1)),
-                          ),
-                          Expanded(
-                              child: Container(
-                                margin: EdgeInsets.only(left: 15.0),
-                                height: 0.5,
-                                color: Color.fromRGBO(204, 204, 204, 1),
-                              )),
-                        ],
-                      ),
-                    ],
-                  )),
-              Container(
-                padding: EdgeInsets.only(top: 20.0),
-                child: Center(
-                  child: Row(
-                    children: <Widget>[
-                      Expanded(
-                        child: Text(''),
-                      ),
-                      Icon(MyIcons.qq_border,
-                          size: 40.0, color: Colors.black45),
                       Container(
-                        width: 8.0,
-                      ),
-                      Icon(
-                        MyIcons.wechat_border,
-                        size: 40.0,
-                        color: Colors.black45,
-                      ),
-                      Expanded(
-                        child: Text(''),
+                          margin: EdgeInsets.only(
+                              left: 15.0, top: 80.0, right: 15.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: <Widget>[
+                              Row(
+                                children: <Widget>[
+                                  Expanded(
+                                      child: Container(
+                                        margin: EdgeInsets.only(right: 15.0),
+                                        height: 0.5,
+                                        color: Color.fromRGBO(204, 204, 204, 1),
+                                      )),
+                                  Text(
+                                    '使用其它登录方式',
+                                    style: TextStyle(
+                                        fontSize: 12.0,
+                                        color:
+                                        Color.fromRGBO(153, 153, 153, 1)),
+                                  ),
+                                  Expanded(
+                                      child: Container(
+                                        margin: EdgeInsets.only(left: 15.0),
+                                        height: 0.5,
+                                        color: Color.fromRGBO(204, 204, 204, 1),
+                                      )),
+                                ],
+                              ),
+                            ],
+                          )),
+                      Container(
+                        padding: EdgeInsets.only(top: 20.0),
+                        child: Center(
+                          child: Row(
+                            children: <Widget>[
+                              Expanded(
+                                child: Text(''),
+                              ),
+                              Icon(MyIcons.qq_border,
+                                  size: 40.0, color: Colors.black45),
+                              Container(
+                                width: 8.0,
+                              ),
+                              Icon(
+                                MyIcons.wechat_border,
+                                size: 40.0,
+                                color: Colors.black45,
+                              ),
+                              Expanded(
+                                child: Text(''),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
-              ),
+              )
             ],
           )),
     );
@@ -167,17 +168,20 @@ class Page extends State<Login> {
 
   // 监听电话号码是否存在
   void _telephoneListener(telephone) {
-    print(telephone);
+
     Color _color = Color.fromRGBO(153, 153, 153, 1);
-    String _telephone = telephone.toString();
+    telephone = telephone.toString();
     Pattern _pattern = new RegExp('1[3|4|5|7|8|9][0-9]{9}');
-    bool isTelephone = _telephone.startsWith(_pattern);
-    print(isTelephone);
+    bool isTelephone = telephone.startsWith(_pattern);
+
     if (telephone.length == 11) {
       _color = Color.fromRGBO(0, 190, 255, 1);
     }
     setState(() {
+      print(isTelephone);
+      print(telephone);
       _countdownTextColor = _color;
+      _telephone = telephone;
     });
   }
 
@@ -230,6 +234,7 @@ class Page extends State<Login> {
                     margin: EdgeInsets.only(right: 10.0),
                     child: Center(
                       child: TextField(
+                        key: Key('yzm'),
                         keyboardType: TextInputType.phone,
                         decoration: InputDecoration(
                             hintText: '请输入验证码',
@@ -241,8 +246,10 @@ class Page extends State<Login> {
                 ),
                 GestureDetector(
                   child: Container(
-                    child: Text(_countdownText,
-                      style: TextStyle(color: _countdownTextColor),),
+                    child: Text(
+                      _countdownText,
+                      style: TextStyle(color: _countdownTextColor),
+                    ),
                     decoration: BoxDecoration(
                         border: Border(
                             left: BorderSide(
@@ -252,10 +259,12 @@ class Page extends State<Login> {
                     margin: EdgeInsets.only(top: 4.0, bottom: 4.0),
                   ),
                   onTap: () {
-                    _updateCountdown('');
-                    Timer.periodic(Duration(seconds: 1), (_this) {
-                      _updateCountdown(_this);
-                    });
+                    if (_countdown == 60) {
+                      _updateCountdown('');
+                      Timer.periodic(Duration(seconds: 1), (_this) {
+                        _updateCountdown(_this);
+                      });
+                    }
                   },
                 )
                 /*,*/
@@ -288,6 +297,7 @@ class Page extends State<Login> {
                               hintText: '请输入手机号',
                               hintStyle: TextStyle(fontSize: 14.0),
                               border: InputBorder.none),
+                          onChanged: _telephoneListener,
                         )),
                   ),
                 )
@@ -315,6 +325,12 @@ class Page extends State<Login> {
                     margin: EdgeInsets.only(right: 10.0),
                     child: Center(
                       child: TextField(
+                        onChanged: (val) {
+                          setState(() {
+                            _loginBtnStatus = !(val == '');
+                            _password = val;
+                          });
+                        },
                         keyboardType: TextInputType.phone,
                         decoration: InputDecoration(
                             hintText: '请输入密码',
@@ -336,7 +352,7 @@ class Page extends State<Login> {
                     margin: EdgeInsets.only(top: 4.0, bottom: 4.0),
                   ),
                   onTap: () {
-                    print('获取验证码');
+                    print('忘记密码');
                   },
                 )
                 /*,*/
@@ -345,6 +361,65 @@ class Page extends State<Login> {
           ],
         ),
       );
+    }
+  }
+
+  Widget _loginBtn() {
+    Color _btnColor = Color.fromRGBO(204, 204, 204, 1);
+    if (_loginBtnStatus) {
+      _btnColor = Color.fromRGBO(0, 145, 219, 1);
+    }
+    return Container(
+        alignment: Alignment.center,
+        margin: EdgeInsets.only(left: 15.0, right: 15.0),
+        padding: EdgeInsets.only(top: 15.0, bottom: 15.0),
+        decoration: BoxDecoration(
+            borderRadius: BorderRadius.all(Radius.circular(2.5)),
+            color: _btnColor),
+        child: GestureDetector(
+          onTap: () {
+            if (_loginBtnStatus) {
+              print('login');
+              _login();
+            }
+          },
+          child: Text(
+            '登录',
+            style: TextStyle(color: Colors.white, fontSize: 17.0),
+          ),
+        ));
+  }
+
+  Future _login() async {
+    Completer _completer = new Completer();
+
+    print(_telephone);
+    print(_password);
+    Ajax _ajax = new Ajax();
+    Response response = await _ajax.post(
+        '/api/user/login/by/telephone/psw', data: {
+      'telephone': _telephone,
+      'userPsw': _password,
+      'userDeviceID': _deviceid
+    });
+
+    if (response.statusCode == 200) {
+      var ret = response.data;
+
+      if (ret['code'].toString() == '200') {
+        var userData = ret['data'];
+        print(userData);
+
+        SharedPreferences _prefs = await SharedPreferences.getInstance();
+        _prefs.setString('userData', userData.toString());
+
+        String user = _prefs.getString('userData');
+        print(user);
+
+        Navigator.pop(context);
+      } else {
+
+      }
     }
   }
 }
