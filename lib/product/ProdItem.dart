@@ -75,9 +75,11 @@ class Page extends State<ProdItem> with TickerProviderStateMixin {
           title: Text('产品详情'),
           centerTitle: true,
           actions: <Widget>[
-            IconButton(icon: Icon(Icons.shopping_cart), onPressed: () {
-              Navigator.of(context).push(CustomRoute(Cart()));
-            })
+            IconButton(
+                icon: Icon(Icons.shopping_cart),
+                onPressed: () {
+                  Navigator.of(context).push(CustomRoute(Cart()));
+                })
           ],
         ),
         body: FutureBuilder(
@@ -338,10 +340,8 @@ class Page extends State<ProdItem> with TickerProviderStateMixin {
                       width: 10.0, color: Color.fromRGBO(241, 241, 241, 1)))),
         ),
         HtmlView(
-          //data: product['prodDetail'].toString(),
-          data:
-          '<img src="http://ns.seevin.com/ueditor/php/upload/image/20180725/1532503996245109.jpg" title="1532503996245109.jpg" alt="0e1961c5-24b4-4797-9be0-edb6bdfc9965.jpg"/>',
-          baseURL: '',
+//          data: product['prodDetail'].toString(),
+          data: '<img src="http://ns.seevin.com/ueditor/php/upload/image/20180725/1532503996245109.jpg"/>',
           onLaunchFail: (url) {
             print('fail');
           },

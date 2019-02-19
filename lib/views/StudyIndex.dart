@@ -1,8 +1,15 @@
 import 'dart:async';
+import 'dart:convert';
 
+import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_exueshi/common/Ajax.dart';
 import 'package:flutter_exueshi/common/custom_router.dart';
+import 'package:flutter_exueshi/components/MyIcons.dart';
 import 'package:flutter_exueshi/study/ProductContent.dart';
+import 'package:flutter_exueshi/study/StudyManage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class StudyIndex extends StatefulWidget {
   @override
@@ -15,6 +22,9 @@ class StudyIndex extends StatefulWidget {
 class Page extends State<StudyIndex>
     with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   TabController _tabController;
+
+  var studyingList = [];
+  var studiedList = [];
 
   @override
   void initState() {
@@ -65,7 +75,10 @@ class Page extends State<StudyIndex>
                 ),
               ),
             ),
-            onTap: () {},
+            onTap: () {
+              print('点击了管理');
+              Navigator.of(context).push(CustomRoute(StudyManage()));
+            },
           ),
         ],
       ),
@@ -86,29 +99,30 @@ class Page extends State<StudyIndex>
             color: Color.fromRGBO(241, 241, 241, 1),
           ),
           Expanded(
-            child: TabBarView(
-              physics: AlwaysScrollableScrollPhysics(),
-              controller: _tabController,
-              children: <Widget>[
-                RefreshIndicator(
-                    child: ListView.builder(
-                        physics: AlwaysScrollableScrollPhysics(),
-                        padding: EdgeInsets.only(top: 10.0),
-                        itemCount: 20,
-                        itemBuilder: (context, index) {
-                          return _renderCourseItem(index, context);
-                        }),
-                    onRefresh: _refreshList),
-                RefreshIndicator(
-                  child: ListView.builder(
-                      padding: EdgeInsets.only(top: 10.0),
-                      itemCount: 5,
-                      itemBuilder: (context, index) {
-                        return _renderCourseItem(index, context);
-                      }),
-                  onRefresh: _refreshList,
-                ),
-              ],
+            child: FutureBuilder(
+              future: _getMyStudyList(),
+              builder: (BuildContext context, AsyncSnapshot snapshot) {
+                print(snapshot);
+                switch (snapshot.connectionState) {
+                  case ConnectionState.waiting:
+                    return Center(
+                      child: CupertinoActivityIndicator(),
+                    );
+                    break;
+                  case ConnectionState.active:
+                  case ConnectionState.none:
+                  case ConnectionState.done:
+                    return TabBarView(
+                      physics: AlwaysScrollableScrollPhysics(),
+                      controller: _tabController,
+                      children: <Widget>[
+                        _studyingList(),
+                        _studiedList(),
+                      ],
+                    );
+                    break;
+                }
+              },
             ),
           ),
         ],
@@ -116,89 +130,239 @@ class Page extends State<StudyIndex>
     );
   }
 
+  Widget _studyingList() {
+    // 判断是否有课程
+    if (studyingList.toString() == [].toString()) {
+      return Center(child: Text('空'),);
+    } else {
+      return RefreshIndicator(
+          child: ListView.builder(
+              physics: AlwaysScrollableScrollPhysics(),
+              padding: EdgeInsets.only(top: 10.0),
+              itemCount: studyingList.length,
+              itemBuilder: (context, index) {
+                return _renderCourseItem(
+                    studyingList[index], context);
+              }),
+          onRefresh: _refreshStudyingList);
+    }
+  }
+
+  Widget _studiedList() {
+    // 判断是否有课程
+    if (studiedList.toString() == [].toString()) {
+      return Center(child: Text('暂无已学完课程'),);
+    } else {
+      return RefreshIndicator(
+        child: ListView.builder(
+            padding: EdgeInsets.only(top: 10.0),
+            itemCount: studiedList.length,
+            itemBuilder: (context, index) {
+              return _renderCourseItem(studiedList[index], context);
+            }),
+        onRefresh: _refreshStudiedList,
+      );
+    }
+  }
+
+  // 渲染列表中的单个课程产品项
+  Widget _renderCourseItem(item, context) {
+    return Container(
+      height: 100.0,
+      padding: EdgeInsets.only(left: 10.0, right: 10.0, bottom: 10.0),
+      child: FlatButton(
+          padding: EdgeInsets.all(0),
+          onPressed: () {
+            print('点击课程');
+            Navigator.of(context).push(CustomRoute(ProductContent()));
+          },
+          child: Row(
+            children: <Widget>[
+              Container(
+                child: Stack(
+                  alignment: Alignment.bottomLeft,
+                  children: <Widget>[
+                    Image.network(
+                      item['logo'],
+                      fit: BoxFit.fill,
+                    ),
+                    Container(
+                      child: Text(
+                        item['prodStatus'],
+                        style: TextStyle(color: Colors.white, fontSize: 11.0),
+                      ),
+                      color: Color.fromRGBO(0, 0, 0, 0.6),
+                      padding: EdgeInsets.only(
+                          left: 4.5, top: 2.0, right: 4.5, bottom: 2.0),
+                    ),
+                  ],
+                ),
+                height: 100.0,
+              ),
+              Expanded(
+                child: Container(
+                  padding: EdgeInsets.only(left: 10.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      Expanded(
+                          child: Text(
+                            item['prodName'],
+                            style: TextStyle(color: Colors.black),
+                            maxLines: 2,
+                            softWrap: false,
+                            overflow: TextOverflow.ellipsis,
+                          )),
+                      _lastStudyItem(item['lastStudyItem']),
+                      _validShow(item),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          )),
+    );
+  }
+
+  Widget _validShow(item) {
+    var _text;
+    switch (item['validType']) {
+      case '永久':
+        _text = '永久有效';
+        break;
+      case '时间段':
+        _text = item['validEndTime'] + ' 前有效';
+        break;
+      case '天数':
+      // 使用支付时间 + 有效天数
+        DateTime _payTime = DateTime.parse(item['payTime']);
+        print(_payTime);
+        DateTime _validEndTime = _payTime.add(
+            Duration(days: item['validDays']));
+        print(_validEndTime);
+        _text =
+            _payTime.year.toString() + '-' + _payTime.month.toString() + '-' +
+                _payTime.day.toString() + ' 前有效';
+        break;
+    }
+
+    Color _color = Color.fromRGBO(102, 102, 102, 1);
+    if (item['prodStatus'] == '预售中' || item['validType'] == '永久') {
+      _color = Color.fromRGBO(255, 102, 0, 1);
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 5.0),
+      child: Text(_text,
+          style:
+          TextStyle(fontSize: 12.0, color: _color)),
+    );
+  }
+
+  // 上次学习锚点
+  Widget _lastStudyItem(lastItem) {
+    if (lastItem.toString() == [].toString()) {
+      // 无上次学习记录
+      return Container();
+    } else {
+      IconData _icon;
+      switch (lastItem['prodContentType']) {
+        case '视频':
+          _icon = MyIcons.video;
+          break;
+        case '资料':
+          _icon = MyIcons.document;
+          break;
+        case '试卷':
+          _icon = MyIcons.paper;
+          break;
+      }
+
+      return Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            Icon(
+              _icon,
+              color: Color.fromRGBO(0, 145, 219, 0.6),
+              size: 20.0,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 5.0),
+              child: Text(
+                lastItem['prodContentName'],
+                style: TextStyle(
+                    fontSize: 12.0, color: Color.fromRGBO(153, 153, 153, 1)),
+              ),
+            ),
+          ]);
+    }
+  }
+
+  // 获取我的课程列表
+  Future _getMyStudyList() async {
+    Completer _completer = new Completer();
+
+    SharedPreferences _prefs = await SharedPreferences.getInstance();
+    var user = json.decode(_prefs.getString('userData'));
+
+    Ajax ajax = new Ajax();
+    Response response = await ajax.post('/api/product/getStuProducts', data: {
+      "userID": user['userID'],
+      "page": 1,
+      "studyStatus": '正在学习',
+      "type": '全部',
+      "num": 500
+    });
+
+    if (response.statusCode == 200) {
+      var ret = response.data;
+      if (ret['code'].toString() == '200') {
+        studyingList = ret['data'];
+      } else {
+        studyingList = [];
+      }
+    }
+
+    Response response2 = await ajax.post('/api/product/getStuProducts', data: {
+      "userID": user['userID'],
+      "page": 1,
+      "studyStatus": '学习完成',
+      "type": '全部',
+      "num": 500
+    });
+
+    if (response2.statusCode == 200) {
+      var ret = response2.data;
+      if (ret['code'].toString() == '200') {
+        studiedList = ret['data'];
+      } else {
+        studiedList = [];
+      }
+    }
+
+    _completer.complete(user);
+    return _completer.future;
+  }
+
+  Future _refreshStudyingList() async {
+    Completer _completer = new Completer();
+    _getMyStudyList();
+    await Future.delayed(Duration(seconds: 2), () {
+      _completer.complete(null);
+    });
+    return _completer.future;
+  }
+
+  Future _refreshStudiedList() async {
+    Completer _completer = new Completer();
+    _getMyStudyList();
+    await Future.delayed(Duration(seconds: 2), () {
+      _completer.complete(null);
+    });
+    return _completer.future;
+  }
+
   @override
   // TODO: implement wantKeepAlive
   bool get wantKeepAlive => true;
-}
-
-Widget _renderCourseItem(item, context) {
-  return Container(
-    height: 100.0,
-    padding: EdgeInsets.only(left: 10.0, right: 10.0, bottom: 10.0),
-    child: FlatButton(
-        padding: EdgeInsets.all(0),
-        onPressed: () {
-          print('点击课程');
-          Navigator.of(context).push(CustomRoute(ProductContent()));
-        },
-        child: Row(
-          children: <Widget>[
-            Container(
-              child: Stack(
-                alignment: Alignment.bottomLeft,
-                children: <Widget>[
-                  Image.network(
-                    'http://exueshi.oss-cn-hangzhou.aliyuncs.com/productLogo/2018-12-7-1544154824445.jpg',
-                    fit: BoxFit.fitHeight,
-                  ),
-                  Container(
-                    child: Text(
-                      '预售中',
-                      style: TextStyle(color: Colors.white, fontSize: 11.0),
-                    ),
-                    color: Color.fromRGBO(0, 0, 0, 0.6),
-                    padding: EdgeInsets.only(
-                        left: 4.5, top: 2.0, right: 4.5, bottom: 2.0),
-                  ),
-                ],
-              ),
-              height: 100.0,
-            ),
-            Expanded(
-              child: Container(
-                padding: EdgeInsets.only(left: 10.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    Expanded(
-                        child: Text(
-                          '新大纲新大纲新大纲纲新大纲新大纲纲新大纲新大纲纲新大纲新大纲纲新大纲新大纲考点补充精讲班—文科文科',
-                          style: TextStyle(color: Colors.black),
-                          maxLines: 2,
-                          softWrap: false,
-                          overflow: TextOverflow.ellipsis,
-                        )),
-                    Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: <Widget>[
-                          Icon(
-                            Icons.videocam,
-                            color: Color.fromRGBO(0, 145, 219, 0.6),
-                          ),
-                          Text(
-                            '视频名称',
-                            style: TextStyle(
-                                fontSize: 12.0,
-                                color: Color.fromRGBO(153, 153, 153, 1)),
-                          ),
-                        ]),
-                    Text('2019-12-25之前有效',
-                        style: TextStyle(
-                            fontSize: 10.0,
-                            color: Color.fromRGBO(153, 153, 153, 1))),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        )),
-  );
-}
-
-Future _refreshList() async {
-  Completer _completer = new Completer();
-  await Future.delayed(Duration(seconds: 2), () {
-    _completer.complete(null);
-  });
-  return _completer.future;
 }

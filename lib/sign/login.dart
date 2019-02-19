@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -42,7 +43,6 @@ class Page extends State<Login> {
 
   @override
   Widget build(BuildContext context) {
-    print(_loginType);
 
     // TODO: implement build
     return Scaffold(
@@ -390,8 +390,8 @@ class Page extends State<Login> {
         ));
   }
 
+  // 登录方法
   Future _login() async {
-    Completer _completer = new Completer();
 
     print(_telephone);
     print(_password);
@@ -408,17 +408,13 @@ class Page extends State<Login> {
 
       if (ret['code'].toString() == '200') {
         var userData = ret['data'];
-        print(userData);
 
         SharedPreferences _prefs = await SharedPreferences.getInstance();
-        _prefs.setString('userData', userData.toString());
-
-        String user = _prefs.getString('userData');
-        print(user);
+        _prefs.setString('userData', json.encode(userData));
 
         Navigator.pop(context);
       } else {
-
+        Scaffold.of(context).showSnackBar(SnackBar(content: Text(ret['msg'])));
       }
     }
   }
