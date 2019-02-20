@@ -9,6 +9,7 @@ import 'package:flutter_exueshi/common/custom_router.dart';
 import 'package:flutter_exueshi/components/MyIcons.dart';
 import 'package:flutter_exueshi/study/ProductContent.dart';
 import 'package:flutter_exueshi/study/StudyManage.dart';
+import 'package:flutter_exueshi/study/VideoPlayer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class StudyIndex extends StatefulWidget {
@@ -25,6 +26,8 @@ class Page extends State<StudyIndex>
 
   var studyingList = [];
   var studiedList = [];
+
+  var userID;
 
   @override
   void initState() {
@@ -77,7 +80,8 @@ class Page extends State<StudyIndex>
             ),
             onTap: () {
               print('点击了管理');
-              Navigator.of(context).push(CustomRoute(StudyManage()));
+              Navigator.of(context).push(CustomRoute(
+                  StudyManage(studyingList: studyingList, userID: userID)));
             },
           ),
         ],
@@ -174,7 +178,8 @@ class Page extends State<StudyIndex>
           padding: EdgeInsets.all(0),
           onPressed: () {
             print('点击课程');
-            Navigator.of(context).push(CustomRoute(ProductContent()));
+            Navigator.of(context).push(
+                CustomRoute(ProductContent(product: item,)));
           },
           child: Row(
             children: <Widget>[
@@ -304,6 +309,8 @@ class Page extends State<StudyIndex>
 
     SharedPreferences _prefs = await SharedPreferences.getInstance();
     var user = json.decode(_prefs.getString('userData'));
+
+    userID = user['userID'];
 
     Ajax ajax = new Ajax();
     Response response = await ajax.post('/api/product/getStuProducts', data: {

@@ -7,7 +7,6 @@ import 'package:flutter_exueshi/components/SliverAppBarDelegate.dart';
 import 'package:flutter_exueshi/common/custom_router.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
 import 'package:flutter_exueshi/product/Cart.dart';
-import 'package:flutter_html_view/flutter_html_view.dart';
 
 class ProdItem extends StatefulWidget {
   final product;
@@ -339,13 +338,13 @@ class Page extends State<ProdItem> with TickerProviderStateMixin {
                   top: BorderSide(
                       width: 10.0, color: Color.fromRGBO(241, 241, 241, 1)))),
         ),
-        HtmlView(
-//          data: product['prodDetail'].toString(),
-          data: '<img src="http://ns.seevin.com/ueditor/php/upload/image/20180725/1532503996245109.jpg"/>',
-          onLaunchFail: (url) {
-            print('fail');
-          },
-        )
+//        HtmlView(
+////          data: product['prodDetail'].toString(),
+//          data: '<img src="http://ns.seevin.com/ueditor/php/upload/image/20180725/1532503996245109.jpg"/>',
+//          onLaunchFail: (url) {
+//            print('fail');
+//          },
+//        )
       ],
     );
   }
