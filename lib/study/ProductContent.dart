@@ -90,7 +90,7 @@ class _ProductContentState extends State<ProductContent> {
       child: Stack(
         children: <Widget>[
           AspectRatio(
-            aspectRatio: _controller.value.aspectRatio,
+            aspectRatio: 16.0 / 9.0,
             child: VideoPlayer(_controller),
           ),
           !_showVideoControllerBar

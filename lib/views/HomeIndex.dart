@@ -26,6 +26,8 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
 
   var loginData;
 
+  var _pageLoadingStatus = 1; // 1：加载中 | 2：完成 | 3：失败
+
   @override
   // TODO: implement wantKeepAlive
   bool get wantKeepAlive => true;
@@ -125,61 +127,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
         ],
       ),
       body: RefreshIndicator(
-        child: FutureBuilder(
-            future: _getHomeData(),
-            builder: (context, snapshot) {
-              // 产品的个数
-              int productsCount = _products.length;
-              int otherCount = 0;
-              if (_banners.length > 0) {
-                otherCount += 1;
-              }
-              if (_bulletions.length > 0) {
-                otherCount += 1;
-              }
-              if (_livings.length > 0) {
-                otherCount += 1;
-              }
-              switch (snapshot.connectionState) {
-                case ConnectionState.waiting:
-                // 加载中
-                  return Center(
-                    child: CupertinoActivityIndicator(),
-                  );
-                  break;
-                case ConnectionState.active:
-                case ConnectionState.none:
-                case ConnectionState.done:
-                  return ListView.builder(
-                      itemCount: productsCount + otherCount,
-                      itemBuilder: (BuildContext text, int index) {
-                        if (index == 0 && _banners.length > 0) {
-                          return Container(
-                            child: Swiper(
-                              itemBuilder: (BuildContext context, int index) {
-                                return Image.network(
-                                  _banners[index]['adPicUrl'],
-                                  fit: BoxFit.fill,
-                                );
-                              },
-                              itemCount: _banners.length,
-                              pagination: SwiperPagination(),
-                              loop: false,
-                            ),
-                            width: clientWidth,
-                            height: clientWidth * 159 / 375,
-                          );
-                        } else if (index == 1 && _bulletions.length > 0) {
-                          return _noticeBar();
-                        } else if (index == 2 && _livings.length > 0) {
-                          return _livingContainer();
-                        } else if (index >= otherCount) {
-                          return _courseContainer(index - otherCount);
-                        }
-                      });
-                  break;
-              }
-            }),
+        child: _renderPage(),
         onRefresh: _getHomeData,
       ),
     );
@@ -218,8 +166,75 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
       }
     }
 
+    _pageLoadingStatus = 2;
+    setState(() {});
+
     completer.complete(true);
     return completer.future;
+  }
+
+  // 渲染根据数据加载状态来渲染页面
+  Widget _renderPage() {
+    final clientWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+
+    switch (_pageLoadingStatus) {
+      case 1:
+        return Center(
+          child: CupertinoActivityIndicator(),
+        );
+        break;
+      case 2:
+        int productsCount = _products.length;
+        int otherCount = 0;
+        if (_banners.length > 0) {
+          otherCount += 1;
+        }
+        if (_bulletions.length > 0) {
+          otherCount += 1;
+        }
+        if (_livings.length > 0) {
+          otherCount += 1;
+        }
+        return ListView.builder(
+            itemCount: productsCount + otherCount,
+            itemBuilder: (BuildContext text, int index) {
+              if (index == 0 && _banners.length > 0) {
+                return Container(
+                  child: Swiper(
+                    itemBuilder: (BuildContext context, int index) {
+                      return Image.network(
+                        _banners[index]['adPicUrl'],
+                        fit: BoxFit.fill,
+                      );
+                    },
+                    itemCount: _banners.length,
+                    pagination: SwiperPagination(),
+                    loop: false,
+                  ),
+                  width: clientWidth,
+                  height: clientWidth * 159 / 375,
+                );
+              } else if (index == 1 && _bulletions.length > 0) {
+                return _noticeBar();
+              } else if (index == 2 && _livings.length > 0) {
+                return _livingContainer();
+              } else if (index >= otherCount) {
+                return _courseContainer(index - otherCount);
+              }
+            });
+        break;
+      case 3:
+        return Center(child: Text('无数据'),);
+        break;
+      case 4:
+        return Center(child: Text('网络错误'),);
+        break;
+      default:
+        return Center(child: Text('未知错误'),);
+    }
   }
 
   // 课程列表
@@ -583,6 +598,8 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                         children: <Widget>[
                           Text(
                             _livings[index]['liveName'],
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(fontSize: 15.0),
                           ),
                           Container(
