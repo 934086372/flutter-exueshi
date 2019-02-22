@@ -171,7 +171,7 @@ class _ExamPaperState extends State<ExamPaper> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        HtmlTextView(data: title),
+        HtmlTextView(data: title), // 题目标题
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: List.generate(2, (index) {

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/product/Cart.dart';
 import 'package:flutter_exueshi/sign/login.dart';
 import 'package:flutter_exueshi/product/ProdItem.dart';
+import 'package:flutter_exueshi/study/LivingRoom.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_exueshi/common/custom_router.dart';
@@ -175,6 +176,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
 
   // 渲染根据数据加载状态来渲染页面
   Widget _renderPage() {
+
     final clientWidth = MediaQuery
         .of(context)
         .size
@@ -213,6 +215,10 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                     itemCount: _banners.length,
                     pagination: SwiperPagination(),
                     loop: false,
+                    onTap: (index) {
+                      print(index);
+                      Navigator.of(context).push(CustomRoute(LivingRoom()));
+                    },
                   ),
                   width: clientWidth,
                   height: clientWidth * 159 / 375,

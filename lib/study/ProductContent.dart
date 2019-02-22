@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_exueshi/common/custom_router.dart';
 import 'package:flutter_exueshi/components/MyIcons.dart';
 import 'package:flutter_exueshi/study/PaperIndex.dart';
@@ -52,12 +53,10 @@ class _ProductContentState extends State<ProductContent> {
 
   @override
   Widget build(BuildContext context) {
-    print(_controller.value);
 
     var videoDuration = _controller.value.duration;
 
     _duration = _controller.value.duration.toString().split(_patten)[0];
-    print(_duration);
 
     return Scaffold(
         appBar: AppBar(
@@ -68,7 +67,18 @@ class _ProductContentState extends State<ProductContent> {
         ),
         body: Column(
           children: <Widget>[
-            _controller.value.initialized ? videoPlayer() : Container(),
+            _controller.value.initialized
+                ? videoPlayer(false)
+                : AspectRatio(
+              child: Container(
+                width: MediaQuery
+                    .of(context)
+                    .size
+                    .width,
+                color: Colors.black,
+              ),
+              aspectRatio: 16.0 / 9.0,
+            ),
             Expanded(
                 child: ListView.builder(
                     itemCount: 20,
@@ -85,7 +95,9 @@ class _ProductContentState extends State<ProductContent> {
         ));
   }
 
-  Widget videoPlayer() {
+  Widget videoPlayer(isFullscreen) {
+    print('isFullscreen:' + isFullscreen.toString());
+
     return GestureDetector(
       child: Stack(
         children: <Widget>[
@@ -104,8 +116,8 @@ class _ProductContentState extends State<ProductContent> {
                   GestureDetector(
                     child: Icon(
                       _controller.value.isPlaying
-                          ? Icons.pause_circle_filled
-                          : Icons.play_circle_filled,
+                          ? Icons.pause
+                          : Icons.play_arrow,
                       size: 35,
                       color: Colors.white,
                     ),
@@ -135,11 +147,29 @@ class _ProductContentState extends State<ProductContent> {
                       style: TextStyle(color: Colors.white),
                     ),
                   ),
-                  Icon(
-                    Icons.fullscreen,
-                    size: 35,
-                    color: Colors.white,
-                  ),
+                  GestureDetector(
+                    child: Icon(
+                      isFullscreen ? Icons.fullscreen_exit : Icons.fullscreen,
+                      size: 35,
+                      color: Colors.white,
+                    ),
+                    onTap: () {
+                      isFullscreen = !isFullscreen;
+                      if (isFullscreen) {
+                        SystemChrome.setPreferredOrientations([
+                          DeviceOrientation.landscapeLeft,
+                          DeviceOrientation.landscapeRight
+                        ]);
+                        _videoFullscreen();
+                      } else {
+                        SystemChrome.setPreferredOrientations([
+                          DeviceOrientation.portraitUp,
+                          DeviceOrientation.portraitDown
+                        ]);
+                        Navigator.pop(context);
+                      }
+                    },
+                  )
                 ],
               ),
             ),
@@ -148,8 +178,36 @@ class _ProductContentState extends State<ProductContent> {
             right: 0,
             height: 45,
           ),
+          _controller.value.isPlaying
+              ? Container()
+              : Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              color: Color.fromRGBO(0, 0, 0, 0.4),
+              child: GestureDetector(
+                child: Icon(
+                  _controller.value.isPlaying
+                      ? Icons.pause_circle_filled
+                      : Icons.play_circle_filled,
+                  size: 60,
+                  color: Color.fromRGBO(255, 255, 255, 0.9),
+                ),
+                onTap: () {
+                  setState(() {
+                    _controller.value.isPlaying
+                        ? _controller.pause()
+                        : _controller.play();
+                  });
+                },
+              ),
+            ),
+          ),
         ],
       ),
+      // 单击出现控制条
       onTap: () {
         // 点击
         setState(() {
@@ -163,6 +221,14 @@ class _ProductContentState extends State<ProductContent> {
           }
         });
       },
+      // 双击暂停播放
+      onDoubleTap: () {
+        setState(() {
+          _controller.value.isPlaying
+              ? _controller.pause()
+              : _controller.play();
+        });
+      },
       onVerticalDragEnd: (_details) {
         print(_details);
       },
@@ -172,6 +238,18 @@ class _ProductContentState extends State<ProductContent> {
     );
   }
 
+  _videoFullscreen() async {
+    final result = await Navigator.of(context).push(CustomRoute(Scaffold(
+        body: Stack(
+          children: <Widget>[
+            videoPlayer(true),
+          ],
+        )
+    )));
+    print(result);
+  }
+
+
   @override
   void dispose() {
     // TODO: implement dispose
@@ -179,3 +257,7 @@ class _ProductContentState extends State<ProductContent> {
     _controller.dispose();
   }
 }
+
+
+
+

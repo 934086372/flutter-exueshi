@@ -24,6 +24,8 @@ class Page extends State<StudyIndex>
     with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   TabController _tabController;
 
+  var _pageLoadingStatus = 1;
+
   var studyingList = [];
   var studiedList = [];
 
@@ -34,6 +36,7 @@ class Page extends State<StudyIndex>
     // TODO: implement initState
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _getMyStudyList();
   }
 
   @override
@@ -61,7 +64,25 @@ class Page extends State<StudyIndex>
             ),
             padding: EdgeInsets.only(left: 10.0),
             onPressed: () {
-              print('点击了管理');
+              print('点击了类型筛选');
+              showMenu(
+                  context: context,
+                  items: <PopupMenuEntry>[
+                    PopupMenuItem(child: Text('全部')),
+                    PopupMenuItem(child: Text('产品')),
+                    PopupMenuItem(child: Text('视频')),
+                    PopupMenuItem(child: Text('资料')),
+                    PopupMenuItem(child: Text('试卷'))
+                  ],
+                  position: RelativeRect.fromLTRB(
+                      0,
+                      kToolbarHeight + MediaQuery
+                          .of(context)
+                          .padding
+                          .top,
+                      0,
+                      0),
+                  elevation: 5.0);
             },
           ),
         ),
@@ -100,44 +121,57 @@ class Page extends State<StudyIndex>
               unselectedLabelColor: Colors.black,
               controller: _tabController,
             ),
-            color: Color.fromRGBO(241, 241, 241, 1),
+            color: Color.fromRGBO(255, 255, 255, 1),
           ),
           Expanded(
-            child: FutureBuilder(
-              future: _getMyStudyList(),
-              builder: (BuildContext context, AsyncSnapshot snapshot) {
-                print(snapshot);
-                switch (snapshot.connectionState) {
-                  case ConnectionState.waiting:
-                    return Center(
-                      child: CupertinoActivityIndicator(),
-                    );
-                    break;
-                  case ConnectionState.active:
-                  case ConnectionState.none:
-                  case ConnectionState.done:
-                    return TabBarView(
-                      physics: AlwaysScrollableScrollPhysics(),
-                      controller: _tabController,
-                      children: <Widget>[
-                        _studyingList(),
-                        _studiedList(),
-                      ],
-                    );
-                    break;
-                }
-              },
-            ),
+            child: _renderPage(),
           ),
         ],
       ),
     );
   }
 
+  Widget _renderPage() {
+    switch (_pageLoadingStatus) {
+      case 1:
+        return Center(
+          child: CupertinoActivityIndicator(),
+        );
+        break;
+      case 2:
+        return TabBarView(
+          physics: AlwaysScrollableScrollPhysics(),
+          controller: _tabController,
+          children: <Widget>[
+            _studyingList(),
+            _studiedList(),
+          ],
+        );
+        break;
+      case 3:
+        return Center(
+          child: Text('暂无数据'),
+        );
+        break;
+      case 4:
+        return Center(
+          child: Text('网络错误'),
+        );
+        break;
+      default:
+        return Center(
+          child: Text('未知错误'),
+        );
+        break;
+    }
+  }
+
   Widget _studyingList() {
     // 判断是否有课程
     if (studyingList.toString() == [].toString()) {
-      return Center(child: Text('空'),);
+      return Center(
+        child: Text('空'),
+      );
     } else {
       return RefreshIndicator(
           child: ListView.builder(
@@ -145,8 +179,7 @@ class Page extends State<StudyIndex>
               padding: EdgeInsets.only(top: 10.0),
               itemCount: studyingList.length,
               itemBuilder: (context, index) {
-                return _renderCourseItem(
-                    studyingList[index], context);
+                return _renderCourseItem(studyingList[index], context);
               }),
           onRefresh: _refreshStudyingList);
     }
@@ -155,7 +188,9 @@ class Page extends State<StudyIndex>
   Widget _studiedList() {
     // 判断是否有课程
     if (studiedList.toString() == [].toString()) {
-      return Center(child: Text('暂无已学完课程'),);
+      return Center(
+        child: Text('暂无已学完课程'),
+      );
     } else {
       return RefreshIndicator(
         child: ListView.builder(
@@ -178,34 +213,44 @@ class Page extends State<StudyIndex>
           padding: EdgeInsets.all(0),
           onPressed: () {
             print('点击课程');
-            Navigator.of(context).push(
-                CustomRoute(ProductContent(product: item,)));
+            Navigator.of(context).push(CustomRoute(ProductContent(
+              product: item,
+            )));
           },
           child: Row(
             children: <Widget>[
-              Container(
-                child: Stack(
-                  alignment: Alignment.bottomLeft,
-                  children: <Widget>[
-                    Image.network(
-                      item['logo'],
-                      fit: BoxFit.fill,
-                    ),
-                    Container(
-                      child: Text(
-                        item['prodStatus'],
-                        style: TextStyle(color: Colors.white, fontSize: 11.0),
+              AspectRatio(
+                aspectRatio: 16.0 / 10.0,
+                child: Container(
+                  child: Stack(
+                    alignment: Alignment.bottomLeft,
+                    children: <Widget>[
+                      ClipRRect(
+                        child: Center(
+                            child: FadeInImage.assetNetwork(
+                              placeholder: 'assets/images/loading.gif',
+                              image: item['logo'],
+                              fit: BoxFit.cover,
+                            )),
+                        borderRadius: BorderRadius.all(Radius.circular(5.0)),
                       ),
-                      color: Color.fromRGBO(0, 0, 0, 0.6),
-                      padding: EdgeInsets.only(
-                          left: 4.5, top: 2.0, right: 4.5, bottom: 2.0),
-                    ),
-                  ],
+                      Container(
+                        child: Text(
+                          item['prodStatus'],
+                          style: TextStyle(color: Colors.white, fontSize: 11.0),
+                        ),
+                        color: Color.fromRGBO(0, 0, 0, 0.6),
+                        padding: EdgeInsets.only(
+                            left: 4.5, top: 2.0, right: 4.5, bottom: 2.0),
+                      ),
+                    ],
+                  ),
+                  height: 100.0,
                 ),
-                height: 100.0,
               ),
               Expanded(
                 child: Container(
+                  color: Colors.white,
                   padding: EdgeInsets.only(left: 10.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -242,12 +287,15 @@ class Page extends State<StudyIndex>
       // 使用支付时间 + 有效天数
         DateTime _payTime = DateTime.parse(item['payTime']);
         print(_payTime);
-        DateTime _validEndTime = _payTime.add(
-            Duration(days: item['validDays']));
+        DateTime _validEndTime =
+        _payTime.add(Duration(days: item['validDays']));
         print(_validEndTime);
-        _text =
-            _payTime.year.toString() + '-' + _payTime.month.toString() + '-' +
-                _payTime.day.toString() + ' 前有效';
+        _text = _payTime.year.toString() +
+            '-' +
+            _payTime.month.toString() +
+            '-' +
+            _payTime.day.toString() +
+            ' 前有效';
         break;
     }
 
@@ -258,9 +306,7 @@ class Page extends State<StudyIndex>
 
     return Padding(
       padding: const EdgeInsets.only(top: 5.0),
-      child: Text(_text,
-          style:
-          TextStyle(fontSize: 12.0, color: _color)),
+      child: Text(_text, style: TextStyle(fontSize: 12.0, color: _color)),
     );
   }
 
@@ -295,6 +341,8 @@ class Page extends State<StudyIndex>
               padding: const EdgeInsets.only(left: 5.0),
               child: Text(
                 lastItem['prodContentName'],
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                     fontSize: 12.0, color: Color.fromRGBO(153, 153, 153, 1)),
               ),
@@ -346,6 +394,10 @@ class Page extends State<StudyIndex>
         studiedList = [];
       }
     }
+
+    setState(() {
+      _pageLoadingStatus = 2;
+    });
 
     _completer.complete(user);
     return _completer.future;
