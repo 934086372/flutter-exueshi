@@ -337,14 +337,16 @@ class Page extends State<StudyIndex>
               color: Color.fromRGBO(0, 145, 219, 0.6),
               size: 20.0,
             ),
-            Padding(
-              padding: const EdgeInsets.only(left: 5.0),
-              child: Text(
-                lastItem['prodContentName'],
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                    fontSize: 12.0, color: Color.fromRGBO(153, 153, 153, 1)),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 5.0),
+                child: Text(
+                  lastItem['prodContentName'],
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                      fontSize: 12.0, color: Color.fromRGBO(153, 153, 153, 1)),
+                ),
               ),
             ),
           ]);
