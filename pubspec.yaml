@@ -24,8 +24,8 @@ dependencies:
   shared_preferences: ^0.4.3
   video_player: ^0.10.0
   flutter_html_textview: ^0.2.6
-
   flutter_qq: ^0.0.4
+  flutter_full_pdf_viewer: ^1.0.3
 
 dev_dependencies:
   flutter_test:

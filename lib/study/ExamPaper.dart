@@ -208,8 +208,8 @@ class _ExamPaperState extends State<ExamPaper> {
 
     Ajax ajax = new Ajax();
 
-    String prodID = 'P20180757206723';
-    String paperID = '37';
+    String prodID = 'P20190286696598b6a35b';
+    String paperID = '1211';
     var paperData;
 
     Response response = await ajax.post('/api/StudyPaper/getPaper',
@@ -238,6 +238,16 @@ class _ExamPaperState extends State<ExamPaper> {
         'paperID': paperID,
         'question': paperData['question'],
       });
+
+      print({
+        'userID': 'U201821436701',
+        'exerciseIDs': _exIDs,
+        'prodID': prodID,
+        'paperID': paperID,
+        'question': paperData['question'],
+      });
+
+      print(response2);
 
       if (response2.statusCode == 200) {
         var ret2 = response2.data;
@@ -270,7 +280,7 @@ class _ExamPaperState extends State<ExamPaper> {
       }
     }
 
-    setState(() {});
+    //setState(() {});
 
     _completer.complete();
 

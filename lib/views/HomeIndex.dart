@@ -27,6 +27,8 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
 
   var loginData;
 
+  double clientWidth;
+
   var _pageLoadingStatus = 1; // 1：加载中 | 2：完成 | 3：失败
 
   @override
@@ -49,7 +51,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
 
   @override
   Widget build(BuildContext context) {
-    final clientWidth = MediaQuery
+    clientWidth = MediaQuery
         .of(context)
         .size
         .width;
@@ -139,7 +141,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
     final Completer completer = new Completer();
 
     Dio dio = new Dio();
-    dio.options.baseUrl = 'http://ns.seevin.com';
+    dio.options.baseUrl = 'http://app.exueshi.com';
     dio.options.responseType = ResponseType.JSON;
 
     Response response = await dio
@@ -176,12 +178,6 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
 
   // 渲染根据数据加载状态来渲染页面
   Widget _renderPage() {
-
-    final clientWidth = MediaQuery
-        .of(context)
-        .size
-        .width;
-
     switch (_pageLoadingStatus) {
       case 1:
         return Center(
@@ -189,58 +185,61 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
         );
         break;
       case 2:
-        int productsCount = _products.length;
-        int otherCount = 0;
-        if (_banners.length > 0) {
-          otherCount += 1;
-        }
-        if (_bulletions.length > 0) {
-          otherCount += 1;
-        }
-        if (_livings.length > 0) {
-          otherCount += 1;
-        }
-        return ListView.builder(
-            itemCount: productsCount + otherCount,
-            itemBuilder: (BuildContext text, int index) {
-              if (index == 0 && _banners.length > 0) {
-                return Container(
-                  child: Swiper(
-                    itemBuilder: (BuildContext context, int index) {
-                      return Image.network(
-                        _banners[index]['adPicUrl'],
-                        fit: BoxFit.fill,
-                      );
-                    },
-                    itemCount: _banners.length,
-                    pagination: SwiperPagination(),
-                    loop: false,
-                    onTap: (index) {
-                      print(index);
-                      Navigator.of(context).push(CustomRoute(LivingRoom()));
-                    },
-                  ),
-                  width: clientWidth,
-                  height: clientWidth * 159 / 375,
-                );
-              } else if (index == 1 && _bulletions.length > 0) {
-                return _noticeBar();
-              } else if (index == 2 && _livings.length > 0) {
-                return _livingContainer();
-              } else if (index >= otherCount) {
-                return _courseContainer(index - otherCount);
-              }
-            });
-        break;
+        return SingleChildScrollView(
+          child: Column(
+            children: <Widget>[
+              _bannerWidget(),
+              _noticeBar(),
+              _livingContainer(),
+              Column(
+                children: List.generate(_products.length, (index) {
+                  return _courseContainer(index);
+                }),
+              ),
+              Container(margin: EdgeInsets.all(10.0), child: Text('查看更多'),)
+            ],
+          ),
+        );
       case 3:
-        return Center(child: Text('无数据'),);
+        return Center(
+          child: Text('无数据'),
+        );
         break;
       case 4:
-        return Center(child: Text('网络错误'),);
+        return Center(
+          child: Text('网络错误'),
+        );
         break;
       default:
-        return Center(child: Text('未知错误'),);
+        return Center(
+          child: Text('未知错误'),
+        );
     }
+  }
+
+  // 渲染banner
+  Widget _bannerWidget() {
+    return _banners.length > 0
+        ? Container(
+      child: Swiper(
+        layout: SwiperLayout.DEFAULT,
+        itemBuilder: (BuildContext context, int index) {
+          return Image.network(
+            _banners[index]['adPicUrl'],
+            fit: BoxFit.fill,
+          );
+        },
+        itemCount: _banners.length,
+        pagination: SwiperPagination(),
+        loop: false,
+        onTap: (index) {
+          //Navigator.of(context).push(CustomRoute(LivingRoom()));
+        },
+      ),
+      width: clientWidth,
+      height: clientWidth * 159 / 375,
+    )
+        : Container();
   }
 
   // 课程列表
@@ -278,6 +277,8 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
   }
 
   Widget _buildCourseItem(index) {
+    var item = _products[index];
+
     return InkResponse(
       child: Container(
         height: 100.0,
@@ -293,7 +294,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                     borderRadius: BorderRadius.all(Radius.circular(2.5)),
                     child: FadeInImage.assetNetwork(
                       placeholder: 'assets/images/loading.gif',
-                      image: _products[index]['logo'],
+                      image: item['logo'],
                       fit: BoxFit.fill,
                     ),
                   ),
@@ -301,7 +302,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                     padding: EdgeInsets.only(
                         left: 6.5, top: 4.0, right: 6.5, bottom: 4.0),
                     child: Text(
-                      _products[index]['status'],
+                      item['status'],
                       style: TextStyle(fontSize: 11.0, color: Colors.white),
                     ),
                     decoration: BoxDecoration(
@@ -320,35 +321,37 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                   children: <Widget>[
                     Expanded(
                         child: Text(
-                          _products[index]['prodName'],
+                          item['prodName'],
                           style: TextStyle(color: Colors.black, fontSize: 14.0),
                           maxLines: 2,
                           softWrap: false,
                           overflow: TextOverflow.ellipsis,
                         )),
-                    Row(
+                    item['dataFlag'] != '免费'
+                        ? Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: <Widget>[
                           Text(
-                            "￥" + _products[index]['realPrice'].toString(),
+                            "￥" + item['realPrice'].toString(),
                             style: TextStyle(
                                 color: Color.fromRGBO(255, 102, 0, 1),
                                 fontSize: 18,
                                 fontFamily: 'PingFang-SC-Bold'),
                           ),
                           Text(
-                            '原价:￥' + _products[index]['price'],
+                            '原价:￥' + item['price'],
                             style: TextStyle(
                                 decoration: TextDecoration.lineThrough,
                                 fontSize: 11.0,
                                 color: Color.fromRGBO(153, 153, 153, 1)),
                           ),
-                        ]),
+                        ])
+                        : Text('免费'),
                     Row(children: <Widget>[
                       Expanded(
                         child: Row(
                           children: List.generate(5, (int i) {
-                            if (i < _products[index]['avgRating']) {
+                            if (i < item['avgRating']) {
                               return Icon(
                                 Icons.star,
                                 size: 10.5,
@@ -364,10 +367,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                           }),
                         ),
                       ),
-                      Text(
-                          '已有' +
-                              _products[index]['learnPeopleCount'].toString() +
-                              '人学习',
+                      Text('已有' + item['learnPeopleCount'].toString() + '人学习',
                           style: TextStyle(
                               fontSize: 10.0,
                               color: Color.fromRGBO(153, 153, 153, 1)))
@@ -380,8 +380,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
         ),
       ),
       onTap: () {
-        Navigator.of(context)
-            .push(CustomRoute(ProdItem(product: _products[index])));
+        Navigator.of(context).push(CustomRoute(ProdItem(product: item)));
       },
     );
   }
@@ -456,7 +455,8 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
 
   // 直播列表
   Widget _livingContainer() {
-    return Column(
+    return _livings.length > 0
+        ? Column(
       children: <Widget>[
         Container(
             margin: EdgeInsets.only(top: 10.0),
@@ -469,7 +469,8 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                   margin: EdgeInsets.only(left: 10.0, right: 10.0),
                   decoration: BoxDecoration(
                       color: Color.fromRGBO(0, 145, 219, 1),
-                      borderRadius: BorderRadius.all(Radius.circular(2.5))),
+                      borderRadius:
+                      BorderRadius.all(Radius.circular(2.5))),
                 ),
                 Text(
                   '直播课程',
@@ -477,83 +478,30 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                 ),
               ],
             )),
-        Container(margin: EdgeInsets.only(top: 15.0), child: _livingList()),
+        Container(
+            margin: EdgeInsets.only(top: 15.0), child: _livingList()),
       ],
-    );
+    )
+        : Container();
   }
 
+  // 直播课列表
   Widget _livingList() {
     if (_livings.length == 0) {
-      return Text('');
+      return Container();
     } else if (_livings.length == 1) {
-      return Text('1');
+      return renderOnlyLive(_livings[0]);
     } else if (_livings.length == 2) {
       return Container(
         padding: EdgeInsets.only(right: 10.0, bottom: 10.0),
         child: Row(
           children: <Widget>[
-            Expanded(
-                child: Container(
-                  margin: EdgeInsets.only(left: 10.0),
-                  decoration: BoxDecoration(
-                      color: Colors.white,
-                      boxShadow: <BoxShadow>[
-                        BoxShadow(
-                            color: Color.fromRGBO(26, 81, 170, 0.1),
-                            blurRadius: 15.0)
-                      ]),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Container(
-                        child: ClipRRect(
-                            borderRadius: BorderRadius.all(
-                                Radius.circular(2.5)),
-                            child: FadeInImage.assetNetwork(
-                                placeholder: 'assets/images/loading.gif',
-                                image: _livings[0]['logo'])),
-                      ),
-                      Text(
-                        _livings[0]['liveName'],
-                        style: TextStyle(fontSize: 15.0, letterSpacing: 0.15),
-                      ),
-                      Text('主讲老师:' + _livings[0]['mainLecturer'].toString()),
-                      Text('直播时间:' + _livings[0]['beginHourTime'].toString())
-                    ],
-                  ),
-                )),
-            Expanded(
-                child: Container(
-                  margin: EdgeInsets.only(left: 10.0),
-                  decoration: BoxDecoration(
-                      color: Colors.white,
-                      boxShadow: <BoxShadow>[
-                        BoxShadow(
-                            color: Color.fromRGBO(26, 81, 170, 0.1),
-                            blurRadius: 15.0)
-                      ]),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Container(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.all(Radius.circular(2.5)),
-                          child: FadeInImage.assetNetwork(
-                              placeholder: 'assets/images/loading.gif',
-                              image: _livings[1]['logo']),
-                        ),
-                      ),
-                      Text(_livings[1]['liveName']),
-                      Text('主讲老师:' + _livings[1]['mainLecturer'].toString()),
-                      Text('直播时间:' + _livings[1]['beginHourTime'].toString())
-                    ],
-                  ),
-                )),
+            renderTwoLive(_livings[0]),
+            renderTwoLive(_livings[1])
           ],
         ),
       );
     } else {
-      //return Text('length:'+_livings.length.toString());
       var clientWidth = MediaQuery
           .of(context)
           .size
@@ -635,4 +583,107 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
       );
     }
   }
+
+  Expanded renderTwoLive(item) {
+    return Expanded(
+        child: Container(
+          margin: EdgeInsets.only(left: 10.0),
+          decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: <BoxShadow>[
+                BoxShadow(
+                    color: Color.fromRGBO(26, 81, 170, 0.1),
+                    blurRadius: 15.0)
+              ]),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Container(
+                child: ClipRRect(
+                    borderRadius: BorderRadius.all(Radius.circular(2.5)),
+                    child: FadeInImage.assetNetwork(
+                        placeholder: 'assets/images/loading.gif',
+                        image: item['logo'])),
+              ),
+              Text(
+                item['liveName'],
+                style: TextStyle(fontSize: 15.0, letterSpacing: 0.15),
+              ),
+              Text('主讲老师:' + item['mainLecturer'].toString()),
+              Text('直播时间:' + item['beginHourTime'].toString())
+            ],
+          ),
+        ));
+  }
+
+  Widget renderOnlyLive(item) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(CustomRoute(LivingRoom(product: item)));
+      },
+      child: Container(
+        margin: EdgeInsets.symmetric(horizontal: 10.0),
+        padding: EdgeInsets.all(10.0),
+        decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.all(Radius.circular(5.0)),
+            boxShadow: <BoxShadow>[
+              BoxShadow(
+                  color: Color.fromRGBO(26, 81, 170, 0.1),
+                  blurRadius: 15.0)
+            ]),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10.0),
+              child: Text(
+                item['liveName'],
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 17.0),
+              ),
+            ),
+            Row(
+              children: <Widget>[
+                Container(
+                  width: 150,
+                  margin: EdgeInsets.only(right: 10.0),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.all(Radius.circular(2.5)),
+                    child: FadeInImage.assetNetwork(
+                        placeholder: 'assets/images/loading.gif',
+                        image: item['logo']),
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text('主讲老师:' + item['mainLecturer'].toString()),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 5.0),
+                        child: Text('直播时间:' + item['beginHourTime'].toString()),
+                      ),
+                      Container(
+                        child: Text(item['liveType'].toString(),
+                          style: TextStyle(fontSize: 12.0,
+                              color: Color.fromRGBO(102, 102, 102, 1)),),
+                        padding: EdgeInsets.symmetric(horizontal: 5.0),
+                        decoration: BoxDecoration(
+                            color: Color.fromRGBO(215, 218, 219, 0.4),
+                            borderRadius:
+                            BorderRadius.all(Radius.circular(5.0))),
+                      ),
+                    ],
+                  ),
+                )
+              ],
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
 }
