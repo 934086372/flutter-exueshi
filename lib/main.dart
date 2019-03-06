@@ -48,7 +48,6 @@ class MyApp extends StatelessWidget {
       title: '易学仕在线',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        brightness: Brightness.light,
         primarySwatch: _themeColor,
       ),
       home: MyHomePage(title: 'Flutter Demo Home Page'),

@@ -150,7 +150,7 @@ class _ProductContentState extends State<ProductContent>
         ),
         body: prodChapters == null
             ? Center(child: CircularProgressIndicator())
-            : buildBody(context));
+            : Container(child: buildBody(context), color: Colors.white,));
   }
 
   Widget buildBody(BuildContext context) {

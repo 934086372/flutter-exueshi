@@ -2,6 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_exueshi/home/BannerDetail.dart';
+import 'package:flutter_exueshi/home/NoticeDetail.dart';
+import 'package:flutter_exueshi/home/VideoTest.dart';
 import 'package:flutter_exueshi/product/Cart.dart';
 import 'package:flutter_exueshi/sign/login.dart';
 import 'package:flutter_exueshi/product/ProdItem.dart';
@@ -60,23 +63,29 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
     return Scaffold(
       appBar: AppBar(
         elevation: 1.0,
-        brightness: Brightness.light,
         backgroundColor: Color.fromRGBO(0, 170, 255, 1),
         title: Container(
           child: Row(
             children: <Widget>[
-              Icon(
-                Icons.location_on,
-                color: Colors.white,
-              ),
-              Text(
-                '重庆',
-                style: TextStyle(color: Colors.white, fontSize: 16.0),
-              ),
-              Icon(
-                Icons.keyboard_arrow_down,
-                size: 16.0,
-                color: Colors.white,
+              GestureDetector(
+                onTap: () {
+                  Navigator.of(context).push(CustomRoute(VideoTest()));
+                },
+                child: Row(children: <Widget>[
+                  Icon(
+                    Icons.location_on,
+                    color: Colors.white,
+                  ),
+                  Text(
+                    '重庆',
+                    style: TextStyle(color: Colors.white, fontSize: 16.0),
+                  ),
+                  Icon(
+                    Icons.keyboard_arrow_down,
+                    size: 16.0,
+                    color: Colors.white,
+                  ),
+                ],),
               ),
               Expanded(
                   child: Container(
@@ -185,19 +194,22 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
         );
         break;
       case 2:
-        return SingleChildScrollView(
-          child: Column(
-            children: <Widget>[
-              _bannerWidget(),
-              _noticeBar(),
-              _livingContainer(),
-              Column(
-                children: List.generate(_products.length, (index) {
-                  return _courseContainer(index);
-                }),
-              ),
-              Container(margin: EdgeInsets.all(10.0), child: Text('查看更多'),)
-            ],
+        return Container(
+          color: Colors.white,
+          child: SingleChildScrollView(
+            child: Column(
+              children: <Widget>[
+                _bannerWidget(),
+                _noticeBar(),
+                _livingContainer(),
+                Column(
+                  children: List.generate(_products.length, (index) {
+                    return _courseContainer(index);
+                  }),
+                ),
+                Container(margin: EdgeInsets.all(10.0), child: Text('查看更多'),)
+              ],
+            ),
           ),
         );
       case 3:
@@ -233,156 +245,14 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
         pagination: SwiperPagination(),
         loop: false,
         onTap: (index) {
-          //Navigator.of(context).push(CustomRoute(LivingRoom()));
+          Navigator.of(context).push(
+              CustomRoute(BannerDetail(bannerItem: _banners[index])));
         },
       ),
       width: clientWidth,
       height: clientWidth * 159 / 375,
     )
         : Container();
-  }
-
-  // 课程列表
-  Widget _courseContainer(index) {
-    if (index == 0) {
-      return Column(
-        children: <Widget>[
-          Container(
-              margin: EdgeInsets.only(top: 10.0),
-              child: Row(
-                children: <Widget>[
-                  Container(
-                    child: Text(''),
-                    width: 5.0,
-                    height: 20.0,
-                    margin: EdgeInsets.only(left: 10.0, right: 10.0),
-                    decoration: BoxDecoration(
-                        color: Color.fromRGBO(0, 145, 219, 1),
-                        borderRadius: BorderRadius.all(Radius.circular(2.5))),
-                  ),
-                  Text(
-                    '精品好课',
-                    style: TextStyle(color: Colors.black, fontSize: 20.0),
-                  ),
-                ],
-              )),
-          Container(
-              margin: EdgeInsets.only(top: 15.0),
-              child: _buildCourseItem(index)),
-        ],
-      );
-    } else {
-      return _buildCourseItem(index);
-    }
-  }
-
-  Widget _buildCourseItem(index) {
-    var item = _products[index];
-
-    return InkResponse(
-      child: Container(
-        height: 100.0,
-        padding: EdgeInsets.only(left: 10.0, right: 10.0, bottom: 10.0),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            Container(
-              child: Stack(
-                alignment: Alignment.bottomLeft,
-                children: <Widget>[
-                  ClipRRect(
-                    borderRadius: BorderRadius.all(Radius.circular(2.5)),
-                    child: FadeInImage.assetNetwork(
-                      placeholder: 'assets/images/loading.gif',
-                      image: item['logo'],
-                      fit: BoxFit.fill,
-                    ),
-                  ),
-                  Container(
-                    padding: EdgeInsets.only(
-                        left: 6.5, top: 4.0, right: 6.5, bottom: 4.0),
-                    child: Text(
-                      item['status'],
-                      style: TextStyle(fontSize: 11.0, color: Colors.white),
-                    ),
-                    decoration: BoxDecoration(
-                        color: Color.fromRGBO(0, 0, 0, 0.9),
-                        borderRadius: BorderRadius.only(
-                            bottomLeft: Radius.circular(2.5))),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: Container(
-                padding: EdgeInsets.only(left: 10.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    Expanded(
-                        child: Text(
-                          item['prodName'],
-                          style: TextStyle(color: Colors.black, fontSize: 14.0),
-                          maxLines: 2,
-                          softWrap: false,
-                          overflow: TextOverflow.ellipsis,
-                        )),
-                    item['dataFlag'] != '免费'
-                        ? Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: <Widget>[
-                          Text(
-                            "￥" + item['realPrice'].toString(),
-                            style: TextStyle(
-                                color: Color.fromRGBO(255, 102, 0, 1),
-                                fontSize: 18,
-                                fontFamily: 'PingFang-SC-Bold'),
-                          ),
-                          Text(
-                            '原价:￥' + item['price'],
-                            style: TextStyle(
-                                decoration: TextDecoration.lineThrough,
-                                fontSize: 11.0,
-                                color: Color.fromRGBO(153, 153, 153, 1)),
-                          ),
-                        ])
-                        : Text('免费'),
-                    Row(children: <Widget>[
-                      Expanded(
-                        child: Row(
-                          children: List.generate(5, (int i) {
-                            if (i < item['avgRating']) {
-                              return Icon(
-                                Icons.star,
-                                size: 10.5,
-                                color: Color.fromRGBO(255, 204, 0, 1),
-                              );
-                            } else {
-                              return Icon(
-                                Icons.star_border,
-                                size: 10.5,
-                                color: Color.fromRGBO(255, 204, 0, 1),
-                              );
-                            }
-                          }),
-                        ),
-                      ),
-                      Text('已有' + item['learnPeopleCount'].toString() + '人学习',
-                          style: TextStyle(
-                              fontSize: 10.0,
-                              color: Color.fromRGBO(153, 153, 153, 1)))
-                    ]),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      onTap: () {
-        Navigator.of(context).push(CustomRoute(ProdItem(product: item)));
-      },
-    );
   }
 
   // 公告栏
@@ -420,6 +290,12 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
               containerHeight: 45.0,
               scrollDirection: Axis.vertical,
               itemCount: _bulletions.length,
+              onTap: (index) {
+                print(index);
+                print(_bulletions[index]);
+                Navigator.of(context).push(
+                    CustomRoute(Notice(noticeItem: _bulletions[index])));
+              },
               itemBuilder: (BuildContext context, int index) {
                 return Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -683,6 +559,150 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
           ],
         ),
       ),
+    );
+  }
+
+
+  // 课程列表
+  Widget _courseContainer(index) {
+    if (index == 0) {
+      return Column(
+        children: <Widget>[
+          Container(
+              margin: EdgeInsets.only(top: 10.0),
+              child: Row(
+                children: <Widget>[
+                  Container(
+                    child: Text(''),
+                    width: 5.0,
+                    height: 20.0,
+                    margin: EdgeInsets.only(left: 10.0, right: 10.0),
+                    decoration: BoxDecoration(
+                        color: Color.fromRGBO(0, 145, 219, 1),
+                        borderRadius: BorderRadius.all(Radius.circular(2.5))),
+                  ),
+                  Text(
+                    '精品好课',
+                    style: TextStyle(color: Colors.black, fontSize: 20.0),
+                  ),
+                ],
+              )),
+          Container(
+              margin: EdgeInsets.only(top: 15.0),
+              child: _buildCourseItem(index)),
+        ],
+      );
+    } else {
+      return _buildCourseItem(index);
+    }
+  }
+
+  Widget _buildCourseItem(index) {
+    var item = _products[index];
+
+    return InkResponse(
+      child: Container(
+        height: 100.0,
+        padding: EdgeInsets.only(left: 10.0, right: 10.0, bottom: 10.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Container(
+              child: Stack(
+                alignment: Alignment.bottomLeft,
+                children: <Widget>[
+                  ClipRRect(
+                    borderRadius: BorderRadius.all(Radius.circular(2.5)),
+                    child: FadeInImage.assetNetwork(
+                      placeholder: 'assets/images/loading.gif',
+                      image: item['logo'],
+                      fit: BoxFit.fill,
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.only(
+                        left: 6.5, top: 4.0, right: 6.5, bottom: 4.0),
+                    child: Text(
+                      item['status'],
+                      style: TextStyle(fontSize: 11.0, color: Colors.white),
+                    ),
+                    decoration: BoxDecoration(
+                        color: Color.fromRGBO(0, 0, 0, 0.9),
+                        borderRadius: BorderRadius.only(
+                            bottomLeft: Radius.circular(2.5))),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Container(
+                padding: EdgeInsets.only(left: 10.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    Expanded(
+                        child: Text(
+                          item['prodName'],
+                          style: TextStyle(color: Colors.black, fontSize: 14.0),
+                          maxLines: 2,
+                          softWrap: false,
+                          overflow: TextOverflow.ellipsis,
+                        )),
+                    item['dataFlag'] != '免费'
+                        ? Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          Text(
+                            "￥" + item['realPrice'].toString(),
+                            style: TextStyle(
+                                color: Color.fromRGBO(255, 102, 0, 1),
+                                fontSize: 18,
+                                fontFamily: 'PingFang-SC-Bold'),
+                          ),
+                          Text(
+                            '原价:￥' + item['price'],
+                            style: TextStyle(
+                                decoration: TextDecoration.lineThrough,
+                                fontSize: 11.0,
+                                color: Color.fromRGBO(153, 153, 153, 1)),
+                          ),
+                        ])
+                        : Text('免费'),
+                    Row(children: <Widget>[
+                      Expanded(
+                        child: Row(
+                          children: List.generate(5, (int i) {
+                            if (i < item['avgRating']) {
+                              return Icon(
+                                Icons.star,
+                                size: 10.5,
+                                color: Color.fromRGBO(255, 204, 0, 1),
+                              );
+                            } else {
+                              return Icon(
+                                Icons.star_border,
+                                size: 10.5,
+                                color: Color.fromRGBO(255, 204, 0, 1),
+                              );
+                            }
+                          }),
+                        ),
+                      ),
+                      Text('已有' + item['learnPeopleCount'].toString() + '人学习',
+                          style: TextStyle(
+                              fontSize: 10.0,
+                              color: Color.fromRGBO(153, 153, 153, 1)))
+                    ]),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      onTap: () {
+        Navigator.of(context).push(CustomRoute(ProdItem(product: item)));
+      },
     );
   }
 

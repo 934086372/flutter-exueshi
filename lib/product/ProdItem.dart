@@ -88,7 +88,7 @@ class Page extends State<ProdItem> with TickerProviderStateMixin {
                 return _body();
               } else {
                 return Center(
-                  child: Text('加载中...'),
+                  child: CircularProgressIndicator(),
                 );
               }
             }));
@@ -513,20 +513,27 @@ class Page extends State<ProdItem> with TickerProviderStateMixin {
           print(snapshot);
 
           if (snapshot.connectionState == ConnectionState.done) {
-            return Container(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: <Widget>[
-                  _commentHeader(),
-                  Expanded(
-                      child: ListView.builder(
-                          itemCount: _commentList.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            return _commentItem(index);
-                          })),
-                ],
-              ),
-            );
+            print(_commentList.length);
+
+            if (_commentList.length > 0) {
+              return Container(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    _commentHeader(),
+                    Expanded(
+                        child: ListView.builder(
+                            itemCount: _commentList.length,
+                            itemBuilder: (BuildContext context, int index) {
+                              return _commentItem(index);
+                            })),
+                  ],
+                ),
+              );
+            } else {
+              return Center(child: Text('暂无数据'),);
+            }
+
           } else {
             return Center(
               child: Text('加载中...'),
@@ -877,10 +884,15 @@ class Page extends State<ProdItem> with TickerProviderStateMixin {
         data: {'prodID': prodID, 'page': 1});
     if (response.statusCode == 200) {
       var ret = response.data;
-      _commentList = ret['data'];
-      _commentStar = ret['star'];
-      completer.complete(_commentList);
+      if (ret['code'].toString() == '200') {
+        _commentList = ret['data'];
+        _commentStar = ret['star'];
+      } else {
+        _commentList = [];
+        _commentStar = [];
+      }
     }
+    completer.complete(true);
     completer.future;
   }
 }
