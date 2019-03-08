@@ -25,6 +25,8 @@ class Page extends State<ProductIndex>
 
   var _prodList;
 
+  bool showGetMore = false;
+
   @override
   void initState() {
     // TODO: implement initState
@@ -39,6 +41,7 @@ class Page extends State<ProductIndex>
           _scrollController.position.maxScrollExtent) {
         print('bottom');
         setState(() {
+          showGetMore = true;
           _page++;
         });
         // 加载更多
@@ -111,6 +114,7 @@ class Page extends State<ProductIndex>
           ),
           Expanded(
               child: _renderPage()),
+          showGetMore ? Container(child: Text('加载更多...'),) : Container(),
         ],
       ),
     );
@@ -165,7 +169,6 @@ class Page extends State<ProductIndex>
 
     if (response.statusCode == 200) {
       var ret = response.data;
-      print(ret);
 
       if (ret['code'].toString() == '200') {
         _prodList = ret['data'];
@@ -174,6 +177,7 @@ class Page extends State<ProductIndex>
 
     setState(() {
       _pageLoadingStatus = 2;
+      showGetMore = false;
     });
 
     await Future.delayed(Duration(seconds: 1), () {
@@ -187,6 +191,8 @@ class Page extends State<ProductIndex>
   Widget _renderCourseItem(item, index) {
     print(item);
 
+    String _learnPeopleCount = item['learnPeopleCount'].toString() + '人已学习';
+
     return Container(
       decoration: BoxDecoration(
           color: Colors.white,
@@ -198,7 +204,9 @@ class Page extends State<ProductIndex>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Container(
+            ClipRRect(
+              borderRadius: BorderRadius.only(topLeft: Radius.circular(5.0),
+                  topRight: Radius.circular(5.0)),
               child: Image.network(
                 item['logo'],
                 fit: BoxFit.fill,
@@ -206,17 +214,19 @@ class Page extends State<ProductIndex>
             ),
             Text(item['prodName'],
                 overflow: TextOverflow.ellipsis, maxLines: 2),
-            Row(crossAxisAlignment: CrossAxisAlignment.center,
+            item['prodFlag'] == '免费' ?
+            Text('免费')
+                : Row(crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   Text(
-                    '￥500',
+                    '￥' + item['realPrice'].toString(),
                     style: TextStyle(
                         color: Color.fromRGBO(255, 102, 0, 1),
                         fontSize: 18,
                         fontFamily: 'PingFang-SC-Bold'),
                   ),
                   Text(
-                    '原价:￥500',
+                    '原价:￥' + item['price'].toString(),
                     style: TextStyle(
                         decoration: TextDecoration.lineThrough,
                         fontSize: 11.0,
@@ -227,7 +237,7 @@ class Page extends State<ProductIndex>
               Expanded(
                 child: Row(
                   children: List.generate(5, (index) {
-                    if (index < 3) {
+                    if (index < item['avgRating']) {
                       return Icon(
                         Icons.star,
                         size: 10.5,
@@ -243,7 +253,7 @@ class Page extends State<ProductIndex>
                   }),
                 ),
               ),
-              Text('已有13215人学习',
+              Text(_learnPeopleCount,
                   style: TextStyle(
                       fontSize: 10.0, color: Color.fromRGBO(153, 153, 153, 1)))
             ]),

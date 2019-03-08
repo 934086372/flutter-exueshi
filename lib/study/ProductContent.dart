@@ -150,7 +150,10 @@ class _ProductContentState extends State<ProductContent>
         ),
         body: prodChapters == null
             ? Center(child: CircularProgressIndicator())
-            : Container(child: buildBody(context), color: Colors.white,));
+            : Container(
+          child: buildBody(context),
+          color: Colors.white,
+        ));
   }
 
   Widget buildBody(BuildContext context) {
@@ -288,7 +291,18 @@ class _ProductContentState extends State<ProductContent>
         overflow: TextOverflow.ellipsis,
       ),
       trailing: Icon(Icons.chevron_right),
-      onTap: () {},
+      onTap: () {
+        switch (item['type'].toString()) {
+          case '视频':
+            break;
+          case '试卷':
+            Navigator.of(context).push(CustomRoute(PaperIndex()));
+            break;
+          case '资料':
+            Navigator.of(context).push(CustomRoute(DocumentStudy()));
+            break;
+        }
+      },
     );
   }
 

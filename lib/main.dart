@@ -11,6 +11,7 @@ import 'views/StudyIndex.dart';
 import 'views/UserIndex.dart';
 
 void main() {
+
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
@@ -48,6 +49,7 @@ class MyApp extends StatelessWidget {
       title: '易学仕在线',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
+        brightness: Brightness.light,
         primarySwatch: _themeColor,
       ),
       home: MyHomePage(title: 'Flutter Demo Home Page'),
@@ -218,6 +220,7 @@ class _MyHomePageState extends State<MyHomePage> {
   // 主页
   Widget _mainView() {
     return Scaffold(
+      resizeToAvoidBottomPadding: true,
       body: PageView.builder(
         pageSnapping: true,
         onPageChanged: _pageChange,

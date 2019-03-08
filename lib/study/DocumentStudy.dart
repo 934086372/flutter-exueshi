@@ -64,7 +64,7 @@ class DocumentStudyState extends State<DocumentStudy> {
               pdfReader.close();
               Navigator.of(context).pop();
             }),
-        title: Text('文档学习'),
+        title: Text('pdf'),
         centerTitle: true,
       ),
       body: Column(
@@ -79,6 +79,7 @@ class DocumentStudyState extends State<DocumentStudy> {
           bottomBar()
         ],
       ),
+      floatingActionButton: FloatingActionButton(onPressed: () {}),
     );
   }
 

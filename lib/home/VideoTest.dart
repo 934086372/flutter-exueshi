@@ -1,16 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/components/Video.dart';
 
+import 'package:chewie/chewie.dart';
+import 'package:video_player/video_player.dart';
+
 class VideoTest extends StatefulWidget {
   @override
   _VideoTestState createState() => _VideoTestState();
 }
 
 class _VideoTestState extends State<VideoTest> {
+
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
   }
 
   @override

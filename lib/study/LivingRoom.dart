@@ -69,7 +69,6 @@ class _LivingRoomState extends State<LivingRoom> {
                         .width,
                     child: Video(
                       url: liveUrl,
-                      initialStatus: false,
                       isLive: true,
                     ),
                   ),

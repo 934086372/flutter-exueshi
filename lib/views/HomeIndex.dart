@@ -61,6 +61,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
 
     // TODO: implement build
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         elevation: 1.0,
         backgroundColor: Color.fromRGBO(0, 170, 255, 1),
@@ -71,21 +72,23 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                 onTap: () {
                   Navigator.of(context).push(CustomRoute(VideoTest()));
                 },
-                child: Row(children: <Widget>[
-                  Icon(
-                    Icons.location_on,
-                    color: Colors.white,
-                  ),
-                  Text(
-                    '重庆',
-                    style: TextStyle(color: Colors.white, fontSize: 16.0),
-                  ),
-                  Icon(
-                    Icons.keyboard_arrow_down,
-                    size: 16.0,
-                    color: Colors.white,
-                  ),
-                ],),
+                child: Row(
+                  children: <Widget>[
+                    Icon(
+                      Icons.location_on,
+                      color: Colors.white,
+                    ),
+                    Text(
+                      '重庆',
+                      style: TextStyle(color: Colors.white, fontSize: 16.0),
+                    ),
+                    Icon(
+                      Icons.keyboard_arrow_down,
+                      size: 16.0,
+                      color: Colors.white,
+                    ),
+                  ],
+                ),
               ),
               Expanded(
                   child: Container(
@@ -207,7 +210,10 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                     return _courseContainer(index);
                   }),
                 ),
-                Container(margin: EdgeInsets.all(10.0), child: Text('查看更多'),)
+                Container(
+                  margin: EdgeInsets.all(10.0),
+                  child: Text('查看更多'),
+                )
               ],
             ),
           ),
@@ -232,7 +238,8 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
   // 渲染banner
   Widget _bannerWidget() {
     return _banners.length > 0
-        ? Container(
+        ? AspectRatio(
+      aspectRatio: 375 / 159,
       child: Swiper(
         layout: SwiperLayout.DEFAULT,
         itemBuilder: (BuildContext context, int index) {
@@ -243,14 +250,12 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
         },
         itemCount: _banners.length,
         pagination: SwiperPagination(),
-        loop: false,
+        loop: true,
         onTap: (index) {
           Navigator.of(context).push(
               CustomRoute(BannerDetail(bannerItem: _banners[index])));
         },
       ),
-      width: clientWidth,
-      height: clientWidth * 159 / 375,
     )
         : Container();
   }
@@ -293,8 +298,8 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
               onTap: (index) {
                 print(index);
                 print(_bulletions[index]);
-                Navigator.of(context).push(
-                    CustomRoute(Notice(noticeItem: _bulletions[index])));
+                Navigator.of(context)
+                    .push(CustomRoute(Notice(noticeItem: _bulletions[index])));
               },
               itemBuilder: (BuildContext context, int index) {
                 return Row(
@@ -313,7 +318,9 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                     Container(
                       padding: EdgeInsets.only(left: 5.0),
                       child: Text(
-                        _bulletions[index]['onlineTime'],
+                        _bulletions[index]['onlineTime']
+                            .toString()
+                            .substring(0, 10),
                         style: TextStyle(
                             fontSize: 12.0,
                             color: Color.fromRGBO(153, 153, 153, 1)),
@@ -396,63 +403,69 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
               if (index == 0) {
                 marginLeft = 10.0;
               }
-              return Container(
-                width: itemWidth,
-                height: itemHeight,
-                margin: EdgeInsets.only(
-                    left: marginLeft, top: 5.0, right: 10.0, bottom: 5.0),
-                decoration: BoxDecoration(
-                    color: Colors.white,
-                    boxShadow: <BoxShadow>[
-                      BoxShadow(
-                          color: Color.fromRGBO(26, 81, 170, 0.1),
-                          blurRadius: 15.0)
-                    ]),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Container(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.all(Radius.circular(2.5)),
-                        child: FadeInImage.assetNetwork(
-                          placeholder: 'assets/images/loading.gif',
-                          image: _livings[index]['logo'],
-                          fit: BoxFit.fill,
+              return GestureDetector(
+                onTap: () {
+                  Navigator.of(context)
+                      .push(CustomRoute(LivingRoom(product: _livings[index])));
+                },
+                child: Container(
+                  width: itemWidth,
+                  height: itemHeight,
+                  margin: EdgeInsets.only(
+                      left: marginLeft, top: 5.0, right: 10.0, bottom: 5.0),
+                  decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: <BoxShadow>[
+                        BoxShadow(
+                            color: Color.fromRGBO(26, 81, 170, 0.1),
+                            blurRadius: 15.0)
+                      ]),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Container(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.all(Radius.circular(2.5)),
+                          child: FadeInImage.assetNetwork(
+                            placeholder: 'assets/images/loading.gif',
+                            image: _livings[index]['logo'],
+                            fit: BoxFit.fill,
+                          ),
                         ),
                       ),
-                    ),
-                    Container(
-                      padding: EdgeInsets.all(10.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            _livings[index]['liveName'],
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(fontSize: 15.0),
-                          ),
-                          Container(
-                            margin: EdgeInsets.only(top: 10.0, bottom: 10),
-                            child: Text(
-                              '主讲老师:' +
-                                  _livings[index]['mainLecturer'].toString(),
-                              style: TextStyle(
-                                  fontSize: 14.0,
-                                  color: Color.fromRGBO(51, 51, 51, 1)),
+                      Container(
+                        padding: EdgeInsets.all(10.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              _livings[index]['liveName'],
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 15.0),
                             ),
-                          ),
-                          Text(
-                            '直播时间:' +
-                                _livings[index]['beginHourTime'].toString(),
-                            style: TextStyle(
-                                fontSize: 13.0,
-                                color: Color.fromRGBO(153, 153, 153, 1)),
-                          )
-                        ],
-                      ),
-                    )
-                  ],
+                            Container(
+                              margin: EdgeInsets.only(top: 10.0, bottom: 10),
+                              child: Text(
+                                '主讲老师:' +
+                                    _livings[index]['mainLecturer'].toString(),
+                                style: TextStyle(
+                                    fontSize: 14.0,
+                                    color: Color.fromRGBO(51, 51, 51, 1)),
+                              ),
+                            ),
+                            Text(
+                              '直播时间:' +
+                                  _livings[index]['beginHourTime'].toString(),
+                              style: TextStyle(
+                                  fontSize: 13.0,
+                                  color: Color.fromRGBO(153, 153, 153, 1)),
+                            )
+                          ],
+                        ),
+                      )
+                    ],
+                  ),
                 ),
               );
             }),
@@ -464,13 +477,9 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
     return Expanded(
         child: Container(
           margin: EdgeInsets.only(left: 10.0),
-          decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: <BoxShadow>[
-                BoxShadow(
-                    color: Color.fromRGBO(26, 81, 170, 0.1),
-                    blurRadius: 15.0)
-              ]),
+          decoration: BoxDecoration(color: Colors.white, boxShadow: <BoxShadow>[
+            BoxShadow(color: Color.fromRGBO(26, 81, 170, 0.1), blurRadius: 15.0)
+          ]),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
@@ -505,8 +514,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
             borderRadius: BorderRadius.all(Radius.circular(5.0)),
             boxShadow: <BoxShadow>[
               BoxShadow(
-                  color: Color.fromRGBO(26, 81, 170, 0.1),
-                  blurRadius: 15.0)
+                  color: Color.fromRGBO(26, 81, 170, 0.1), blurRadius: 15.0)
             ]),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -542,9 +550,12 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                         child: Text('直播时间:' + item['beginHourTime'].toString()),
                       ),
                       Container(
-                        child: Text(item['liveType'].toString(),
-                          style: TextStyle(fontSize: 12.0,
-                              color: Color.fromRGBO(102, 102, 102, 1)),),
+                        child: Text(
+                          item['liveType'].toString(),
+                          style: TextStyle(
+                              fontSize: 12.0,
+                              color: Color.fromRGBO(102, 102, 102, 1)),
+                        ),
                         padding: EdgeInsets.symmetric(horizontal: 5.0),
                         decoration: BoxDecoration(
                             color: Color.fromRGBO(215, 218, 219, 0.4),
@@ -561,7 +572,6 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
       ),
     );
   }
-
 
   // 课程列表
   Widget _courseContainer(index) {
@@ -705,5 +715,4 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
       },
     );
   }
-
 }
