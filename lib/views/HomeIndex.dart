@@ -2,12 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_exueshi/common/Ajax.dart';
 import 'package:flutter_exueshi/home/BannerDetail.dart';
 import 'package:flutter_exueshi/home/NoticeDetail.dart';
 import 'package:flutter_exueshi/home/VideoTest.dart';
 import 'package:flutter_exueshi/product/Cart.dart';
 import 'package:flutter_exueshi/sign/login.dart';
-import 'package:flutter_exueshi/product/ProdItem.dart';
+import 'package:flutter_exueshi/product/ProdDetail.dart';
 import 'package:flutter_exueshi/study/LivingRoom.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:dio/dio.dart';
@@ -152,15 +153,13 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
   Future _getHomeData() async {
     final Completer completer = new Completer();
 
-    Dio dio = new Dio();
-    dio.options.baseUrl = 'http://app.exueshi.com';
-    dio.options.responseType = ResponseType.JSON;
+    Ajax ajax = new Ajax();
 
-    Response response = await dio
+    Response response = await ajax
         .post('/api/Product/getProductBannerBulletion', data: {'areas': '全国'});
 
     Response response2 =
-    await dio.post('/api/live/getLives', data: {'page': 1});
+    await ajax.post('/api/live/getLives', data: {'page': 1});
 
     // 判断返回结果
     if (response.statusCode == 200) {
@@ -193,7 +192,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
     switch (_pageLoadingStatus) {
       case 1:
         return Center(
-          child: CupertinoActivityIndicator(),
+          child: CircularProgressIndicator(),
         );
         break;
       case 2:
@@ -711,7 +710,8 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
         ),
       ),
       onTap: () {
-        Navigator.of(context).push(CustomRoute(ProdItem(product: item)));
+        Navigator.of(context)
+            .push(CustomRoute(ProdDetail(prodID: item['prodID'])));
       },
     );
   }

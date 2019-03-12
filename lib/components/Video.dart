@@ -25,7 +25,7 @@ class Video extends StatefulWidget {
   const Video({
     Key key,
     @required this.url,
-    this.aspectRatio,
+    this.aspectRatio = 16.0 / 9.0,
     this.background,
     this.enableFull = false,
     this.title = '',
@@ -40,7 +40,6 @@ class Video extends StatefulWidget {
 }
 
 class _VideoState extends State<Video> with SingleTickerProviderStateMixin {
-
   VideoPlayerController _controller;
 
   String get url => widget.url;
@@ -72,6 +71,8 @@ class _VideoState extends State<Video> with SingleTickerProviderStateMixin {
 
   List<SystemUiOverlay> systemUiOverlay = SystemUiOverlay.values;
 
+  double realAspectRatio = 16.0 / 9.0;
+
   @override
   void initState() {
     // TODO: implement initState
@@ -83,6 +84,14 @@ class _VideoState extends State<Video> with SingleTickerProviderStateMixin {
     _controller = VideoPlayerController.network(url)
       ..initialize().then((_) {
         print('初始化完成');
+        print(_controller.value);
+
+        // 检查视频比例
+        Size videoSize = _controller.value.size;
+        double videoWidth = videoSize.width;
+        double videoHeight = videoSize.height;
+
+        realAspectRatio = videoSize.aspectRatio;
         _controller.pause();
         setState(() {
           _duration = _controller.value.duration.toString().split(_patten)[0];
@@ -137,21 +146,31 @@ class _VideoState extends State<Video> with SingleTickerProviderStateMixin {
       tag: 'videoPlayer',
       child: Stack(
         children: <Widget>[
-          GestureDetector(
-            child: isFullscreen ? Container() : VideoPlayer(_controller),
-            onTap: () {
-              setState(() {
-                cleanMode = !cleanMode;
-                if (isFullscreen) {
-                  if (cleanMode) {
-                    SystemChrome.setEnabledSystemUIOverlays([]);
-                  } else {
-                    SystemChrome.setEnabledSystemUIOverlays(
-                        systemUiOverlay);
-                  }
-                }
-              });
-            },
+          Container(
+            color: Colors.black,
+            child: Center(
+              child: GestureDetector(
+                child: isFullscreen
+                    ? Container()
+                    : AspectRatio(
+                  child: VideoPlayer(_controller),
+                  aspectRatio: realAspectRatio,
+                ),
+                onTap: () {
+                  setState(() {
+                    cleanMode = !cleanMode;
+                    if (isFullscreen) {
+                      if (cleanMode) {
+                        SystemChrome.setEnabledSystemUIOverlays([]);
+                      } else {
+                        SystemChrome.setEnabledSystemUIOverlays(
+                            systemUiOverlay);
+                      }
+                    }
+                  });
+                },
+              ),
+            ),
           ),
           cleanMode
               ? Container()
@@ -195,9 +214,7 @@ class _VideoState extends State<Video> with SingleTickerProviderStateMixin {
                 Icons.arrow_back,
                 color: Colors.white,
               ),
-              onPressed: () {
-
-              }),
+              onPressed: () {}),
           Expanded(
               child: Text(
                 title,
@@ -305,14 +322,6 @@ class _VideoState extends State<Video> with SingleTickerProviderStateMixin {
 
     SystemChrome.setEnabledSystemUIOverlays(systemUiOverlay);
     SystemChrome.setPreferredOrientations([]);
-
-    /*final callbackData = await Navigator.push(
-        context, CustomRoute(VideoPlayerFullscreen(controller: _controller)));
-    print(callbackData);
-
-    setState(() {
-      //_controller = callbackData['controller'];
-    });*/
   }
 
   Container exchangeDefinitionBtn() {
@@ -328,7 +337,6 @@ class _VideoState extends State<Video> with SingleTickerProviderStateMixin {
           borderRadius: BorderRadius.all(Radius.circular(5.0))),
     );
   }
-
 
   // 开始暂停
   GestureDetector _playAndPauseBtn() {
@@ -349,6 +357,8 @@ class _VideoState extends State<Video> with SingleTickerProviderStateMixin {
   }
 }
 
+
+// 进度条
 class VideoProgressBar extends StatefulWidget {
   final controller;
 
@@ -372,10 +382,8 @@ class _VideoProgressBarState extends State<VideoProgressBar> {
     int duration = controller.value.duration.inMicroseconds;
 
     controller.addListener(() {
-      double width = MediaQuery
-          .of(context)
-          .size
-          .width;
+      //double width = MediaQuery.of(context).size.width;
+      double width = 100;
       int position = controller.value.position.inMicroseconds;
       double currentProgress = position / duration * width;
 
@@ -413,7 +421,6 @@ class _VideoProgressBarState extends State<VideoProgressBar> {
     );
   }
 }
-
 
 // 全屏窗口播放
 class VideoPlayerFullscreen extends StatefulWidget {
@@ -456,8 +463,7 @@ class _VideoPlayerFullscreenState extends State<VideoPlayerFullscreen> {
                   if (cleanMode) {
                     SystemChrome.setEnabledSystemUIOverlays([]);
                   } else {
-                    SystemChrome.setEnabledSystemUIOverlays(
-                        systemUiOverlay);
+                    SystemChrome.setEnabledSystemUIOverlays(systemUiOverlay);
                   }
                 });
               },
@@ -483,7 +489,6 @@ class _VideoPlayerFullscreenState extends State<VideoPlayerFullscreen> {
       ),
     );
   }
-
 
   Widget playerTitle() {
     //double statusBarHeight = MediaQuery.of(context).padding.top;
@@ -556,7 +561,6 @@ class _VideoPlayerFullscreenState extends State<VideoPlayerFullscreen> {
     );
   }
 
-
   Widget fullscreenBtn() {
     return GestureDetector(
       child: Icon(
@@ -569,7 +573,4 @@ class _VideoPlayerFullscreenState extends State<VideoPlayerFullscreen> {
       },
     );
   }
-
-
-
 }

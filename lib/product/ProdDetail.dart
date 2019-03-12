@@ -7,28 +7,32 @@ import 'package:flutter_exueshi/components/SliverAppBarDelegate.dart';
 import 'package:flutter_exueshi/common/custom_router.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
 import 'package:flutter_exueshi/product/Cart.dart';
+import 'package:flutter_html_view/flutter_html_view.dart';
 
-class ProdItem extends StatefulWidget {
-  final product;
+class ProdDetail extends StatefulWidget {
+  final prodID;
 
-  ProdItem({@required this.product}) : super();
+  ProdDetail({@required this.prodID}) : super();
 
   @override
-  State<ProdItem> createState() {
-    return Page(product: product);
+  State<ProdDetail> createState() {
+    return Page(prodID: prodID);
   }
 }
 
-class Page extends State<ProdItem> with TickerProviderStateMixin {
-  final product;
+class Page extends State<ProdDetail> with TickerProviderStateMixin {
+  final prodID;
+
+  var product;
   String prodType;
 
   var _chapter;
-
   var _commentList;
   var _commentStar;
 
-  Page({@required this.product}) : super();
+  int pageLoadStatus = 1;
+
+  Page({@required this.prodID}) : super();
 
   TabController _controller;
   TabController _controllerChild;
@@ -41,31 +45,17 @@ class Page extends State<ProdItem> with TickerProviderStateMixin {
     _controller = TabController(length: 3, vsync: this);
     _controllerChild = TabController(length: 3, vsync: this);
 
-    switch (product['prodType']) {
-      case '视频':
-        prodType = 'video';
-        break;
-      case '试卷':
-        prodType = 'paper';
-        break;
-      case '资料':
-        prodType = 'document';
-        break;
-      case '计划':
-        prodType = 'plan';
-        break;
-      case '套餐':
-        prodType = 'package';
-        break;
-    }
+    _controller.addListener(() {
+      if (_controller.index == 1) {
+        _getChapter();
+      }
+    });
+
+    _getProdDetail();
   }
 
   @override
   Widget build(BuildContext context) {
-    _getProdDetail(product);
-
-    _getChapter();
-
     // TODO: implement build
     return Scaffold(
         appBar: AppBar(
@@ -81,23 +71,37 @@ class Page extends State<ProdItem> with TickerProviderStateMixin {
                 })
           ],
         ),
-        body: FutureBuilder(
-            future: _getProdDetail(product),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                return _body();
-              } else {
-                return Center(
-                  child: CircularProgressIndicator(),
-                );
-              }
-            }));
+        body: renderPage());
   }
 
-  Widget _body() {
-    return Column(
-      children: <Widget>[Expanded(child: _header()), _bottomBar()],
-    );
+  Widget renderPage() {
+    print(pageLoadStatus);
+    switch (pageLoadStatus) {
+      case 1:
+        return Center(
+          child: CircularProgressIndicator(),
+        );
+        break;
+      case 2:
+        return Column(
+          children: <Widget>[Expanded(child: _header()), _bottomBar()],
+        );
+        break;
+      case 3:
+        return Center(
+          child: Text('暂无数据'),
+        );
+        break;
+      case 4:
+        return Center(
+          child: Text('数据请求错误'),
+        );
+        break;
+      default:
+        return Center(
+          child: Text('未知错误'),
+        );
+    }
   }
 
   Widget _bottomBar() {
@@ -338,13 +342,9 @@ class Page extends State<ProdItem> with TickerProviderStateMixin {
                   top: BorderSide(
                       width: 10.0, color: Color.fromRGBO(241, 241, 241, 1)))),
         ),
-//        HtmlView(
-////          data: product['prodDetail'].toString(),
-//          data: '<img src="http://ns.seevin.com/ueditor/php/upload/image/20180725/1532503996245109.jpg"/>',
-//          onLaunchFail: (url) {
-//            print('fail');
-//          },
-//        )
+        HtmlView(
+          data: product['prodDetail'].toString(),
+        )
       ],
     );
   }
@@ -443,6 +443,11 @@ class Page extends State<ProdItem> with TickerProviderStateMixin {
   // 设置目录列表
   List<Widget> _getChapterItem(data) {
     List<Widget> _list = new List<Widget>();
+    if (data == null) {
+      _list.add(Center(child: CircularProgressIndicator()));
+      return _list;
+    }
+
     for (int i = 0; i < data.length; i++) {
       var groupName = data[i]['groupName'].toString();
       bool isGrouped = groupName != '未分类';
@@ -531,9 +536,10 @@ class Page extends State<ProdItem> with TickerProviderStateMixin {
                 ),
               );
             } else {
-              return Center(child: Text('暂无数据'),);
+              return Center(
+                child: Text('暂无数据'),
+              );
             }
-
           } else {
             return Center(
               child: Text('加载中...'),
@@ -847,38 +853,58 @@ class Page extends State<ProdItem> with TickerProviderStateMixin {
     }
   }
 
-  Future _getProdDetail(product) async {
-    Completer completer = new Completer();
-
+  void _getProdDetail() async {
     Ajax ajax = new Ajax();
-    Response response = await ajax
-        .post('/api/Product/getProduct', data: {'prodID': product['prodID']});
+    Response response =
+    await ajax.post('/api/Product/getProduct', data: {'prodID': prodID});
     if (response.statusCode == 200) {
       var ret = response.data;
       if (ret['code'].toString() == '200') {
         product = ret['data'];
-        completer.complete(product);
+        switch (product['prodType']) {
+          case '视频':
+            prodType = 'video';
+            break;
+          case '试卷':
+            prodType = 'paper';
+            break;
+          case '资料':
+            prodType = 'document';
+            break;
+          case '计划':
+            prodType = 'plan';
+            break;
+          case '套餐':
+            prodType = 'package';
+            break;
+        }
+        pageLoadStatus = 2;
+      } else {
+        pageLoadStatus = 3;
       }
+    } else {
+      pageLoadStatus = 4;
+      print("网络请求错误");
     }
-
-    return completer.future;
+    setState(() {});
   }
 
   Future _getChapter() async {
+    print(product['prodType']);
     Ajax ajax = new Ajax();
     Response response = await ajax.post('/api/Product/getProductLists',
-        data: {'prodID': product['prodID'], 'type': prodType});
+        data: {'prodID': prodID, 'type': prodType});
     if (response.statusCode == 200) {
       var ret = response.data;
       print(ret);
       _chapter = ret['data'];
+      setState(() {});
     }
   }
 
   Future _getComments() async {
     Completer completer = new Completer();
 
-    String prodID = this.product['prodID'];
     Ajax ajax = new Ajax();
     Response response = await ajax.post('/api/Appraise/getProAppraises',
         data: {'prodID': prodID, 'page': 1});
