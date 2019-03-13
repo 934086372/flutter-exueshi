@@ -30,7 +30,7 @@ dependencies:
   webview_flutter: ^0.0.1
   share: ^0.6.0
   chewie: any
-  device_info: 0.4.0
+  device_info: ^0.4.0
 
 dev_dependencies:
   flutter_test:

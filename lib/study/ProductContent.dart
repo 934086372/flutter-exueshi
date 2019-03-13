@@ -94,6 +94,7 @@ class _ProductContentState extends State<ProductContent>
     });
 
     _tabController.addListener(() {
+      if (_tabController.indexIsChanging) return;
       setState(() {
         print(_tabController.index);
         showVideoPlayer = _tabController.index == 0;

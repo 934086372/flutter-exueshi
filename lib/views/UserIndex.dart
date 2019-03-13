@@ -8,9 +8,14 @@ import 'package:flutter_exueshi/common/custom_router.dart';
 import 'package:flutter_exueshi/user/About.dart';
 import 'package:flutter_exueshi/user/Help.dart';
 import 'package:flutter_exueshi/user/MyAddress.dart';
+import 'package:flutter_exueshi/user/MyCollections.dart';
 import 'package:flutter_exueshi/user/MyCoupon.dart';
+import 'package:flutter_exueshi/user/MyMessage.dart';
+import 'package:flutter_exueshi/user/MyMistakes.dart';
+import 'package:flutter_exueshi/user/MyNotes.dart';
 import 'package:flutter_exueshi/user/MyOrder.dart';
 import 'package:flutter_exueshi/user/MyPhone.dart';
+import 'package:flutter_exueshi/user/Setting.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:device_info/device_info.dart';
 
@@ -83,8 +88,16 @@ class Page extends State<UserIndex> with AutomaticKeepAliveClientMixin {
         title: Text('个人中心'),
         centerTitle: true,
         actions: <Widget>[
-          IconButton(icon: Icon(Icons.message), onPressed: () {}),
-          IconButton(icon: Icon(Icons.settings), onPressed: () {}),
+          IconButton(
+              icon: Icon(Icons.message),
+              onPressed: () {
+                routerManage('message');
+              }),
+          IconButton(
+              icon: Icon(Icons.settings),
+              onPressed: () {
+                routerManage('setting');
+              }),
         ],
       ),
       body: renderPage(),
@@ -287,7 +300,19 @@ class Page extends State<UserIndex> with AutomaticKeepAliveClientMixin {
     return Expanded(
       child: FlatButton(
           padding: EdgeInsets.only(top: 15.0, bottom: 10.0),
-          onPressed: () {},
+          onPressed: () {
+            switch (index) {
+              case 0:
+                routerManage('notes');
+                break;
+              case 1:
+                routerManage('mistakes');
+                break;
+              case 2:
+                routerManage('collections');
+                break;
+            }
+          },
           child: Column(
             children: <Widget>[
               Text(
@@ -322,26 +347,44 @@ class Page extends State<UserIndex> with AutomaticKeepAliveClientMixin {
   }
 
   void routerManage(item) {
+    Widget page;
+
     switch (item) {
       case 'order':
-        Navigator.of(context).push(CustomRoute(MyOrder()));
+        page = MyOrder();
         break;
       case 'coupon':
-        Navigator.of(context).push(CustomRoute(MyCoupon()));
+        page = MyOrder();
         break;
       case 'address':
-        Navigator.of(context).push(CustomRoute(MyAddress()));
+        page = MyAddress();
         break;
       case 'phone':
-        Navigator.of(context).push(CustomRoute(MyPhone()));
+        page = MyPhone();
         break;
       case 'help':
-        Navigator.of(context).push(CustomRoute(Help()));
+        page = Help();
         break;
       case 'about':
-        Navigator.of(context).push(CustomRoute(About()));
+        page = About();
         break;
+      case 'notes':
+        page = MyNotes();
+        break;
+      case 'mistakes':
+        page = MyMistakes();
+        break;
+      case 'collections':
+        page = MyCollections();
+        break;
+      case 'setting':
+        page = Setting();
+        break;
+      case 'message':
+        page = MyMessage();
     }
+
+    Navigator.of(context).push(CustomRoute(page));
   }
 
   @override
