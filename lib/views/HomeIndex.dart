@@ -7,7 +7,7 @@ import 'package:flutter_exueshi/home/BannerDetail.dart';
 import 'package:flutter_exueshi/home/NoticeDetail.dart';
 import 'package:flutter_exueshi/home/VideoTest.dart';
 import 'package:flutter_exueshi/product/Cart.dart';
-import 'package:flutter_exueshi/sign/login.dart';
+import 'package:flutter_exueshi/sign/Login.dart';
 import 'package:flutter_exueshi/product/ProdDetail.dart';
 import 'package:flutter_exueshi/study/LivingRoom.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';

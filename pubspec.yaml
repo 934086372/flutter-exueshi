@@ -31,6 +31,7 @@ dependencies:
   share: ^0.6.0
   chewie: any
   device_info: ^0.4.0
+  event_bus: 1.0.3
 
 dev_dependencies:
   flutter_test:

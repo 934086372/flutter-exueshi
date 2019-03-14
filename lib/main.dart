@@ -11,7 +11,6 @@ import 'views/StudyIndex.dart';
 import 'views/UserIndex.dart';
 
 void main() {
-
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
@@ -52,16 +51,12 @@ class MyApp extends StatelessWidget {
         brightness: Brightness.light,
         primarySwatch: _themeColor,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-
-  final String title;
-
   @override
   State<StatefulWidget> createState() {
     // TODO: implement createState
@@ -172,9 +167,9 @@ class _MyHomePageState extends State<MyHomePage> {
                 loop: false,
                 itemCount: 4,
                 itemBuilder: (BuildContext context, int index) {
-                  String imagePath =
-                      'assets/images/boot/start_0' + (index + 1).toString() +
-                          '.jpg';
+                  String imagePath = 'assets/images/boot/start_0' +
+                      (index + 1).toString() +
+                      '.jpg';
                   return Image.asset(
                     imagePath,
                     fit: BoxFit.fill,

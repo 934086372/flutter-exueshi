@@ -10,6 +10,7 @@ import 'package:flutter_exueshi/common/custom_router.dart';
 import 'package:flutter_exueshi/sign/SignUp.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+
 class Login extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
@@ -393,8 +394,6 @@ class Page extends State<Login> {
   // 登录方法
   Future _login() async {
 
-    print(_telephone);
-    print(_password);
     Ajax _ajax = new Ajax();
     Response response = await _ajax.post(
         '/api/user/login/by/telephone/psw', data: {
