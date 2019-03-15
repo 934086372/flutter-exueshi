@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
-import 'package:flutter_exueshi/common/custom_router.dart';
+import 'package:flutter_exueshi/common/PageRouter.dart';
 import 'package:flutter_html_view/flutter_html_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -28,7 +28,6 @@ class _MyMessageState extends State<MyMessage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color.fromRGBO(0, 170, 255, 1),
         elevation: 1.0,
         title: Text('消息中心'),
         centerTitle: true,
@@ -97,7 +96,7 @@ class _MyMessageState extends State<MyMessage> {
         ),
         subtitle: Text(item['noticeContent']),
         onTap: () {
-          Navigator.of(context).push(CustomRoute(MyMessageDetail(item: item)));
+          Navigator.of(context).push(PageRouter(MyMessageDetail(item: item)));
         },
       ),
     );
@@ -162,7 +161,6 @@ class _MyMessageDetailState extends State<MyMessageDetail> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color.fromRGBO(0, 170, 255, 1),
         elevation: 1.0,
         title: Text('消息详情'),
         centerTitle: true,

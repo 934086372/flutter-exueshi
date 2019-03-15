@@ -5,11 +5,10 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
 import 'package:flutter_exueshi/components/MyIcons.dart';
-import 'package:flutter_exueshi/common/custom_router.dart';
+import 'package:flutter_exueshi/common/PageRouter.dart';
 
 import 'package:flutter_exueshi/sign/SignUp.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 
 class Login extends StatefulWidget {
   @override
@@ -44,11 +43,9 @@ class Page extends State<Login> {
 
   @override
   Widget build(BuildContext context) {
-
     // TODO: implement build
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color.fromRGBO(0, 170, 255, 1),
         elevation: 0.0,
         title: Text('登录'),
         centerTitle: true,
@@ -59,12 +56,9 @@ class Page extends State<Login> {
               child: MaterialButton(
                 shape: CircleBorder(),
                 onPressed: () {
-                  Navigator.push(context, CustomRoute(SignUp()));
+                  Navigator.push(context, PageRouter(SignUp()));
                 },
-                child: Text(
-                  '注册',
-                  style: TextStyle(color: Colors.white),
-                ),
+                child: Text('注册'),
               ))
         ],
       ),
@@ -169,7 +163,6 @@ class Page extends State<Login> {
 
   // 监听电话号码是否存在
   void _telephoneListener(telephone) {
-
     Color _color = Color.fromRGBO(153, 153, 153, 1);
     telephone = telephone.toString();
     Pattern _pattern = new RegExp('1[3|4|5|7|8|9][0-9]{9}');
@@ -393,14 +386,13 @@ class Page extends State<Login> {
 
   // 登录方法
   Future _login() async {
-
     Ajax _ajax = new Ajax();
-    Response response = await _ajax.post(
-        '/api/user/login/by/telephone/psw', data: {
-      'telephone': _telephone,
-      'userPsw': _password,
-      'userDeviceID': _deviceid
-    });
+    Response response = await _ajax.post('/api/user/login/by/telephone/psw',
+        data: {
+          'telephone': _telephone,
+          'userPsw': _password,
+          'userDeviceID': _deviceid
+        });
 
     if (response.statusCode == 200) {
       var ret = response.data;

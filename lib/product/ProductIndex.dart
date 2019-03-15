@@ -4,8 +4,10 @@ import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import "package:flutter/material.dart";
 import 'package:flutter_exueshi/common/Ajax.dart';
-import 'package:flutter_exueshi/common/custom_router.dart';
+import 'package:flutter_exueshi/common/PageRouter.dart';
+import 'package:flutter_exueshi/product/Cart.dart';
 import 'package:flutter_exueshi/product/ProdDetail.dart';
+import 'package:flutter_exueshi/product/ProdSearch.dart';
 
 class ProductIndex extends StatefulWidget {
   @override
@@ -56,60 +58,57 @@ class Page extends State<ProductIndex>
     return Scaffold(
       appBar: AppBar(
         title: Text('选课中心'),
-        elevation: 1.0,
-        backgroundColor: Color.fromRGBO(0, 170, 255, 1),
+        elevation: 0.0,
         centerTitle: true,
         actions: <Widget>[
-          IconButton(icon: Icon(Icons.search), onPressed: () {}),
-          IconButton(icon: Icon(Icons.shopping_cart), onPressed: () {})
+          IconButton(
+              icon: Icon(Icons.search),
+              onPressed: () {
+                Navigator.of(context).push(PageRouter(ProdSearch()));
+              }),
+          IconButton(
+              icon: Icon(Icons.shopping_cart),
+              onPressed: () {
+                Navigator.of(context).push(PageRouter(Cart()));
+              })
         ],
-        bottom: TabBar(
-          tabs: <Tab>[
-            Tab(
-              text: '全部',
-            ),
-            Tab(
-              text: '题库',
-            ),
-            Tab(
-              text: '微课',
-            ),
-            Tab(
-              text: '全程课',
-            ),
-            Tab(
-              text: '定制课',
-            ),
-            Tab(
-              text: '讲义',
-            ),
-          ],
-          controller: _tabController,
-          isScrollable: true,
-        ),
       ),
       body: Column(
         children: <Widget>[
           Container(
-            padding: EdgeInsets.only(
-                left: 10.0, top: 15.0, right: 10.0, bottom: 15.0),
-            color: Color.fromRGBO(241, 241, 241, 1),
+            color: Colors.white,
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[
-                Text('综合排序'),
-                Icon(
-                  Icons.keyboard_arrow_down,
-                  size: 14.0,
+                Expanded(
+                  child: TabBar(
+                    tabs: <Tab>[
+                      Tab(
+                        text: '全部',
+                      ),
+                      Tab(
+                        text: '题库',
+                      ),
+                      Tab(
+                        text: '微课',
+                      ),
+                      Tab(
+                        text: '全程课',
+                      ),
+                      Tab(
+                        text: '定制课',
+                      ),
+                      Tab(
+                        text: '讲义',
+                      ),
+                    ],
+                    controller: _tabController,
+                    isScrollable: true,
+                  ),
                 ),
-                Container(
-                  width: 15.0,
-                ),
-                Text('筛选'),
-                Icon(
-                  Icons.filter_list,
-                  size: 14.0,
-                ),
+                IconButton(
+                  icon: Icon(Icons.format_list_bulleted),
+                  onPressed: () {},
+                )
               ],
             ),
           ),
@@ -178,6 +177,14 @@ class Page extends State<ProductIndex>
     }
   }
 
+
+  Widget renderAppBar() {
+    return Row(
+      children: <Widget>[
+      ],
+    );
+  }
+
   Future _getProductList() async {
     Completer _completer = new Completer();
 
@@ -219,7 +226,7 @@ class Page extends State<ProductIndex>
 
     return GestureDetector(
       onTap: () {
-        Navigator.of(context).push(CustomRoute(ProdDetail(
+        Navigator.of(context).push(PageRouter(ProdDetail(
           prodID: item['prodID'],
         )));
       },

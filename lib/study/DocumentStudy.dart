@@ -56,7 +56,6 @@ class DocumentStudyState extends State<DocumentStudy> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color.fromRGBO(0, 170, 255, 1),
         elevation: 1.0,
         leading: IconButton(
             icon: Icon(Icons.arrow_back),

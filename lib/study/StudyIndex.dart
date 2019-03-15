@@ -5,7 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
-import 'package:flutter_exueshi/common/custom_router.dart';
+import 'package:flutter_exueshi/common/PageRouter.dart';
 import 'package:flutter_exueshi/components/MyIcons.dart';
 import 'package:flutter_exueshi/sign/Login.dart';
 import 'package:flutter_exueshi/study/ProductContent.dart';
@@ -44,7 +44,6 @@ class Page extends State<StudyIndex>
     // TODO: implement build
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color.fromRGBO(0, 170, 255, 1),
         elevation: 0.0,
         leading: Container(
           width: 100,
@@ -53,12 +52,10 @@ class Page extends State<StudyIndex>
               children: <Widget>[
                 Text(
                   '全部',
-                  style: TextStyle(color: Colors.white),
                 ),
                 Icon(
                   Icons.keyboard_arrow_down,
                   size: 14.0,
-                  color: Colors.white,
                 )
               ],
             ),
@@ -95,13 +92,12 @@ class Page extends State<StudyIndex>
               child: Center(
                 child: Text(
                   '管理',
-                  style: TextStyle(color: Colors.white),
                 ),
               ),
             ),
             onTap: () {
               print('点击了管理');
-              Navigator.of(context).push(CustomRoute(
+              Navigator.of(context).push(PageRouter(
                   StudyManage(studyingList: studyingList, userID: userID)));
             },
           ),
@@ -165,7 +161,7 @@ class Page extends State<StudyIndex>
             Text('登录后查看更多内容'),
             RaisedButton(
               onPressed: () {
-                Navigator.of(context).push(CustomRoute(Login()));
+                Navigator.of(context).push(PageRouter(Login()));
               },
               child: Text(
                 '立即登录',
@@ -231,7 +227,7 @@ class Page extends State<StudyIndex>
           padding: EdgeInsets.all(0),
           onPressed: () {
             print('点击课程');
-            Navigator.of(context).push(CustomRoute(ProductContent(
+            Navigator.of(context).push(PageRouter(ProductContent(
               product: item,
             )));
           },

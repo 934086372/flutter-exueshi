@@ -12,7 +12,6 @@ class _UserFeedbackState extends State<UserFeedback> {
     return Scaffold(
       backgroundColor: Color.fromRGBO(240, 243, 245, 1),
       appBar: AppBar(
-        backgroundColor: Color.fromRGBO(0, 170, 255, 1),
         elevation: 1.0,
         title: Text('问题反馈'),
         centerTitle: true,

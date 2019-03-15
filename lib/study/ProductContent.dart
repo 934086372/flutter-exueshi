@@ -5,7 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
-import 'package:flutter_exueshi/common/custom_router.dart';
+import 'package:flutter_exueshi/common/PageRouter.dart';
 import 'package:flutter_exueshi/components/MyIcons.dart';
 import 'package:flutter_exueshi/study/DocumentStudy.dart';
 import 'package:flutter_exueshi/study/PaperIndex.dart';
@@ -144,7 +144,6 @@ class _ProductContentState extends State<ProductContent>
 
     return Scaffold(
         appBar: AppBar(
-          backgroundColor: Color.fromRGBO(0, 170, 255, 1),
           elevation: 0.0,
           title: Text('目录'),
           centerTitle: true,
@@ -216,7 +215,7 @@ class _ProductContentState extends State<ProductContent>
                       leading: Icon(MyIcons.paper),
                       title: Text('试卷'),
                       onTap: () {
-                        Navigator.of(context).push(CustomRoute(PaperIndex()));
+                        Navigator.of(context).push(PageRouter(PaperIndex()));
                       },
                     );
                   }),
@@ -228,7 +227,7 @@ class _ProductContentState extends State<ProductContent>
                       title: Text('资料'),
                       onTap: () {
                         Navigator.of(context)
-                            .push(CustomRoute(DocumentStudy()));
+                            .push(PageRouter(DocumentStudy()));
                       },
                     );
                   })
@@ -297,10 +296,10 @@ class _ProductContentState extends State<ProductContent>
           case '视频':
             break;
           case '试卷':
-            Navigator.of(context).push(CustomRoute(PaperIndex()));
+            Navigator.of(context).push(PageRouter(PaperIndex()));
             break;
           case '资料':
-            Navigator.of(context).push(CustomRoute(DocumentStudy()));
+            Navigator.of(context).push(PageRouter(DocumentStudy()));
             break;
         }
       },
@@ -508,7 +507,7 @@ class _ProductContentState extends State<ProductContent>
   }
 
   _videoFullscreen() async {
-    final result = await Navigator.of(context).push(CustomRoute(Scaffold(
+    final result = await Navigator.of(context).push(PageRouter(Scaffold(
         body: Stack(
           children: <Widget>[
             videoPlayer(true),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_exueshi/common/custom_router.dart';
+import 'package:flutter_exueshi/common/PageRouter.dart';
 import 'package:flutter_exueshi/sign/Login.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -13,7 +13,6 @@ class _SettingState extends State<Setting> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color.fromRGBO(0, 170, 255, 1),
         elevation: 1.0,
         title: Text('账户设置'),
         centerTitle: true,
@@ -165,6 +164,6 @@ class _SettingState extends State<Setting> {
     SharedPreferences _pref = await SharedPreferences.getInstance();
     await _pref.remove('userData');
 
-    Navigator.of(context).push(CustomRoute(Login()));
+    Navigator.of(context).push(PageRouter(Login()));
   }
 }

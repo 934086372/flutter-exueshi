@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
-import 'package:flutter_exueshi/common/custom_router.dart';
+import 'package:flutter_exueshi/common/PageRouter.dart';
 import 'package:flutter_exueshi/components/MyIcons.dart';
 import 'package:flutter_exueshi/user/MyMistakesDetail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -29,7 +29,6 @@ class _MyMistakesState extends State<MyMistakes> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Color.fromRGBO(0, 170, 255, 1),
         elevation: 1.0,
         title: Text('错题集'),
         centerTitle: true,
@@ -64,7 +63,7 @@ class _MyMistakesState extends State<MyMistakes> {
                           item['masteredCount'].toString()),
                       trailing: Icon(Icons.chevron_right),
                       onTap: () {
-                        Navigator.of(context).push(CustomRoute(MyMistakesDetail(
+                        Navigator.of(context).push(PageRouter(MyMistakesDetail(
                           prodID: group['prodID'],
                           paperID: item['paperID'],
                         )));

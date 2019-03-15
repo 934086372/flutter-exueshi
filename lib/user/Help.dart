@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
-import 'package:flutter_exueshi/common/custom_router.dart';
+import 'package:flutter_exueshi/common/PageRouter.dart';
 import 'package:flutter_html_view/flutter_html_view.dart';
 import 'package:flutter_exueshi/user/UserFeedback.dart';
 
@@ -25,7 +25,6 @@ class _HelpState extends State<Help> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color.fromRGBO(0, 170, 255, 1),
         elevation: 1.0,
         title: Text('帮助中心'),
         centerTitle: true,
@@ -33,7 +32,7 @@ class _HelpState extends State<Help> {
           IconButton(
               icon: Icon(Icons.feedback),
               onPressed: () {
-                Navigator.of(context).push(CustomRoute(UserFeedback()));
+                Navigator.of(context).push(PageRouter(UserFeedback()));
               })
         ],
       ),
@@ -80,7 +79,7 @@ class _HelpState extends State<Help> {
                 trailing: Icon(Icons.chevron_right),
                 onTap: () {
                   Navigator.of(context)
-                      .push(CustomRoute(HelpDetail(helpItem: helpList[index])));
+                      .push(PageRouter(HelpDetail(helpItem: helpList[index])));
                 },
               );
             });
@@ -104,7 +103,6 @@ class HelpDetail extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color.fromRGBO(0, 170, 255, 1),
         elevation: 1.0,
         title: Text('帮助详情'),
         centerTitle: true,

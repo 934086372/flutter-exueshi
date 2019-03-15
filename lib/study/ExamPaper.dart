@@ -32,7 +32,6 @@ class _ExamPaperState extends State<ExamPaper> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          backgroundColor: Color.fromRGBO(0, 170, 255, 1),
           elevation: 1.0,
           title: Text('考试模式'),
           actions: <Widget>[

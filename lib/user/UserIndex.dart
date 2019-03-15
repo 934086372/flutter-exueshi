@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
-import 'package:flutter_exueshi/common/custom_router.dart';
+import 'package:flutter_exueshi/common/PageRouter.dart';
 import 'package:flutter_exueshi/user/About.dart';
 import 'package:flutter_exueshi/user/Help.dart';
 import 'package:flutter_exueshi/user/MyAddress.dart';
@@ -83,8 +83,7 @@ class Page extends State<UserIndex> with AutomaticKeepAliveClientMixin {
     // TODO: implement build
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color.fromRGBO(0, 170, 255, 1),
-        elevation: 1.0,
+        elevation: 0.0,
         title: Text('个人中心'),
         centerTitle: true,
         actions: <Widget>[
@@ -384,7 +383,7 @@ class Page extends State<UserIndex> with AutomaticKeepAliveClientMixin {
         page = MyMessage();
     }
 
-    Navigator.of(context).push(CustomRoute(page));
+    Navigator.of(context).push(PageRouter(page));
   }
 
   @override

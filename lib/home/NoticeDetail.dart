@@ -17,7 +17,6 @@ class Notice extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
-        backgroundColor: Color.fromRGBO(0, 170, 255, 1),
         elevation: 0.0,
         actions: <Widget>[
           IconButton(

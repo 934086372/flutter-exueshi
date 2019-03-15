@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_exueshi/common/custom_router.dart';
+import 'package:flutter_exueshi/common/PageRouter.dart';
 
 class MyAddress extends StatefulWidget {
   @override
@@ -11,7 +11,6 @@ class _MyAddressState extends State<MyAddress> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color.fromRGBO(0, 170, 255, 1),
         elevation: 1.0,
         title: Text('收货地址管理'),
         centerTitle: true,
@@ -19,7 +18,7 @@ class _MyAddressState extends State<MyAddress> {
           IconButton(
               icon: Icon(Icons.add),
               onPressed: () {
-                Navigator.of(context).push(CustomRoute(AddAddress(
+                Navigator.of(context).push(PageRouter(AddAddress(
                   action: 'add',
                 )));
               })
@@ -79,7 +78,6 @@ class _AddAddressState extends State<AddAddress> {
     return Scaffold(
       backgroundColor: Color.fromRGBO(241, 241, 241, 1),
       appBar: AppBar(
-        backgroundColor: Color.fromRGBO(0, 170, 255, 1),
         elevation: 1.0,
         title: Text(title),
         centerTitle: true,

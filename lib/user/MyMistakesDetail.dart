@@ -36,7 +36,6 @@ class _MyMistakesDetailState extends State<MyMistakesDetail> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color.fromRGBO(0, 170, 255, 1),
         elevation: 1.0,
         centerTitle: true,
         title: Container(

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 // 自定义左右滑动路由动画
-class CustomRoute extends PageRouteBuilder {
+class PageRouter extends PageRouteBuilder {
   final Widget widget;
 
-  CustomRoute(this.widget)
+  PageRouter(this.widget)
       : super(
             transitionDuration: const Duration(milliseconds: 400),
             pageBuilder: (BuildContext context, Animation<double> animation1,

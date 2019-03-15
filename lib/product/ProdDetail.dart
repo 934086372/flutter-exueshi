@@ -4,7 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/components/MyIcons.dart';
 import 'package:flutter_exueshi/components/SliverAppBarDelegate.dart';
-import 'package:flutter_exueshi/common/custom_router.dart';
+import 'package:flutter_exueshi/common/PageRouter.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
 import 'package:flutter_exueshi/product/Cart.dart';
 import 'package:flutter_html_view/flutter_html_view.dart';
@@ -59,7 +59,6 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
     // TODO: implement build
     return Scaffold(
         appBar: AppBar(
-          backgroundColor: Color.fromRGBO(0, 190, 255, 1),
           elevation: 0.0,
           title: Text('产品详情'),
           centerTitle: true,
@@ -67,7 +66,7 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
             IconButton(
                 icon: Icon(Icons.shopping_cart),
                 onPressed: () {
-                  Navigator.of(context).push(CustomRoute(Cart()));
+                  Navigator.of(context).push(PageRouter(Cart()));
                 })
           ],
         ),

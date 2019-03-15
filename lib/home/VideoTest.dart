@@ -29,7 +29,6 @@ class _VideoTestState extends State<VideoTest> {
     return Scaffold(
         appBar: AppBar(
           elevation: 1.0,
-          backgroundColor: Color.fromRGBO(0, 170, 255, 1),
           title: Text('视频播放器插件'),
           centerTitle: true,
         ),

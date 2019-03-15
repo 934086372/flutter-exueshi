@@ -5,15 +5,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
 import 'package:flutter_exueshi/home/BannerDetail.dart';
 import 'package:flutter_exueshi/home/NoticeDetail.dart';
+import 'package:flutter_exueshi/home/SwitchCity.dart';
 import 'package:flutter_exueshi/home/VideoTest.dart';
 import 'package:flutter_exueshi/product/Cart.dart';
+import 'package:flutter_exueshi/product/ProdSearch.dart';
 import 'package:flutter_exueshi/sign/Login.dart';
 import 'package:flutter_exueshi/product/ProdDetail.dart';
 import 'package:flutter_exueshi/study/LivingRoom.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter_exueshi/common/custom_router.dart';
+import 'package:flutter_exueshi/common/PageRouter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:event_bus/event_bus.dart';
 
 class HomeIndex extends StatefulWidget {
   @override
@@ -24,6 +27,8 @@ class HomeIndex extends StatefulWidget {
 }
 
 class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
+  String city = '全国';
+
   var _banners = [];
   var _bulletions = [];
   var _livings = [];
@@ -64,83 +69,8 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        elevation: 1.0,
-        backgroundColor: Color.fromRGBO(0, 170, 255, 1),
-        title: Container(
-          child: Row(
-            children: <Widget>[
-              GestureDetector(
-                onTap: () {
-                  Navigator.of(context).push(CustomRoute(VideoTest()));
-                },
-                child: Row(
-                  children: <Widget>[
-                    Icon(
-                      Icons.location_on,
-                      color: Colors.white,
-                    ),
-                    Text(
-                      '重庆',
-                      style: TextStyle(color: Colors.white, fontSize: 16.0),
-                    ),
-                    Icon(
-                      Icons.keyboard_arrow_down,
-                      size: 16.0,
-                      color: Colors.white,
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                  child: Container(
-                    margin: EdgeInsets.only(
-                        top: 10.0, bottom: 10.0, left: 20.0),
-                    child: Material(
-                      borderRadius: BorderRadius.circular(30.0),
-                      color: Color.fromRGBO(255, 255, 255, 0.85),
-                      child: Container(
-                        alignment: Alignment.centerRight,
-                        child: Icon(
-                          Icons.search,
-                          color: Colors.black12,
-                        ),
-                        padding: EdgeInsets.only(right: 10.0),
-                      ),
-                    ),
-                  )),
-            ],
-          ),
-        ),
-        actions: <Widget>[
-          Stack(
-            alignment: Alignment(0.5, -0.5),
-            children: <Widget>[
-              IconButton(
-                  icon: Icon(
-                    Icons.shopping_cart,
-                  ),
-                  onPressed: () {
-                    print(loginData);
-                    if (loginData == '') {
-                      Navigator.of(context).push(CustomRoute(Login()));
-                    } else {
-                      Navigator.of(context).push(CustomRoute(Cart()));
-                    }
-                  }),
-              Container(
-                child: Center(
-                    child: Text(
-                      '99+',
-                      style: TextStyle(fontSize: 10.0),
-                    )),
-                decoration:
-                BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                width: 18.0,
-                height: 18.0,
-              ),
-            ],
-          )
-        ],
+        elevation: 0.0,
+        title: renderHeader(),
       ),
       body: RefreshIndicator(
         child: _renderPage(),
@@ -156,7 +86,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
     Ajax ajax = new Ajax();
 
     Response response = await ajax
-        .post('/api/Product/getProductBannerBulletion', data: {'areas': '全国'});
+        .post('/api/Product/getProductBannerBulletion', data: {'areas': city});
 
     Response response2 =
     await ajax.post('/api/live/getLives', data: {'page': 1});
@@ -196,25 +126,31 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
         );
         break;
       case 2:
-        return Container(
-          color: Colors.white,
-          child: SingleChildScrollView(
-            child: Column(
-              children: <Widget>[
-                _bannerWidget(),
-                _noticeBar(),
-                _livingContainer(),
-                Column(
-                  children: List.generate(_products.length, (index) {
-                    return _courseContainer(index);
-                  }),
-                ),
-                Container(
-                  margin: EdgeInsets.all(10.0),
+        return SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              renderBanner(),
+              renderNotice(),
+              renderLiveCourse(),
+              Column(
+                children: List.generate(_products.length, (index) {
+                  return renderCourseItem(index);
+                }),
+              ),
+              GestureDetector(
+                onTap: () {
+                  print('more');
+                  EventBus eventBus = new EventBus();
+                  eventBus.fire('changeMainTab');
+                  eventBus.fire('changeMainTab');
+                },
+                child: Container(
+                  margin: EdgeInsets.all(20.0),
                   child: Text('查看更多'),
-                )
-              ],
-            ),
+                ),
+              )
+            ],
           ),
         );
       case 3:
@@ -234,44 +170,125 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
     }
   }
 
+  Widget renderHeader() {
+    return Row(
+      children: <Widget>[
+        GestureDetector(
+          onTap: resetCity,
+          child: Row(
+            children: <Widget>[
+              Icon(
+                Icons.location_on,
+              ),
+              Text(
+                city,
+                style: TextStyle(fontSize: 14.0),
+              ),
+              Icon(
+                Icons.keyboard_arrow_down,
+                size: 16.0,
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+            child: GestureDetector(
+              onTap: () {
+                Navigator.of(context).push(PageRouter(ProdSearch()));
+              },
+              child: Container(
+                height: 35,
+                margin: EdgeInsets.symmetric(horizontal: 10.0),
+                child: Material(
+                  borderRadius: BorderRadius.circular(30.0),
+                  color: Color.fromRGBO(241, 241, 241, 1),
+                  child: Container(
+                    alignment: Alignment.centerRight,
+                    child: Icon(
+                      Icons.search,
+                      color: Colors.black12,
+                    ),
+                    padding: EdgeInsets.only(right: 10.0),
+                  ),
+                ),
+              ),
+            )),
+        GestureDetector(
+            child: Stack(
+              children: <Widget>[
+                Container(
+                  padding:
+                  EdgeInsets.symmetric(vertical: 10.0, horizontal: 5.0),
+                  child: Icon(
+                    Icons.shopping_cart,
+                  ),
+                ),
+                Positioned(
+                  top: 5,
+                  right: 0,
+                  child: Container(
+                    child: Center(
+                        child: Text(
+                          '50',
+                          style: TextStyle(fontSize: 8.0),
+                        )),
+                    decoration: BoxDecoration(
+                        color: Colors.red, shape: BoxShape.circle),
+                    width: 16.0,
+                    height: 16.0,
+                  ),
+                )
+              ],
+            ),
+            onTap: () {
+              print(loginData);
+              if (loginData == '') {
+                Navigator.of(context).push(PageRouter(Login()));
+              } else {
+                Navigator.of(context).push(PageRouter(Cart()));
+              }
+            })
+      ],
+    );
+  }
+
   // 渲染banner
-  Widget _bannerWidget() {
-    return _banners.length > 0
-        ? AspectRatio(
-      aspectRatio: 375 / 159,
-      child: Swiper(
-        layout: SwiperLayout.DEFAULT,
-        itemBuilder: (BuildContext context, int index) {
-          return Image.network(
-            _banners[index]['adPicUrl'],
-            fit: BoxFit.fill,
-          );
-        },
-        itemCount: _banners.length,
-        pagination: SwiperPagination(),
-        loop: true,
-        onTap: (index) {
-          Navigator.of(context).push(
-              CustomRoute(BannerDetail(bannerItem: _banners[index])));
-        },
-      ),
-    )
-        : Container();
+  Widget renderBanner() {
+    if (_banners.length > 0)
+      return AspectRatio(
+        aspectRatio: 75 / 32,
+        child: Swiper(
+          layout: SwiperLayout.DEFAULT,
+          viewportFraction: 0.8,
+          scale: 0.9,
+          itemBuilder: (BuildContext context, int index) {
+            return ClipRRect(
+              borderRadius: BorderRadius.circular(10.0),
+              child: Image.network(
+                _banners[index]['adPicUrl'],
+                fit: BoxFit.fill,
+              ),
+            );
+          },
+          itemCount: _banners.length,
+          pagination: SwiperPagination(),
+          loop: true,
+          autoplay: true,
+          duration: 5,
+          onTap: (index) {
+            Navigator.of(context)
+                .push(PageRouter(BannerDetail(bannerItem: _banners[index])));
+          },
+        ),
+      );
+    return Container();
   }
 
   // 公告栏
-  Widget _noticeBar() {
+  Widget renderNotice() {
     return Container(
-      width: MediaQuery
-          .of(context)
-          .size
-          .width,
       height: 45.0,
-      margin: EdgeInsets.only(left: 10.0, right: 10.0, bottom: 10.0),
-      decoration: BoxDecoration(
-          border: Border(
-              bottom: BorderSide(
-                  color: Color.fromRGBO(204, 204, 204, 1), width: 0.5))),
+      margin: EdgeInsets.all(10.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
@@ -298,7 +315,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                 print(index);
                 print(_bulletions[index]);
                 Navigator.of(context)
-                    .push(CustomRoute(Notice(noticeItem: _bulletions[index])));
+                    .push(PageRouter(Notice(noticeItem: _bulletions[index])));
               },
               itemBuilder: (BuildContext context, int index) {
                 return Row(
@@ -336,7 +353,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
   }
 
   // 直播列表
-  Widget _livingContainer() {
+  Widget renderLiveCourse() {
     return _livings.length > 0
         ? Column(
       children: <Widget>[
@@ -405,7 +422,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
               return GestureDetector(
                 onTap: () {
                   Navigator.of(context)
-                      .push(CustomRoute(LivingRoom(product: _livings[index])));
+                      .push(PageRouter(LivingRoom(product: _livings[index])));
                 },
                 child: Container(
                   width: itemWidth,
@@ -503,7 +520,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
   Widget renderOnlyLive(item) {
     return GestureDetector(
       onTap: () {
-        Navigator.of(context).push(CustomRoute(LivingRoom(product: item)));
+        Navigator.of(context).push(PageRouter(LivingRoom(product: item)));
       },
       child: Container(
         margin: EdgeInsets.symmetric(horizontal: 10.0),
@@ -573,7 +590,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
   }
 
   // 课程列表
-  Widget _courseContainer(index) {
+  Widget renderCourseItem(index) {
     if (index == 0) {
       return Column(
         children: <Widget>[
@@ -711,8 +728,16 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
       ),
       onTap: () {
         Navigator.of(context)
-            .push(CustomRoute(ProdDetail(prodID: item['prodID'])));
+            .push(PageRouter(ProdDetail(prodID: item['prodID'])));
       },
     );
+  }
+
+  void resetCity() async {
+    final _city = await Navigator.of(context).push(PageRouter(SwitchCity()));
+    setState(() {
+      city = _city;
+      _getHomeData();
+    });
   }
 }

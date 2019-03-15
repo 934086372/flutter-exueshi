@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
-import 'package:flutter_exueshi/common/custom_router.dart';
+import 'package:flutter_exueshi/common/PageRouter.dart';
 import 'package:flutter_exueshi/components/MyIcons.dart';
 import 'package:flutter_exueshi/product/ProdDetail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -37,7 +37,6 @@ class _MyOrderState extends State<MyOrder> with SingleTickerProviderStateMixin {
     return Scaffold(
       backgroundColor: Color.fromRGBO(241, 241, 241, 1),
       appBar: AppBar(
-        backgroundColor: Color.fromRGBO(0, 170, 255, 1),
         elevation: 1.0,
         title: Text('我的订单'),
         centerTitle: true,
@@ -230,7 +229,7 @@ class _MyOrderState extends State<MyOrder> with SingleTickerProviderStateMixin {
             ]),
         onPressed: () {
           print(item);
-          Navigator.of(context).push(CustomRoute(ProdDetail(
+          Navigator.of(context).push(PageRouter(ProdDetail(
             prodID: item['prodID'],
           )));
         },

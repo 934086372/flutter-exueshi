@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_exueshi/common/custom_router.dart';
+import 'package:flutter_exueshi/common/PageRouter.dart';
 import 'package:flutter_exueshi/components/MyIcons.dart';
 import 'package:flutter_exueshi/study/ExamPaper.dart';
 
@@ -105,7 +105,7 @@ class _PaperIndexState extends State<PaperIndex> {
                         child: GestureDetector(
                           onTap: () {
                             Navigator.of(context).push(
-                                CustomRoute(ExamPaper()));
+                                PageRouter(ExamPaper()));
                           },
                           child: Container(
                             width: 130.0,
