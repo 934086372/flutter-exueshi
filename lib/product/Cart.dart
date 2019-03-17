@@ -28,7 +28,6 @@ class Page extends State<Cart> {
     return Scaffold(
       appBar: AppBar(
         title: Text('购物车'),
-        backgroundColor: Color.fromRGBO(0, 190, 255, 1),
         centerTitle: true,
         elevation: 1.0,
         actions: <Widget>[

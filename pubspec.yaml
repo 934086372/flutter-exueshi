@@ -24,8 +24,14 @@ dependencies:
   shared_preferences: ^0.4.3
   video_player: ^0.10.0
   flutter_html_textview: ^0.2.6
-
+  flutter_html_view: any
   flutter_qq: ^0.0.4
+  flutter_full_pdf_viewer: ^1.0.3
+  webview_flutter: ^0.0.1
+  share: ^0.6.0
+  chewie: any
+  device_info: ^0.4.0
+  event_bus: 1.0.3
 
 dev_dependencies:
   flutter_test:
@@ -56,6 +62,7 @@ flutter:
   - assets/images/boot/start_03.jpg
   - assets/images/boot/start_04.jpg
   - assets/images/bg_ex_blank.png
+  - assets/images/about.jpg
   - assets/videos/video.mp4
 
   # An image asset can refer to one or more resolution-specific "variants", see

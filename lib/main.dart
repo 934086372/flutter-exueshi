@@ -1,3 +1,4 @@
+import 'package:event_bus/event_bus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
@@ -5,10 +6,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'views/HomeIndex.dart';
-import 'views/ProductIndex.dart';
-import 'views/StudyIndex.dart';
-import 'views/UserIndex.dart';
+import 'package:flutter_exueshi/home/HomeIndex.dart';
+import 'package:flutter_exueshi/product/ProductIndex.dart';
+import 'package:flutter_exueshi/study/StudyIndex.dart';
+import 'package:flutter_exueshi/user/UserIndex.dart';
 
 void main() {
   SystemChrome.setPreferredOrientations([
@@ -40,8 +41,6 @@ void main() {
 * */
 
 class MyApp extends StatelessWidget {
-  final Color _themeColor = Colors.blue;
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -49,18 +48,14 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.light,
-        primarySwatch: _themeColor,
+        primaryColor: Colors.white,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-
-  final String title;
-
   @override
   State<StatefulWidget> createState() {
     // TODO: implement createState
@@ -77,9 +72,15 @@ class _MyHomePageState extends State<MyHomePage> {
 
   String alreadyUse;
 
+  EventBus eventBus = new EventBus();
+
   void init() {
     pages..add(HomeIndex())..add(ProductIndex())..add(StudyIndex())..add(
         UserIndex());
+
+    eventBus.on().listen((event) {
+      print(event);
+    });
   }
 
   void _pageChange(int index) {
@@ -171,9 +172,9 @@ class _MyHomePageState extends State<MyHomePage> {
                 loop: false,
                 itemCount: 4,
                 itemBuilder: (BuildContext context, int index) {
-                  String imagePath =
-                      'assets/images/boot/start_0' + (index + 1).toString() +
-                          '.jpg';
+                  String imagePath = 'assets/images/boot/start_0' +
+                      (index + 1).toString() +
+                      '.jpg';
                   return Image.asset(
                     imagePath,
                     fit: BoxFit.fill,
@@ -219,66 +220,82 @@ class _MyHomePageState extends State<MyHomePage> {
   // 主页
   Widget _mainView() {
     return Scaffold(
-      body: PageView.builder(
-        pageSnapping: true,
-        onPageChanged: _pageChange,
-        controller: _pageController,
-        itemBuilder: (BuildContext context, int index) {
-          return pages.elementAt(index);
-        },
-        itemCount: 4,
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-              icon: Icon(
-                Icons.home,
-                color: Colors.black26,
-              ),
-              activeIcon: Icon(
-                Icons.home,
-                color: Colors.blue,
-              ),
-              title: Text('首页')),
-          BottomNavigationBarItem(
-              icon: Icon(
-                Icons.apps,
-                color: Colors.black26,
-              ),
-              activeIcon: Icon(
-                Icons.apps,
-                color: Colors.blue,
-              ),
-              title: Text('选课中心')),
-          BottomNavigationBarItem(
-              icon: Icon(
-                Icons.edit,
-                color: Colors.black26,
-              ),
-              activeIcon: Icon(
-                Icons.edit,
-                color: Colors.blue,
-              ),
-              title: Text('我的学习')),
-          BottomNavigationBarItem(
-              icon: Icon(
-                Icons.person_outline,
-                color: Colors.black26,
-              ),
-              activeIcon: Icon(
-                Icons.person_outline,
-                color: Colors.blue,
-              ),
-              title: Text('个人中心'))
+      resizeToAvoidBottomPadding: true,
+      body: Column(
+        children: <Widget>[
+          Expanded(
+            child: PageView.builder(
+              pageSnapping: true,
+              onPageChanged: _pageChange,
+              controller: _pageController,
+              itemBuilder: (BuildContext context, int index) {
+                return pages.elementAt(index);
+              },
+              itemCount: 4,
+            ),
+          ),
+          CupertinoTabBar(
+            backgroundColor: Color.fromRGBO(255, 255, 255, 0.8),
+            items: <BottomNavigationBarItem>[
+              BottomNavigationBarItem(
+                  icon: Icon(
+                    Icons.home,
+                    color: Colors.black26,
+                    size: 24,
+                  ),
+                  activeIcon: Icon(
+                    Icons.home,
+                    color: Colors.blue,
+                    size: 24,
+                  ),
+                  title: Text('首页')),
+              BottomNavigationBarItem(
+                  icon: Icon(
+                    Icons.apps,
+                    color: Colors.black26,
+                    size: 24,
+                  ),
+                  activeIcon: Icon(
+                    Icons.apps,
+                    color: Colors.blue,
+                    size: 24,
+                  ),
+                  title: Text('选课中心')),
+              BottomNavigationBarItem(
+                  icon: Icon(
+                    Icons.edit,
+                    color: Colors.black26,
+                    size: 24,
+                  ),
+                  activeIcon: Icon(
+                    Icons.edit,
+                    color: Colors.blue,
+                    size: 24,
+                  ),
+                  title: Text('我的学习')),
+              BottomNavigationBarItem(
+                  icon: Icon(
+                    Icons.person_outline,
+                    color: Colors.black26,
+                    size: 24,
+                  ),
+                  activeIcon: Icon(
+                    Icons.person_outline,
+                    size: 24,
+                    color: Colors.blue,
+                  ),
+                  title: Text('个人中心'))
+            ],
+            currentIndex: _currentIndex,
+            onTap: (int index) {
+              eventBus.fire('changeMainTab');
+              setState(() {
+                _currentIndex = index;
+                _pageController.jumpToPage(_currentIndex);
+              });
+            },
+          )
         ],
-        currentIndex: _currentIndex,
-        type: BottomNavigationBarType.fixed,
-        onTap: (int index) {
-          setState(() {
-            _currentIndex = index;
-            _pageController.jumpToPage(_currentIndex);
-          });
-        },
       ),
     );
   }

@@ -5,11 +5,11 @@ import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
-import 'package:flutter_exueshi/common/custom_router.dart';
+import 'package:flutter_exueshi/common/PageRouter.dart';
 import 'package:flutter_exueshi/components/MyIcons.dart';
+import 'package:flutter_exueshi/sign/Login.dart';
 import 'package:flutter_exueshi/study/ProductContent.dart';
 import 'package:flutter_exueshi/study/StudyManage.dart';
-import 'package:flutter_exueshi/study/VideoPlayer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class StudyIndex extends StatefulWidget {
@@ -24,7 +24,7 @@ class Page extends State<StudyIndex>
     with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   TabController _tabController;
 
-  var _pageLoadingStatus = 1;
+  var pageLoadStatus = 1;
 
   var studyingList = [];
   var studiedList = [];
@@ -44,7 +44,6 @@ class Page extends State<StudyIndex>
     // TODO: implement build
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color.fromRGBO(0, 170, 255, 1),
         elevation: 0.0,
         leading: Container(
           width: 100,
@@ -53,12 +52,10 @@ class Page extends State<StudyIndex>
               children: <Widget>[
                 Text(
                   '全部',
-                  style: TextStyle(color: Colors.white),
                 ),
                 Icon(
                   Icons.keyboard_arrow_down,
                   size: 14.0,
-                  color: Colors.white,
                 )
               ],
             ),
@@ -95,13 +92,12 @@ class Page extends State<StudyIndex>
               child: Center(
                 child: Text(
                   '管理',
-                  style: TextStyle(color: Colors.white),
                 ),
               ),
             ),
             onTap: () {
               print('点击了管理');
-              Navigator.of(context).push(CustomRoute(
+              Navigator.of(context).push(PageRouter(
                   StudyManage(studyingList: studyingList, userID: userID)));
             },
           ),
@@ -132,7 +128,7 @@ class Page extends State<StudyIndex>
   }
 
   Widget _renderPage() {
-    switch (_pageLoadingStatus) {
+    switch (pageLoadStatus) {
       case 1:
         return Center(
           child: CupertinoActivityIndicator(),
@@ -156,6 +152,24 @@ class Page extends State<StudyIndex>
       case 4:
         return Center(
           child: Text('网络错误'),
+        );
+        break;
+      case 5:
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text('登录后查看更多内容'),
+            RaisedButton(
+              onPressed: () {
+                Navigator.of(context).push(PageRouter(Login()));
+              },
+              child: Text(
+                '立即登录',
+                style: TextStyle(color: Colors.white),
+              ),
+              color: Colors.lightBlueAccent,
+            )
+          ],
         );
         break;
       default:
@@ -213,7 +227,7 @@ class Page extends State<StudyIndex>
           padding: EdgeInsets.all(0),
           onPressed: () {
             print('点击课程');
-            Navigator.of(context).push(CustomRoute(ProductContent(
+            Navigator.of(context).push(PageRouter(ProductContent(
               product: item,
             )));
           },
@@ -354,12 +368,17 @@ class Page extends State<StudyIndex>
   }
 
   // 获取我的课程列表
-  Future _getMyStudyList() async {
-    Completer _completer = new Completer();
-
+  void _getMyStudyList() async {
     SharedPreferences _prefs = await SharedPreferences.getInstance();
-    var user = json.decode(_prefs.getString('userData'));
+    String _user = _prefs.getString('userData');
+    if (_user == null) {
+      setState(() {
+        pageLoadStatus = 5;
+      });
+      return;
+    }
 
+    var user = json.decode(_user);
     userID = user['userID'];
 
     Ajax ajax = new Ajax();
@@ -398,11 +417,8 @@ class Page extends State<StudyIndex>
     }
 
     setState(() {
-      _pageLoadingStatus = 2;
+      pageLoadStatus = 2;
     });
-
-    _completer.complete(user);
-    return _completer.future;
   }
 
   Future _refreshStudyingList() async {

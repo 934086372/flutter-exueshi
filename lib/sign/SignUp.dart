@@ -16,7 +16,6 @@ class Page extends State<SignUp> {
     // TODO: implement build
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color.fromRGBO(0, 170, 255, 1),
         elevation: 0.0,
         title: Text('注册'),
         centerTitle: true,

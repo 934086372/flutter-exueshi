@@ -51,7 +51,6 @@ class _StudyManageState extends State<StudyManage> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color.fromRGBO(0, 170, 255, 1),
         elevation: 0.0,
         title: Text('批量管理'),
         centerTitle: true,
