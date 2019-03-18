@@ -119,7 +119,7 @@ class Page extends State<ProductIndex>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                CircularProgressIndicator(),
+                CupertinoActivityIndicator(),
                 Padding(
                   padding: const EdgeInsets.only(left: 10.0),
                   child: Text(

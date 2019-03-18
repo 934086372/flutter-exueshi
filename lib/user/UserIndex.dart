@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
 import 'package:flutter_exueshi/common/PageRouter.dart';
@@ -107,7 +108,7 @@ class Page extends State<UserIndex> with AutomaticKeepAliveClientMixin {
   Widget renderPage() {
     switch (pageLoadStatus) {
       case 0:
-        return Center(child: CircularProgressIndicator());
+        return Center(child: CupertinoActivityIndicator());
         break;
       case 1:
         print(userData);
@@ -353,7 +354,7 @@ class Page extends State<UserIndex> with AutomaticKeepAliveClientMixin {
         page = MyOrder();
         break;
       case 'coupon':
-        page = MyOrder();
+        page = MyCoupon();
         break;
       case 'address':
         page = MyAddress();

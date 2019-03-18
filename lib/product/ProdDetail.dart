@@ -1,13 +1,18 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/components/MyIcons.dart';
 import 'package:flutter_exueshi/components/SliverAppBarDelegate.dart';
 import 'package:flutter_exueshi/common/PageRouter.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
 import 'package:flutter_exueshi/product/Cart.dart';
+import 'package:flutter_exueshi/sign/Login.dart';
+import 'package:flutter_exueshi/study/ProductContent.dart';
 import 'package:flutter_html_view/flutter_html_view.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProdDetail extends StatefulWidget {
   final prodID;
@@ -36,6 +41,9 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
 
   TabController _controller;
   TabController _controllerChild;
+
+  AnimationController _animationController;
+  Animation _animation;
 
   @override
   void initState() {
@@ -74,11 +82,10 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
   }
 
   Widget renderPage() {
-    print(pageLoadStatus);
     switch (pageLoadStatus) {
       case 1:
         return Center(
-          child: CircularProgressIndicator(),
+          child: CupertinoActivityIndicator(),
         );
         break;
       case 2:
@@ -104,25 +111,32 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
   }
 
   Widget _bottomBar() {
+    // 判断是否购买
+
+    bool isBuy = product['isBuy'] == '1';
+
     return Container(
       decoration: BoxDecoration(
           border: Border(
               top: BorderSide(
                   color: Color.fromRGBO(226, 226, 226, 1), width: 0.5))),
       child: Row(children: <Widget>[
-        Container(
+        Expanded(
           child: Row(
             children: <Widget>[
-              Container(
-                padding: EdgeInsets.only(left: 10.0, right: 10.0),
-                child: Row(
-                  children: <Widget>[
-                    Icon(
-                      Icons.share,
-                      size: 16.0,
-                    ),
-                    Text('分享')
-                  ],
+              Expanded(
+                child: Container(
+                  padding: EdgeInsets.only(left: 10.0, right: 10.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Icon(
+                        Icons.share,
+                        size: 16.0,
+                      ),
+                      Text('分享')
+                    ],
+                  ),
                 ),
               ),
               Container(
@@ -130,36 +144,88 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
                 height: 40.0,
                 color: Color.fromRGBO(226, 226, 226, 1),
               ),
-              Container(
-                padding: EdgeInsets.only(left: 10.0, right: 10.0),
-                child: Row(
-                  children: <Widget>[
-                    Icon(
-                      MyIcons.like_border,
-                      size: 16.0,
-                    ),
-                    Text('收藏')
-                  ],
+              Expanded(
+                child: Container(
+                  padding: EdgeInsets.only(left: 10.0, right: 10.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Icon(
+                        MyIcons.like_border,
+                        size: 16.0,
+                      ),
+                      Text('收藏')
+                    ],
+                  ),
                 ),
               ),
             ],
           ),
         ),
-        Expanded(
+        isBuy
+            ? Stack(
+          children: <Widget>[
+            Container(
+              child: Ink(
+                decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: <Color>[
+                        Color.fromRGBO(0, 145, 219, 1),
+                        Color.fromRGBO(0, 175, 219, 1)
+                      ],
+                    )),
+                /*padding: EdgeInsets.all(0.0),*/
+
+                child: FlatButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                        PageRouter(ProductContent(product: product)));
+                  },
+                  child: Container(
+                    alignment: Alignment.center,
+                    padding: EdgeInsets.symmetric(
+                        vertical: 15.0, horizontal: 20.0),
+                    child: Text(
+                      '前往学习',
+                      style:
+                      TextStyle(color: Colors.white, fontSize: 16.0),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            AnimatedPositioned(
+                top: 0,
+                right: 0,
+                width: 50,
+                height: 50,
+                curve: Curves.easeIn,
+                child: Image.network(
+                  product['logo'],
+                ),
+                duration: Duration(milliseconds: 300)),
+          ],
+        )
+            : Container(),
+        isBuy
+            ? Container()
+            : Expanded(
           child: Ink(
             decoration: BoxDecoration(
                 gradient: LinearGradient(
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-              colors: <Color>[
-                Color.fromRGBO(242, 182, 0, 1),
-                Color.fromRGBO(242, 161, 0, 1)
-              ],
-            )),
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: <Color>[
+                    Color.fromRGBO(242, 182, 0, 1),
+                    Color.fromRGBO(242, 161, 0, 1)
+                  ],
+                )),
             /*padding: EdgeInsets.all(0.0),*/
 
             child: FlatButton(
-              onPressed: () {},
+              onPressed: addCart,
               child: Container(
                 alignment: Alignment.center,
                 padding: EdgeInsets.only(top: 15.0, bottom: 15.0),
@@ -171,29 +237,31 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
             ),
           ),
         ),
-        Expanded(
+        isBuy
+            ? Container()
+            : Expanded(
             child: Ink(
-          child: FlatButton(
-            onPressed: () {},
-            child: Container(
-              alignment: Alignment.center,
-              padding: EdgeInsets.only(top: 15.0, bottom: 15.0),
-              child: Text(
-                '立即购买',
-                style: TextStyle(color: Colors.white, fontSize: 16.0),
+              child: FlatButton(
+                onPressed: () {},
+                child: Container(
+                  alignment: Alignment.center,
+                  padding: EdgeInsets.only(top: 15.0, bottom: 15.0),
+                  child: Text(
+                    '立即购买',
+                    style: TextStyle(color: Colors.white, fontSize: 16.0),
+                  ),
+                ),
               ),
-            ),
-          ),
-          decoration: BoxDecoration(
-              gradient: LinearGradient(
-            begin: Alignment.topRight,
-            end: Alignment.bottomLeft,
-            colors: <Color>[
-              Color.fromRGBO(242, 126, 0, 1),
-              Color.fromRGBO(242, 102, 0, 1)
-            ],
-          )),
-        )),
+              decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topRight,
+                    end: Alignment.bottomLeft,
+                    colors: <Color>[
+                      Color.fromRGBO(242, 126, 0, 1),
+                      Color.fromRGBO(242, 102, 0, 1)
+                    ],
+                  )),
+            )),
       ]),
     );
   }
@@ -350,6 +418,12 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
 
   // 章节目录页
   Widget _tabPage2() {
+    if (_chapter == null || _chapter.length <= 0) {
+      return Center(
+        child: Text('暂无数据'),
+      );
+    }
+
     // 判断产品类型
     if (prodType == 'package') {
       // 套餐产品
@@ -443,7 +517,7 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
   List<Widget> _getChapterItem(data) {
     List<Widget> _list = new List<Widget>();
     if (data == null) {
-      _list.add(Center(child: CircularProgressIndicator()));
+      _list.add(Center(child: CupertinoActivityIndicator()));
       return _list;
     }
 
@@ -456,7 +530,7 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
         _list.add(ExpansionTile(
             title: Text(groupName),
             initiallyExpanded: true,
-            children: List.generate(data[i].length, (int index) {
+            children: List.generate(data[i]['list'].length, (int index) {
               var item = data[i]['list'][index];
               var itemName = '';
               var itemIcon;
@@ -514,11 +588,7 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
     return FutureBuilder(
         future: _getComments(),
         builder: (context, snapshot) {
-          print(snapshot);
-
           if (snapshot.connectionState == ConnectionState.done) {
-            print(_commentList.length);
-
             if (_commentList.length > 0) {
               return Container(
                 child: Column(
@@ -853,13 +923,25 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
   }
 
   void _getProdDetail() async {
+    var userID = '';
+    SharedPreferences _pref = await SharedPreferences.getInstance();
+    var _user = _pref.getString('userData');
+    if (_user != null) {
+      userID = json.decode(_user)['userID'];
+    }
+
+    print(userID);
+    print(prodID);
+
     Ajax ajax = new Ajax();
-    Response response =
-    await ajax.post('/api/Product/getProduct', data: {'prodID': prodID});
+    Response response = await ajax.post('/api/Product/getProduct',
+        data: {'prodID': prodID, 'userID': userID});
     if (response.statusCode == 200) {
       var ret = response.data;
       if (ret['code'].toString() == '200') {
         product = ret['data'];
+        print(product);
+        print(product['isBuy']);
         switch (product['prodType']) {
           case '视频':
             prodType = 'video';
@@ -889,16 +971,20 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
   }
 
   Future _getChapter() async {
-    print(product['prodType']);
     Ajax ajax = new Ajax();
     Response response = await ajax.post('/api/Product/getProductLists',
         data: {'prodID': prodID, 'type': prodType});
     if (response.statusCode == 200) {
       var ret = response.data;
-      print(ret);
-      _chapter = ret['data'];
-      setState(() {});
+      if (ret['code'].toString() == '200') {
+        _chapter = ret['data'];
+      } else {
+        _chapter = [];
+      }
+    } else {
+      _chapter = [];
     }
+    setState(() {});
   }
 
   Future _getComments() async {
@@ -919,5 +1005,34 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
     }
     completer.complete(true);
     completer.future;
+  }
+
+  void addCart() async {
+    SharedPreferences _pref = await SharedPreferences.getInstance();
+    var _user = _pref.getString('userData');
+    if (_user == null) {
+      // 进入登录界面
+      Navigator.of(context).push(PageRouter(Login()));
+    } else {
+      var userData = json.decode(_user);
+      Ajax ajax = new Ajax();
+      Response response = await ajax.post('/api/user/cart/prod/addCart', data: {
+        'userID': userData['userID'],
+        'token': userData['token'],
+        'prodIDs': [prodID]
+      });
+      if (response.statusCode == 200) {
+        var ret = response.data;
+        if (ret['code'].toString() == '200') {
+          Scaffold.of(context)
+              .showSnackBar(SnackBar(content: Text('加入购物车成功!')));
+        } else {
+          Scaffold.of(context)
+              .showSnackBar(SnackBar(content: Text(ret['msg'].toString())));
+        }
+      } else {
+        Scaffold.of(context).showSnackBar(SnackBar(content: Text('网络请求错误')));
+      }
+    }
   }
 }

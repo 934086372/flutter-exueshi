@@ -122,7 +122,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
     switch (_pageLoadingStatus) {
       case 1:
         return Center(
-          child: CircularProgressIndicator(),
+          child: CupertinoActivityIndicator(),
         );
         break;
       case 2:
@@ -230,7 +230,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                     child: Center(
                         child: Text(
                           '50',
-                          style: TextStyle(fontSize: 8.0),
+                          style: TextStyle(fontSize: 8.0, color: Colors.white),
                         )),
                     decoration: BoxDecoration(
                         color: Colors.red, shape: BoxShape.circle),
@@ -287,13 +287,13 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
   // 公告栏
   Widget renderNotice() {
     return Container(
-      height: 45.0,
+      height: 40.0,
       margin: EdgeInsets.all(10.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
           Container(
-            width: 45.0,
+            width: 40.0,
             child: Image.asset(
               'assets/images/news.png',
               fit: BoxFit.fitWidth,
@@ -308,7 +308,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
           Expanded(
             child: Swiper(
               key: Key('noticeBar'),
-              containerHeight: 45.0,
+              containerHeight: 40.0,
               scrollDirection: Axis.vertical,
               itemCount: _bulletions.length,
               onTap: (index) {
@@ -626,7 +626,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
   Widget _buildCourseItem(index) {
     var item = _products[index];
 
-    return InkResponse(
+    return InkWell(
       child: Container(
         height: 100.0,
         padding: EdgeInsets.only(left: 10.0, right: 10.0, bottom: 10.0),
