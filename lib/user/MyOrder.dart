@@ -207,10 +207,12 @@ class _MyOrderState extends State<MyOrder> with SingleTickerProviderStateMixin {
                                       return Container();
                                   }
                                 } else {
-                                  return Text(
-                                    item['prodContentName'].toString(),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
+                                  return Expanded(
+                                    child: Text(
+                                      item['prodContentName'].toString(),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   );
                                 }
                               }),

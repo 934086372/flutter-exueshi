@@ -269,14 +269,14 @@ class Page extends State<ProductIndex>
                             '￥' + item['realPrice'].toString(),
                             style: TextStyle(
                                 color: Color.fromRGBO(255, 102, 0, 1),
-                                fontSize: 18,
+                                fontSize: 16,
                                 fontFamily: 'PingFang-SC-Bold'),
                           ),
                           Text(
                             '原价:￥' + item['price'].toString(),
                             style: TextStyle(
                                 decoration: TextDecoration.lineThrough,
-                                fontSize: 11.0,
+                                fontSize: 10.0,
                                 color: Color.fromRGBO(153, 153, 153, 1)),
                           ),
                         ]),

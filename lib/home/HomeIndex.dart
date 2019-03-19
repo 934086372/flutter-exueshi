@@ -44,6 +44,8 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
   // TODO: implement wantKeepAlive
   bool get wantKeepAlive => true;
 
+  EventBus eventBus = new EventBus();
+
   // 获取登录数据
   _getPreference() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -56,14 +58,15 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
     super.initState();
     _getHomeData();
     _getPreference();
+
+    eventBus.on().listen((event){
+      print(event);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    clientWidth = MediaQuery
-        .of(context)
-        .size
-        .width;
+    clientWidth = MediaQuery.of(context).size.width;
 
     // TODO: implement build
     return Scaffold(
@@ -89,7 +92,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
         .post('/api/Product/getProductBannerBulletion', data: {'areas': city});
 
     Response response2 =
-    await ajax.post('/api/live/getLives', data: {'page': 1});
+        await ajax.post('/api/live/getLives', data: {'page': 1});
 
     // 判断返回结果
     if (response.statusCode == 200) {
@@ -141,13 +144,11 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
               GestureDetector(
                 onTap: () {
                   print('more');
-                  EventBus eventBus = new EventBus();
-                  eventBus.fire('changeMainTab');
                   eventBus.fire('changeMainTab');
                 },
                 child: Container(
                   margin: EdgeInsets.all(20.0),
-                  child: Text('查看更多'),
+                  child: Center(child: Text('查看更多')),
                 ),
               )
             ],
@@ -193,32 +194,32 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
         ),
         Expanded(
             child: GestureDetector(
-              onTap: () {
-                Navigator.of(context).push(PageRouter(ProdSearch()));
-              },
+          onTap: () {
+            Navigator.of(context).push(PageRouter(ProdSearch()));
+          },
+          child: Container(
+            height: 35,
+            margin: EdgeInsets.symmetric(horizontal: 10.0),
+            child: Material(
+              borderRadius: BorderRadius.circular(30.0),
+              color: Color.fromRGBO(241, 241, 241, 1),
               child: Container(
-                height: 35,
-                margin: EdgeInsets.symmetric(horizontal: 10.0),
-                child: Material(
-                  borderRadius: BorderRadius.circular(30.0),
-                  color: Color.fromRGBO(241, 241, 241, 1),
-                  child: Container(
-                    alignment: Alignment.centerRight,
-                    child: Icon(
-                      Icons.search,
-                      color: Colors.black12,
-                    ),
-                    padding: EdgeInsets.only(right: 10.0),
-                  ),
+                alignment: Alignment.centerRight,
+                child: Icon(
+                  Icons.search,
+                  color: Colors.black12,
                 ),
+                padding: EdgeInsets.only(right: 10.0),
               ),
-            )),
+            ),
+          ),
+        )),
         GestureDetector(
             child: Stack(
               children: <Widget>[
                 Container(
                   padding:
-                  EdgeInsets.symmetric(vertical: 10.0, horizontal: 5.0),
+                      EdgeInsets.symmetric(vertical: 10.0, horizontal: 5.0),
                   child: Icon(
                     Icons.shopping_cart,
                   ),
@@ -229,9 +230,9 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                   child: Container(
                     child: Center(
                         child: Text(
-                          '50',
-                          style: TextStyle(fontSize: 8.0, color: Colors.white),
-                        )),
+                      '50',
+                      style: TextStyle(fontSize: 8.0, color: Colors.white),
+                    )),
                     decoration: BoxDecoration(
                         color: Colors.red, shape: BoxShape.circle),
                     width: 16.0,
@@ -301,7 +302,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
           ),
           Container(
             margin:
-            EdgeInsets.only(left: 10.0, top: 6.5, right: 10.0, bottom: 6.5),
+                EdgeInsets.only(left: 10.0, top: 6.5, right: 10.0, bottom: 6.5),
             color: Color.fromRGBO(204, 204, 204, 1),
             width: 0.5,
           ),
@@ -356,31 +357,31 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
   Widget renderLiveCourse() {
     return _livings.length > 0
         ? Column(
-      children: <Widget>[
-        Container(
-            margin: EdgeInsets.only(top: 10.0),
-            child: Row(
-              children: <Widget>[
-                Container(
-                  child: Text(''),
-                  width: 5.0,
-                  height: 20.0,
-                  margin: EdgeInsets.only(left: 10.0, right: 10.0),
-                  decoration: BoxDecoration(
-                      color: Color.fromRGBO(0, 145, 219, 1),
-                      borderRadius:
-                      BorderRadius.all(Radius.circular(2.5))),
-                ),
-                Text(
-                  '直播课程',
-                  style: TextStyle(color: Colors.black, fontSize: 20.0),
-                ),
-              ],
-            )),
-        Container(
-            margin: EdgeInsets.only(top: 15.0), child: _livingList()),
-      ],
-    )
+            children: <Widget>[
+              Container(
+                  margin: EdgeInsets.only(top: 10.0),
+                  child: Row(
+                    children: <Widget>[
+                      Container(
+                        child: Text(''),
+                        width: 5.0,
+                        height: 20.0,
+                        margin: EdgeInsets.only(left: 10.0, right: 10.0),
+                        decoration: BoxDecoration(
+                            color: Color.fromRGBO(0, 145, 219, 1),
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(2.5))),
+                      ),
+                      Text(
+                        '直播课程',
+                        style: TextStyle(color: Colors.black, fontSize: 20.0),
+                      ),
+                    ],
+                  )),
+              Container(
+                  margin: EdgeInsets.only(top: 15.0), child: _livingList()),
+            ],
+          )
         : Container();
   }
 
@@ -401,10 +402,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
         ),
       );
     } else {
-      var clientWidth = MediaQuery
-          .of(context)
-          .size
-          .width;
+      var clientWidth = MediaQuery.of(context).size.width;
       var itemWidth = (clientWidth - 50) / 2;
       var itemHeight = itemWidth * 160 / 222;
       return Container(
@@ -492,29 +490,29 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
   Expanded renderTwoLive(item) {
     return Expanded(
         child: Container(
-          margin: EdgeInsets.only(left: 10.0),
-          decoration: BoxDecoration(color: Colors.white, boxShadow: <BoxShadow>[
-            BoxShadow(color: Color.fromRGBO(26, 81, 170, 0.1), blurRadius: 15.0)
-          ]),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Container(
-                child: ClipRRect(
-                    borderRadius: BorderRadius.all(Radius.circular(2.5)),
-                    child: FadeInImage.assetNetwork(
-                        placeholder: 'assets/images/loading.gif',
-                        image: item['logo'])),
-              ),
-              Text(
-                item['liveName'],
-                style: TextStyle(fontSize: 15.0, letterSpacing: 0.15),
-              ),
-              Text('主讲老师:' + item['mainLecturer'].toString()),
-              Text('直播时间:' + item['beginHourTime'].toString())
-            ],
+      margin: EdgeInsets.only(left: 10.0),
+      decoration: BoxDecoration(color: Colors.white, boxShadow: <BoxShadow>[
+        BoxShadow(color: Color.fromRGBO(26, 81, 170, 0.1), blurRadius: 15.0)
+      ]),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Container(
+            child: ClipRRect(
+                borderRadius: BorderRadius.all(Radius.circular(2.5)),
+                child: FadeInImage.assetNetwork(
+                    placeholder: 'assets/images/loading.gif',
+                    image: item['logo'])),
           ),
-        ));
+          Text(
+            item['liveName'],
+            style: TextStyle(fontSize: 15.0, letterSpacing: 0.15),
+          ),
+          Text('主讲老师:' + item['mainLecturer'].toString()),
+          Text('直播时间:' + item['beginHourTime'].toString())
+        ],
+      ),
+    ));
   }
 
   Widget renderOnlyLive(item) {
@@ -576,7 +574,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                         decoration: BoxDecoration(
                             color: Color.fromRGBO(215, 218, 219, 0.4),
                             borderRadius:
-                            BorderRadius.all(Radius.circular(5.0))),
+                                BorderRadius.all(Radius.circular(5.0))),
                       ),
                     ],
                   ),
@@ -668,31 +666,31 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                   children: <Widget>[
                     Expanded(
                         child: Text(
-                          item['prodName'],
-                          style: TextStyle(color: Colors.black, fontSize: 14.0),
-                          maxLines: 2,
-                          softWrap: false,
-                          overflow: TextOverflow.ellipsis,
-                        )),
+                      item['prodName'],
+                      style: TextStyle(color: Colors.black, fontSize: 14.0),
+                      maxLines: 2,
+                      softWrap: false,
+                      overflow: TextOverflow.ellipsis,
+                    )),
                     item['dataFlag'] != '免费'
                         ? Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: <Widget>[
-                          Text(
-                            "￥" + item['realPrice'].toString(),
-                            style: TextStyle(
-                                color: Color.fromRGBO(255, 102, 0, 1),
-                                fontSize: 18,
-                                fontFamily: 'PingFang-SC-Bold'),
-                          ),
-                          Text(
-                            '原价:￥' + item['price'],
-                            style: TextStyle(
-                                decoration: TextDecoration.lineThrough,
-                                fontSize: 11.0,
-                                color: Color.fromRGBO(153, 153, 153, 1)),
-                          ),
-                        ])
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: <Widget>[
+                                Text(
+                                  "￥" + item['realPrice'].toString(),
+                                  style: TextStyle(
+                                      color: Color.fromRGBO(255, 102, 0, 1),
+                                      fontSize: 18,
+                                      fontFamily: 'PingFang-SC-Bold'),
+                                ),
+                                Text(
+                                  '原价:￥' + item['price'],
+                                  style: TextStyle(
+                                      decoration: TextDecoration.lineThrough,
+                                      fontSize: 11.0,
+                                      color: Color.fromRGBO(153, 153, 153, 1)),
+                                ),
+                              ])
                         : Text('免费'),
                     Row(children: <Widget>[
                       Expanded(
