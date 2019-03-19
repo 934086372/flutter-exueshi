@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
@@ -73,6 +74,11 @@ class _MyMessageState extends State<MyMessage> {
     Key key = Key(item['noticeID'].toString());
     return Dismissible(
       key: key,
+      confirmDismiss: _confirmDelete,
+      background: Container(
+        color: Colors.red,
+        child: Align(alignment: Alignment.centerRight, child: Text('删除')),
+      ),
       child: ListTile(
         title: Row(
           children: <Widget>[
@@ -100,6 +106,10 @@ class _MyMessageState extends State<MyMessage> {
         },
       ),
     );
+  }
+
+  Future<bool> _confirmDelete(DismissDirection dismissDirection) async {
+    return false;
   }
 
   void getMessageList() async {

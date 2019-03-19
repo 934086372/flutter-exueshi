@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
+import 'package:flutter_exueshi/components/SlideListTile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Cart extends StatefulWidget {
@@ -14,7 +15,7 @@ class Cart extends StatefulWidget {
   }
 }
 
-class Page extends State<Cart> {
+class Page extends State<Cart> with TickerProviderStateMixin {
   List<String> items = List.generate(50, (int index) {
     return 'items $index';
   });
@@ -65,22 +66,11 @@ class Page extends State<Cart> {
           child: ListView.builder(
               itemCount: cartList.length,
               itemBuilder: (BuildContext context, int index) {
-                return GestureDetector(
-                  onHorizontalDragStart: (direction) {
-                    print(direction);
-                  },
-                  onHorizontalDragDown: (pos) {},
-                  onHorizontalDragUpdate: (offset) {
-                    print(offset.delta.dx);
-                  },
-                  child: Stack(
-                    children: <Widget>[
-                      Container(
-                        color: Colors.red,
-                      ),
-                      renderItem(cartList[index])
-                    ],
-                  ),
+                return SlideListTile(
+                  child: renderItem(cartList[index]),
+                  menu: <Widget>[
+                    FlatButton(onPressed: () {}, child: Text('删除'))
+                  ],
                 );
               }),
         );
