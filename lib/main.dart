@@ -75,11 +75,19 @@ class _MyHomePageState extends State<MyHomePage> {
   EventBus eventBus = new EventBus();
 
   void init() {
-    pages..add(HomeIndex())..add(ProductIndex())..add(StudyIndex())..add(
-        UserIndex());
+    pages
+      ..add(HomeIndex())
+      ..add(ProductIndex())
+      ..add(StudyIndex())
+      ..add(UserIndex());
 
     eventBus.on().listen((event) {
       print(event);
+      if (event == 'changeMainTab') {
+        setState(() {
+          _currentIndex = 1;
+        });
+      }
     });
   }
 
@@ -128,7 +136,7 @@ class _MyHomePageState extends State<MyHomePage> {
         child: GestureDetector(
           child: Container(
             padding:
-            EdgeInsets.only(left: 20.0, top: 8.0, right: 20.0, bottom: 8.0),
+                EdgeInsets.only(left: 20.0, top: 8.0, right: 20.0, bottom: 8.0),
             child: Text(
               '马上使用',
               style: TextStyle(color: Colors.white),
@@ -159,62 +167,53 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget _bootView() {
     return Scaffold(
         body: Container(
-          width: MediaQuery
-              .of(context)
-              .size
-              .width,
-          height: MediaQuery
-              .of(context)
-              .size
-              .height,
-          child: Stack(children: <Widget>[
-            Swiper(
-                loop: false,
-                itemCount: 4,
-                itemBuilder: (BuildContext context, int index) {
-                  String imagePath = 'assets/images/boot/start_0' +
-                      (index + 1).toString() +
-                      '.jpg';
-                  return Image.asset(
-                    imagePath,
-                    fit: BoxFit.fill,
-                  );
-                },
-                onIndexChanged: (int index) {
-                  setState(() {
-                    _currentBootPageIndex = index;
-                  });
-                }),
-            Positioned(
-              child: GestureDetector(
-                child: Container(
-                  padding: EdgeInsets.only(
-                      left: 10.0, top: 2.0, right: 10.0, bottom: 2.0),
-                  child: Text(
-                    '跳过',
-                    style: TextStyle(color: Colors.white, fontSize: 12.0),
-                  ),
-                  decoration: BoxDecoration(
-                      color: Color.fromRGBO(0, 0, 0, 0.5),
-                      borderRadius: BorderRadius.all(Radius.circular(30.0))),
-                ),
-                onTap: () {
-                  _navigationToMain();
-                },
+      width: MediaQuery.of(context).size.width,
+      height: MediaQuery.of(context).size.height,
+      child: Stack(children: <Widget>[
+        Swiper(
+            loop: false,
+            itemCount: 4,
+            itemBuilder: (BuildContext context, int index) {
+              String imagePath = 'assets/images/boot/start_0' +
+                  (index + 1).toString() +
+                  '.jpg';
+              return Image.asset(
+                imagePath,
+                fit: BoxFit.fill,
+              );
+            },
+            onIndexChanged: (int index) {
+              setState(() {
+                _currentBootPageIndex = index;
+              });
+            }),
+        Positioned(
+          child: GestureDetector(
+            child: Container(
+              padding: EdgeInsets.only(
+                  left: 10.0, top: 2.0, right: 10.0, bottom: 2.0),
+              child: Text(
+                '跳过',
+                style: TextStyle(color: Colors.white, fontSize: 12.0),
               ),
-              top: 40.0,
-              right: 30.0,
+              decoration: BoxDecoration(
+                  color: Color.fromRGBO(0, 0, 0, 0.5),
+                  borderRadius: BorderRadius.all(Radius.circular(30.0))),
             ),
-            Positioned(
-              child: _useBtn(),
-              bottom: 80.0,
-              width: MediaQuery
-                  .of(context)
-                  .size
-                  .width,
-            )
-          ]),
-        ));
+            onTap: () {
+              _navigationToMain();
+            },
+          ),
+          top: 40.0,
+          right: 30.0,
+        ),
+        Positioned(
+          child: _useBtn(),
+          bottom: 80.0,
+          width: MediaQuery.of(context).size.width,
+        )
+      ]),
+    ));
   }
 
   // 主页
@@ -288,7 +287,6 @@ class _MyHomePageState extends State<MyHomePage> {
             ],
             currentIndex: _currentIndex,
             onTap: (int index) {
-              eventBus.fire('changeMainTab');
               setState(() {
                 _currentIndex = index;
                 _pageController.jumpToPage(_currentIndex);
