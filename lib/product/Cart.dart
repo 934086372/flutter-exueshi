@@ -1,4 +1,11 @@
+import 'dart:convert';
+
+import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_exueshi/common/Ajax.dart';
+import 'package:flutter_exueshi/components/SlideListTile.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Cart extends StatefulWidget {
   @override
@@ -8,18 +15,22 @@ class Cart extends StatefulWidget {
   }
 }
 
-class Page extends State<Cart> {
+class Page extends State<Cart> with TickerProviderStateMixin {
   List<String> items = List.generate(50, (int index) {
     return 'items $index';
   });
   var _selectAll = false;
 
+  int pageLoadStatus = 1;
+  var cartList;
+
+  Set selectedItem = new Set();
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-
-    print(items);
+    getCartList();
   }
 
   @override
@@ -29,7 +40,7 @@ class Page extends State<Cart> {
       appBar: AppBar(
         title: Text('购物车'),
         centerTitle: true,
-        elevation: 1.0,
+        elevation: 0,
         actions: <Widget>[
           FlatButton(
               onPressed: () {},
@@ -46,32 +57,116 @@ class Page extends State<Cart> {
   }
 
   Widget _body() {
-    return Expanded(
-      child: ListView.builder(
-          itemCount: items.length,
-          itemBuilder: (BuildContext context, int index) {
-            return GestureDetector(
-              onHorizontalDragStart: (direction) {
-                print(direction);
-              },
-              onHorizontalDragDown: (pos) {
+    switch (pageLoadStatus) {
+      case 1:
+        return Center(child: CupertinoActivityIndicator());
+        break;
+      case 2:
+        return Expanded(
+          child: ListView.builder(
+              itemCount: cartList.length,
+              itemBuilder: (BuildContext context, int index) {
+                return SlideListTile(
+                  child: renderItem(cartList[index]),
+                  menu: <Widget>[
+                    FlatButton(onPressed: () {}, child: Text('删除'))
+                  ],
+                );
+              }),
+        );
+        break;
+      case 3:
+        return Center(
+          child: Text('暂无数据'),
+        );
+        break;
+      case 4:
+        return Center(
+          child: Text('网络请求错误'),
+        );
+        break;
+      default:
+        return Center(
+          child: Text('未知错误'),
+        );
+        break;
+    }
+  }
 
-              },
-              onHorizontalDragUpdate: (offset) {
-                print(offset.delta.dx);
-              },
-              child: Stack(
-                children: <Widget>[
-                  Container(
-                    color: Colors.red,
-                  ),
-                  ListTile(
-                    title: Text('title $index'),
-                  )
-                ],
+  Widget renderItem(item) {
+    bool isSelected = selectedItem.contains(item['prodID']);
+
+    return Container(
+      height: 100,
+      padding: EdgeInsets.all(10.0),
+      color: Colors.white,
+      child: Row(
+        children: <Widget>[
+          Align(
+            child: GestureDetector(
+              child: isSelected
+                  ? Icon(
+                Icons.check_circle,
+                color: Color.fromRGBO(0, 170, 255, 1),
+              )
+                  : Icon(
+                Icons.radio_button_unchecked,
+                color: Color.fromRGBO(204, 204, 204, 1),
               ),
-            );
-          }),
+              onTap: () {
+                if (isSelected) {
+                  selectedItem.remove(item['prodID']);
+                } else {
+                  selectedItem.add(item['prodID']);
+                }
+                setState(() {});
+              },
+            ),
+          ),
+          AspectRatio(
+            aspectRatio: 16.0 / 9.0,
+            child: Center(
+              child: ClipRRect(
+                borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                child: FadeInImage.assetNetwork(
+                  placeholder: 'assets/images/loading.gif',
+                  image: item['logo'].toString(),
+                  fit: BoxFit.fill,
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Column(
+              children: <Widget>[
+                Text(
+                  item['prodName'].toString(),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Expanded(child: Container()),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    Text(
+                      '￥' + item['realPrice'].toString(),
+                      style: TextStyle(
+                          color: Color.fromRGBO(255, 102, 0, 1),
+                          fontSize: 18.0),
+                    ),
+                    Text(
+                      ' 原价:￥' + item['price'].toString(),
+                      style: TextStyle(
+                          fontSize: 11,
+                          color: Color.fromRGBO(153, 153, 153, 1)),
+                    )
+                  ],
+                )
+              ],
+            ),
+          )
+        ],
+      ),
     );
   }
 
@@ -120,5 +215,40 @@ class Page extends State<Cart> {
         ],
       ),
     );
+  }
+
+  void getCartList() async {
+    SharedPreferences _prefs = await SharedPreferences.getInstance();
+    String _user = _prefs.getString('userData');
+    if (_user == null) {
+      setState(() {
+        pageLoadStatus = 5;
+      });
+      return;
+    }
+
+    var user = json.decode(_user);
+
+    Ajax ajax = new Ajax();
+    Response response = await ajax.post('/api/user/cart/prods', data: {
+      'userID': user['userID'],
+      'token': user['token'],
+      'page': 1,
+      'num': 50
+    });
+    if (response.statusCode == 200) {
+      var ret = response.data;
+      if (ret['code'].toString() == '200') {
+        cartList = ret['data'];
+        print(cartList);
+        pageLoadStatus = 2;
+      } else {
+        cartList = [];
+        pageLoadStatus = 3;
+      }
+    } else {
+      pageLoadStatus = 4;
+    }
+    setState(() {});
   }
 }

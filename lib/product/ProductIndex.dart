@@ -115,21 +115,21 @@ class Page extends State<ProductIndex>
           Expanded(child: _renderPage()),
           showGetMore
               ? Container(
-                  padding: EdgeInsets.symmetric(vertical: 10.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      CupertinoActivityIndicator(),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 10.0),
-                        child: Text(
-                          '加载中',
-                          style: TextStyle(fontSize: 14.0),
-                        ),
-                      )
-                    ],
+            padding: EdgeInsets.symmetric(vertical: 10.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                CupertinoActivityIndicator(),
+                Padding(
+                  padding: const EdgeInsets.only(left: 10.0),
+                  child: Text(
+                    '加载中',
+                    style: TextStyle(fontSize: 14.0),
                   ),
                 )
+              ],
+            ),
+          )
               : Container(),
         ],
       ),
@@ -177,9 +177,11 @@ class Page extends State<ProductIndex>
     }
   }
 
+
   Widget renderAppBar() {
     return Row(
-      children: <Widget>[],
+      children: <Widget>[
+      ],
     );
   }
 
@@ -240,14 +242,9 @@ class Page extends State<ProductIndex>
                 borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(5.0),
                     topRight: Radius.circular(5.0)),
-                child: FadeInImage.assetNetwork(
-                  placeholder: 'assets/images/loading.gif',
-                  image: item['logo'],
+                child: Image.network(
+                  item['logo'],
                   fit: BoxFit.fill,
-                  /* child: Image.network(
-                    item['logo'],
-                    fit: BoxFit.fill,
-                  ),*/
                 ),
               ),
               Padding(
@@ -259,30 +256,30 @@ class Page extends State<ProductIndex>
                         overflow: TextOverflow.ellipsis, maxLines: 2),
                     item['prodFlag'] == '免费'
                         ? Text(
-                            '免费',
+                      '免费',
+                      style: TextStyle(
+                          color: Color.fromRGBO(255, 102, 0, 1),
+                          fontSize: 18,
+                          fontFamily: 'PingFang-SC-Bold'),
+                    )
+                        : Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          Text(
+                            '￥' + item['realPrice'].toString(),
                             style: TextStyle(
                                 color: Color.fromRGBO(255, 102, 0, 1),
                                 fontSize: 18,
                                 fontFamily: 'PingFang-SC-Bold'),
-                          )
-                        : Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: <Widget>[
-                                Text(
-                                  '￥' + item['realPrice'].toString(),
-                                  style: TextStyle(
-                                      color: Color.fromRGBO(255, 102, 0, 1),
-                                      fontSize: 18,
-                                      fontFamily: 'PingFang-SC-Bold'),
-                                ),
-                                Text(
-                                  '原价:￥' + item['price'].toString(),
-                                  style: TextStyle(
-                                      decoration: TextDecoration.lineThrough,
-                                      fontSize: 11.0,
-                                      color: Color.fromRGBO(153, 153, 153, 1)),
-                                ),
-                              ]),
+                          ),
+                          Text(
+                            '原价:￥' + item['price'].toString(),
+                            style: TextStyle(
+                                decoration: TextDecoration.lineThrough,
+                                fontSize: 11.0,
+                                color: Color.fromRGBO(153, 153, 153, 1)),
+                          ),
+                        ]),
                     Row(children: <Widget>[
                       Expanded(
                         child: Row(
