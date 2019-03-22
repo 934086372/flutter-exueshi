@@ -18,7 +18,7 @@ class _SlideListTileState extends State<SlideListTile>
 
   double _dragExtent = 0.0;
 
-  double _threshold = 60.0;
+  double _threshold = 80.0;
 
   double get _overallDragAxisExtent {
     final Size size = context.size;
@@ -68,7 +68,7 @@ class _SlideListTileState extends State<SlideListTile>
       _moveController.value = _dragExtent.abs() / _overallDragAxisExtent;
     } else {
       _dragExtent = 0.0;
-      _moveController.value = -1.0;
+      _moveController.value = 0.0;
     }
   }
 
@@ -94,8 +94,10 @@ class _SlideListTileState extends State<SlideListTile>
         Positioned.fill(
           child: Container(
             color: Colors.red,
+            alignment: Alignment.centerRight,
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: widget.menu,
             ),
           ),

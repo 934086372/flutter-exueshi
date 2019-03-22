@@ -16,15 +16,12 @@ class Cart extends StatefulWidget {
 }
 
 class Page extends State<Cart> with TickerProviderStateMixin {
-  List<String> items = List.generate(50, (int index) {
-    return 'items $index';
-  });
   var _selectAll = false;
-
   int pageLoadStatus = 1;
-  var cartList;
+  List cartList;
 
-  Set selectedItem = new Set();
+  Set selectedItem = new Set(); // 已选商品集合
+  double orderAmount = 0.0;
 
   @override
   void initState() {
@@ -40,13 +37,12 @@ class Page extends State<Cart> with TickerProviderStateMixin {
       appBar: AppBar(
         title: Text('购物车'),
         centerTitle: true,
-        elevation: 0,
+        elevation: 0.0,
         actions: <Widget>[
           FlatButton(
               onPressed: () {},
               child: Text(
                 '管理',
-                style: TextStyle(color: Colors.white),
               ))
         ],
       ),
@@ -69,7 +65,13 @@ class Page extends State<Cart> with TickerProviderStateMixin {
                 return SlideListTile(
                   child: renderItem(cartList[index]),
                   menu: <Widget>[
-                    FlatButton(onPressed: () {}, child: Text('删除'))
+                    FlatButton(
+                        onPressed: () {},
+                        child: Center(
+                            child: Text(
+                              '删除',
+                              style: TextStyle(color: Colors.white),
+                            )))
                   ],
                 );
               }),
@@ -116,9 +118,12 @@ class Page extends State<Cart> with TickerProviderStateMixin {
               onTap: () {
                 if (isSelected) {
                   selectedItem.remove(item['prodID']);
+                  orderAmount -= double.parse(item['realPrice']);
                 } else {
                   selectedItem.add(item['prodID']);
+                  orderAmount += double.parse(item['realPrice']);
                 }
+                _selectAll = selectedItem.length == cartList.length;
                 setState(() {});
               },
             ),
@@ -178,13 +183,21 @@ class Page extends State<Cart> with TickerProviderStateMixin {
                   color: Color.fromRGBO(226, 226, 226, 1), width: 0.5))),
       child: Row(
         children: <Widget>[
-          Checkbox(
-              value: _selectAll,
-              onChanged: (value) {
-                setState(() {
-                  _selectAll = value;
-                });
-              }),
+          GestureDetector(
+            onTap: selectAll,
+            child: Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: _selectAll
+                  ? Icon(
+                Icons.check_circle,
+                color: Color.fromRGBO(0, 170, 255, 1),
+              )
+                  : Icon(
+                Icons.radio_button_unchecked,
+                color: Color.fromRGBO(204, 204, 204, 1),
+              ),
+            ),
+          ),
           Text('全选'),
           Expanded(
             child: Container(),
@@ -194,7 +207,7 @@ class Page extends State<Cart> with TickerProviderStateMixin {
             style: TextStyle(fontSize: 17.0),
           ),
           Text(
-            '￥498',
+            '￥${orderAmount}',
             style: TextStyle(
                 fontSize: 17.0, color: Color.fromRGBO(255, 102, 0, 1)),
           ),
@@ -215,6 +228,23 @@ class Page extends State<Cart> with TickerProviderStateMixin {
         ],
       ),
     );
+  }
+
+  void selectAll() {
+    if (_selectAll) {
+      // 已全选
+      selectedItem.clear();
+      orderAmount = 0.0;
+    } else {
+      // 非全选
+      cartList.forEach((item) {
+        selectedItem.add(item['prodID']);
+        orderAmount += double.parse(item['realPrice']);
+      });
+    }
+    setState(() {
+      _selectAll = !_selectAll;
+    });
   }
 
   void getCartList() async {
@@ -240,7 +270,6 @@ class Page extends State<Cart> with TickerProviderStateMixin {
       var ret = response.data;
       if (ret['code'].toString() == '200') {
         cartList = ret['data'];
-        print(cartList);
         pageLoadStatus = 2;
       } else {
         cartList = [];
