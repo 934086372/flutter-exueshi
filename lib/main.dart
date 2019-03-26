@@ -1,7 +1,11 @@
+import 'dart:convert';
+
+import 'package:dio/dio.dart';
 import 'package:event_bus/event_bus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_exueshi/common/Ajax.dart';
 
 import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -75,11 +79,7 @@ class _MyHomePageState extends State<MyHomePage> {
   EventBus eventBus = new EventBus();
 
   void init() {
-    pages
-      ..add(HomeIndex())
-      ..add(ProductIndex())
-      ..add(StudyIndex())
-      ..add(UserIndex());
+    pages..add(HomeIndex())..add(ProductIndex())..add(StudyIndex())..add(UserIndex());
 
     eventBus.on().listen((event) {
       print(event);
@@ -102,6 +102,7 @@ class _MyHomePageState extends State<MyHomePage> {
     // TODO: implement initState
     super.initState();
     init();
+    _getMainData();
   }
 
   @override
@@ -136,7 +137,7 @@ class _MyHomePageState extends State<MyHomePage> {
         child: GestureDetector(
           child: Container(
             padding:
-                EdgeInsets.only(left: 20.0, top: 8.0, right: 20.0, bottom: 8.0),
+            EdgeInsets.only(left: 20.0, top: 8.0, right: 20.0, bottom: 8.0),
             child: Text(
               '马上使用',
               style: TextStyle(color: Colors.white),
@@ -155,6 +156,25 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  // 获取主页购物车数据
+  _getMainData() async {
+    Ajax ajax = new Ajax();
+    SharedPreferences _pref = await SharedPreferences.getInstance();
+    var userData = _pref.get('userData');
+    if (userData != null) {
+      var user = json.decode(userData);
+      Response response = await ajax.post('/api/user/getMainData',
+          data: {'userID': user['userID'], 'token': user['data']});
+      if (response.statusCode == 200) {
+        var ret = response.data;
+        if (ret['code'].toString() == '200') {
+          var data = ret['data'];
+          _pref.setString('cartCount', data['prodCount']);
+        }
+      }
+    } else {}
+  }
+
   // 导航到主页
   _navigationToMain() {
     _setPreference();
@@ -167,57 +187,59 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget _bootView() {
     return Scaffold(
         body: Container(
-      width: MediaQuery.of(context).size.width,
-      height: MediaQuery.of(context).size.height,
-      child: Stack(children: <Widget>[
-        Swiper(
-            loop: false,
-            itemCount: 4,
-            itemBuilder: (BuildContext context, int index) {
-              String imagePath = 'assets/images/boot/start_0' +
-                  (index + 1).toString() +
-                  '.jpg';
-              return Image.asset(
-                imagePath,
-                fit: BoxFit.fill,
-              );
-            },
-            onIndexChanged: (int index) {
-              setState(() {
-                _currentBootPageIndex = index;
-              });
-            }),
-        Positioned(
-          child: GestureDetector(
-            child: Container(
-              padding: EdgeInsets.only(
-                  left: 10.0, top: 2.0, right: 10.0, bottom: 2.0),
-              child: Text(
-                '跳过',
-                style: TextStyle(color: Colors.white, fontSize: 12.0),
-              ),
-              decoration: BoxDecoration(
-                  color: Color.fromRGBO(0, 0, 0, 0.5),
-                  borderRadius: BorderRadius.all(Radius.circular(30.0))),
-            ),
-            onTap: () {
-              _navigationToMain();
-            },
-          ),
-          top: 40.0,
-          right: 30.0,
-        ),
-        Positioned(
-          child: _useBtn(),
-          bottom: 80.0,
           width: MediaQuery.of(context).size.width,
-        )
-      ]),
-    ));
+          height: MediaQuery.of(context).size.height,
+          child: Stack(children: <Widget>[
+            Swiper(
+                loop: false,
+                itemCount: 4,
+                itemBuilder: (BuildContext context, int index) {
+                  String imagePath = 'assets/images/boot/start_0' +
+                      (index + 1).toString() +
+                      '.jpg';
+                  return Image.asset(
+                    imagePath,
+                    fit: BoxFit.fill,
+                  );
+                },
+                onIndexChanged: (int index) {
+                  setState(() {
+                    _currentBootPageIndex = index;
+                  });
+                }),
+            Positioned(
+              child: GestureDetector(
+                child: Container(
+                  padding: EdgeInsets.only(
+                      left: 10.0, top: 2.0, right: 10.0, bottom: 2.0),
+                  child: Text(
+                    '跳过',
+                    style: TextStyle(color: Colors.white, fontSize: 12.0),
+                  ),
+                  decoration: BoxDecoration(
+                      color: Color.fromRGBO(0, 0, 0, 0.5),
+                      borderRadius: BorderRadius.all(Radius.circular(30.0))),
+                ),
+                onTap: () {
+                  _navigationToMain();
+                },
+              ),
+              top: 40.0,
+              right: 30.0,
+            ),
+            Positioned(
+              child: _useBtn(),
+              bottom: 80.0,
+              width: MediaQuery.of(context).size.width,
+            )
+          ]),
+        ));
   }
 
   // 主页
   Widget _mainView() {
+    TextStyle _tabText = TextStyle(fontSize: 12.0);
+
     return Scaffold(
       resizeToAvoidBottomPadding: true,
       body: Column(
@@ -247,7 +269,10 @@ class _MyHomePageState extends State<MyHomePage> {
                     color: Colors.blue,
                     size: 24,
                   ),
-                  title: Text('首页')),
+                  title: Text(
+                    '首页',
+                    style: _tabText,
+                  )),
               BottomNavigationBarItem(
                   icon: Icon(
                     Icons.apps,
@@ -259,7 +284,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     color: Colors.blue,
                     size: 24,
                   ),
-                  title: Text('选课中心')),
+                  title: Text('选课中心', style: _tabText)),
               BottomNavigationBarItem(
                   icon: Icon(
                     Icons.edit,
@@ -271,7 +296,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     color: Colors.blue,
                     size: 24,
                   ),
-                  title: Text('我的学习')),
+                  title: Text('我的学习', style: _tabText)),
               BottomNavigationBarItem(
                   icon: Icon(
                     Icons.person_outline,
@@ -283,7 +308,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     size: 24,
                     color: Colors.blue,
                   ),
-                  title: Text('个人中心'))
+                  title: Text('个人中心', style: _tabText))
             ],
             currentIndex: _currentIndex,
             onTap: (int index) {

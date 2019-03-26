@@ -27,6 +27,14 @@ class HomeIndex extends StatefulWidget {
 }
 
 class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
+  /*
+  * 页面加载状态
+  *
+  * 1：加载中 | 2：完成 | 3：失败
+  *
+  * */
+  int _pageLoadingStatus = 1;
+
   String city = '全国';
 
   var _banners = [];
@@ -35,10 +43,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
   var _products = [];
 
   var loginData;
-
   double clientWidth;
-
-  var _pageLoadingStatus = 1; // 1：加载中 | 2：完成 | 3：失败
 
   @override
   // TODO: implement wantKeepAlive
@@ -49,7 +54,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
   // 获取登录数据
   _getPreference() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    loginData = prefs.getString('loginData') ?? ''; // 首次使用记录数据
+    loginData = prefs.getString('userData') ?? ''; // 用户登录数据
   }
 
   @override
@@ -58,10 +63,6 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
     super.initState();
     _getHomeData();
     _getPreference();
-
-    eventBus.on().listen((event){
-      print(event);
-    });
   }
 
   @override
@@ -88,11 +89,15 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
 
     Ajax ajax = new Ajax();
 
-    Response response = await ajax
-        .post('/api/Product/getProductBannerBulletion', data: {'areas': city});
+    print(city);
 
-    Response response2 =
-        await ajax.post('/api/live/getLives', data: {'page': 1});
+    Response response = await ajax
+        .post('/api/Product/getProductBannerBulletion', data: {'area': city});
+
+    Response response2 = await ajax.post('/api/live/getLives', data: {
+      'page': 1,
+      'search': {'area': city}
+    });
 
     // 判断返回结果
     if (response.statusCode == 200) {
@@ -194,32 +199,32 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
         ),
         Expanded(
             child: GestureDetector(
-          onTap: () {
-            Navigator.of(context).push(PageRouter(ProdSearch()));
-          },
-          child: Container(
-            height: 35,
-            margin: EdgeInsets.symmetric(horizontal: 10.0),
-            child: Material(
-              borderRadius: BorderRadius.circular(30.0),
-              color: Color.fromRGBO(241, 241, 241, 1),
+              onTap: () {
+                Navigator.of(context).push(PageRouter(ProdSearch()));
+              },
               child: Container(
-                alignment: Alignment.centerRight,
-                child: Icon(
-                  Icons.search,
-                  color: Colors.black12,
+                height: 35,
+                margin: EdgeInsets.symmetric(horizontal: 10.0),
+                child: Material(
+                  borderRadius: BorderRadius.circular(30.0),
+                  color: Color.fromRGBO(241, 241, 241, 1),
+                  child: Container(
+                    alignment: Alignment.centerRight,
+                    child: Icon(
+                      Icons.search,
+                      color: Colors.black12,
+                    ),
+                    padding: EdgeInsets.only(right: 10.0),
+                  ),
                 ),
-                padding: EdgeInsets.only(right: 10.0),
               ),
-            ),
-          ),
-        )),
+            )),
         GestureDetector(
             child: Stack(
               children: <Widget>[
                 Container(
                   padding:
-                      EdgeInsets.symmetric(vertical: 10.0, horizontal: 5.0),
+                  EdgeInsets.symmetric(vertical: 10.0, horizontal: 5.0),
                   child: Icon(
                     Icons.shopping_cart,
                   ),
@@ -230,9 +235,9 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                   child: Container(
                     child: Center(
                         child: Text(
-                      '50',
-                      style: TextStyle(fontSize: 8.0, color: Colors.white),
-                    )),
+                          '50',
+                          style: TextStyle(fontSize: 8.0, color: Colors.white),
+                        )),
                     decoration: BoxDecoration(
                         color: Colors.red, shape: BoxShape.circle),
                     width: 16.0,
@@ -255,40 +260,42 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
 
   // 渲染banner
   Widget renderBanner() {
-    if (_banners.length > 0)
-      return AspectRatio(
-        aspectRatio: 75 / 32,
-        child: Swiper(
-          layout: SwiperLayout.DEFAULT,
-          viewportFraction: 0.8,
-          scale: 0.9,
-          itemBuilder: (BuildContext context, int index) {
-            return ClipRRect(
-              borderRadius: BorderRadius.circular(10.0),
-              child: Image.network(
-                _banners[index]['adPicUrl'],
-                fit: BoxFit.fill,
-              ),
-            );
-          },
-          itemCount: _banners.length,
-          pagination: SwiperPagination(),
-          loop: true,
-          autoplay: true,
-          duration: 5,
-          onTap: (index) {
-            Navigator.of(context)
-                .push(PageRouter(BannerDetail(bannerItem: _banners[index])));
-          },
-        ),
-      );
-    return Container();
+    if (_banners == null || _banners.length <= 0) return Container();
+    return AspectRatio(
+      aspectRatio: 75 / 32,
+      child: Swiper(
+        layout: SwiperLayout.DEFAULT,
+        //viewportFraction: 0.8,
+        //scale: 0.9,
+        itemBuilder: (BuildContext context, int index) {
+          return ClipRRect(
+            borderRadius: BorderRadius.circular(0.0),
+            child: Image.network(
+              _banners[index]['adPicUrl'],
+              fit: BoxFit.fill,
+            ),
+          );
+        },
+        itemCount: _banners.length,
+        pagination: SwiperPagination(
+            builder: DotSwiperPaginationBuilder(
+                color: Colors.white, activeColor: Colors.blue)),
+        loop: true,
+        autoplay: true,
+        duration: 5,
+        onTap: (index) {
+          Navigator.of(context)
+              .push(PageRouter(BannerDetail(bannerItem: _banners[index])));
+        },
+      ),
+    );
   }
 
   // 公告栏
   Widget renderNotice() {
+    if (_bulletions == null || _bulletions.length <= 0) return Container();
     return Container(
-      height: 40.0,
+      height: 30.0,
       margin: EdgeInsets.all(10.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -302,7 +309,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
           ),
           Container(
             margin:
-                EdgeInsets.only(left: 10.0, top: 6.5, right: 10.0, bottom: 6.5),
+            EdgeInsets.only(left: 10.0, top: 6.5, right: 10.0, bottom: 6.5),
             color: Color.fromRGBO(204, 204, 204, 1),
             width: 0.5,
           ),
@@ -313,8 +320,6 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
               scrollDirection: Axis.vertical,
               itemCount: _bulletions.length,
               onTap: (index) {
-                print(index);
-                print(_bulletions[index]);
                 Navigator.of(context)
                     .push(PageRouter(Notice(noticeItem: _bulletions[index])));
               },
@@ -357,31 +362,31 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
   Widget renderLiveCourse() {
     return _livings.length > 0
         ? Column(
-            children: <Widget>[
-              Container(
-                  margin: EdgeInsets.only(top: 10.0),
-                  child: Row(
-                    children: <Widget>[
-                      Container(
-                        child: Text(''),
-                        width: 5.0,
-                        height: 20.0,
-                        margin: EdgeInsets.only(left: 10.0, right: 10.0),
-                        decoration: BoxDecoration(
-                            color: Color.fromRGBO(0, 145, 219, 1),
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(2.5))),
-                      ),
-                      Text(
-                        '直播课程',
-                        style: TextStyle(color: Colors.black, fontSize: 20.0),
-                      ),
-                    ],
-                  )),
-              Container(
-                  margin: EdgeInsets.only(top: 15.0), child: _livingList()),
-            ],
-          )
+      children: <Widget>[
+        Container(
+            margin: EdgeInsets.only(top: 10.0),
+            child: Row(
+              children: <Widget>[
+                Container(
+                  child: Text(''),
+                  width: 5.0,
+                  height: 20.0,
+                  margin: EdgeInsets.only(left: 10.0, right: 10.0),
+                  decoration: BoxDecoration(
+                      color: Color.fromRGBO(0, 145, 219, 1),
+                      borderRadius:
+                      BorderRadius.all(Radius.circular(2.5))),
+                ),
+                Text(
+                  '直播课程',
+                  style: TextStyle(color: Colors.black, fontSize: 20.0),
+                ),
+              ],
+            )),
+        Container(
+            margin: EdgeInsets.only(top: 15.0), child: _livingList()),
+      ],
+    )
         : Container();
   }
 
@@ -490,29 +495,29 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
   Expanded renderTwoLive(item) {
     return Expanded(
         child: Container(
-      margin: EdgeInsets.only(left: 10.0),
-      decoration: BoxDecoration(color: Colors.white, boxShadow: <BoxShadow>[
-        BoxShadow(color: Color.fromRGBO(26, 81, 170, 0.1), blurRadius: 15.0)
-      ]),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Container(
-            child: ClipRRect(
-                borderRadius: BorderRadius.all(Radius.circular(2.5)),
-                child: FadeInImage.assetNetwork(
-                    placeholder: 'assets/images/loading.gif',
-                    image: item['logo'])),
+          margin: EdgeInsets.only(left: 10.0),
+          decoration: BoxDecoration(color: Colors.white, boxShadow: <BoxShadow>[
+            BoxShadow(color: Color.fromRGBO(26, 81, 170, 0.1), blurRadius: 15.0)
+          ]),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Container(
+                child: ClipRRect(
+                    borderRadius: BorderRadius.all(Radius.circular(2.5)),
+                    child: FadeInImage.assetNetwork(
+                        placeholder: 'assets/images/loading.gif',
+                        image: item['logo'])),
+              ),
+              Text(
+                item['liveName'],
+                style: TextStyle(fontSize: 15.0, letterSpacing: 0.15),
+              ),
+              Text('主讲老师:' + item['mainLecturer'].toString()),
+              Text('直播时间:' + item['beginHourTime'].toString())
+            ],
           ),
-          Text(
-            item['liveName'],
-            style: TextStyle(fontSize: 15.0, letterSpacing: 0.15),
-          ),
-          Text('主讲老师:' + item['mainLecturer'].toString()),
-          Text('直播时间:' + item['beginHourTime'].toString())
-        ],
-      ),
-    ));
+        ));
   }
 
   Widget renderOnlyLive(item) {
@@ -574,7 +579,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                         decoration: BoxDecoration(
                             color: Color.fromRGBO(215, 218, 219, 0.4),
                             borderRadius:
-                                BorderRadius.all(Radius.circular(5.0))),
+                            BorderRadius.all(Radius.circular(5.0))),
                       ),
                     ],
                   ),
@@ -590,8 +595,15 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
   // 课程列表
   Widget renderCourseItem(index) {
     if (index == 0) {
+      bool showDivide = _banners.length > 0 || _bulletions.length > 0;
       return Column(
         children: <Widget>[
+          showDivide
+              ? Container(
+            height: 10.0,
+            color: Color.fromRGBO(241, 241, 241, 0.7),
+          )
+              : Container(),
           Container(
               margin: EdgeInsets.only(top: 10.0),
               child: Row(
@@ -666,31 +678,31 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                   children: <Widget>[
                     Expanded(
                         child: Text(
-                      item['prodName'],
-                      style: TextStyle(color: Colors.black, fontSize: 14.0),
-                      maxLines: 2,
-                      softWrap: false,
-                      overflow: TextOverflow.ellipsis,
-                    )),
+                          item['prodName'],
+                          style: TextStyle(color: Colors.black, fontSize: 14.0),
+                          maxLines: 2,
+                          softWrap: false,
+                          overflow: TextOverflow.ellipsis,
+                        )),
                     item['dataFlag'] != '免费'
                         ? Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: <Widget>[
-                                Text(
-                                  "￥" + item['realPrice'].toString(),
-                                  style: TextStyle(
-                                      color: Color.fromRGBO(255, 102, 0, 1),
-                                      fontSize: 18,
-                                      fontFamily: 'PingFang-SC-Bold'),
-                                ),
-                                Text(
-                                  '原价:￥' + item['price'],
-                                  style: TextStyle(
-                                      decoration: TextDecoration.lineThrough,
-                                      fontSize: 11.0,
-                                      color: Color.fromRGBO(153, 153, 153, 1)),
-                                ),
-                              ])
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          Text(
+                            "￥" + item['realPrice'].toString(),
+                            style: TextStyle(
+                                color: Color.fromRGBO(255, 102, 0, 1),
+                                fontSize: 18,
+                                fontFamily: 'PingFang-SC-Bold'),
+                          ),
+                          Text(
+                            '原价:￥' + item['price'],
+                            style: TextStyle(
+                                decoration: TextDecoration.lineThrough,
+                                fontSize: 11.0,
+                                color: Color.fromRGBO(153, 153, 153, 1)),
+                          ),
+                        ])
                         : Text('免费'),
                     Row(children: <Widget>[
                       Expanded(
@@ -733,9 +745,10 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
 
   void resetCity() async {
     final _city = await Navigator.of(context).push(PageRouter(SwitchCity()));
-    setState(() {
-      city = _city;
-      _getHomeData();
-    });
+    if (_city != null)
+      setState(() {
+        city = _city;
+        _getHomeData();
+      });
   }
 }

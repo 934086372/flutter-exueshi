@@ -176,8 +176,6 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
                         Color.fromRGBO(0, 175, 219, 1)
                       ],
                     )),
-                /*padding: EdgeInsets.all(0.0),*/
-
                 child: FlatButton(
                   onPressed: () {
                     Navigator.of(context).push(
