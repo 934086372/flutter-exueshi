@@ -116,6 +116,7 @@ class Page extends State<ProductIndex>
           showGetMore
               ? Container(
             padding: EdgeInsets.symmetric(vertical: 10.0),
+            margin: EdgeInsets.only(top: 10.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
@@ -177,11 +178,9 @@ class Page extends State<ProductIndex>
     }
   }
 
-
   Widget renderAppBar() {
     return Row(
-      children: <Widget>[
-      ],
+      children: <Widget>[],
     );
   }
 

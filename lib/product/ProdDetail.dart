@@ -66,19 +66,43 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     // TODO: implement build
     return Scaffold(
-        appBar: AppBar(
-          elevation: 0.0,
-          title: Text('产品详情'),
-          centerTitle: true,
-          actions: <Widget>[
-            IconButton(
-                icon: Icon(Icons.shopping_cart),
-                onPressed: () {
-                  Navigator.of(context).push(PageRouter(Cart()));
-                })
+        body: Stack(
+          children: <Widget>[
+            Column(
+              children: <Widget>[
+                AppBar(
+                  elevation: 0.0,
+                  title: Text('产品详情'),
+                  centerTitle: true,
+                  actions: <Widget>[
+                    IconButton(
+                        icon: Icon(Icons.shopping_cart),
+                        onPressed: () {
+                          Navigator.of(context).push(PageRouter(Cart()));
+                        })
+                  ],
+                ),
+                Expanded(
+                  child: renderPage(),
+                )
+              ],
+            ),
+            /*AnimatedPositioned(
+            right: 150,
+            bottom: 20,
+            width: 50,
+            height: 50,
+            curve: Curves.easeIn,
+            child: ClipRRect(
+              child: Image.network(
+                product['logo'],
+                width: 50,
+              ),
+              borderRadius: BorderRadius.all(Radius.circular(50)),
+            ),
+            duration: Duration(milliseconds: 300))*/
           ],
-        ),
-        body: renderPage());
+        ));
   }
 
   Widget renderPage() {
@@ -163,48 +187,33 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
           ),
         ),
         isBuy
-            ? Stack(
-          children: <Widget>[
-            Container(
-              child: Ink(
-                decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                      colors: <Color>[
-                        Color.fromRGBO(0, 145, 219, 1),
-                        Color.fromRGBO(0, 175, 219, 1)
-                      ],
-                    )),
-                child: FlatButton(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                        PageRouter(ProductContent(product: product)));
-                  },
-                  child: Container(
-                    alignment: Alignment.center,
-                    padding: EdgeInsets.symmetric(
-                        vertical: 15.0, horizontal: 20.0),
-                    child: Text(
-                      '前往学习',
-                      style:
-                      TextStyle(color: Colors.white, fontSize: 16.0),
-                    ),
-                  ),
+            ? Container(
+          child: Ink(
+            decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: <Color>[
+                    Color.fromRGBO(0, 145, 219, 1),
+                    Color.fromRGBO(0, 175, 219, 1)
+                  ],
+                )),
+            child: FlatButton(
+              onPressed: () {
+                Navigator.of(context)
+                    .push(PageRouter(ProductContent(product: product)));
+              },
+              child: Container(
+                alignment: Alignment.center,
+                padding: EdgeInsets.symmetric(
+                    vertical: 15.0, horizontal: 20.0),
+                child: Text(
+                  '前往学习',
+                  style: TextStyle(color: Colors.white, fontSize: 16.0),
                 ),
               ),
             ),
-            AnimatedPositioned(
-                top: 0,
-                right: 0,
-                width: 50,
-                height: 50,
-                curve: Curves.easeIn,
-                child: Image.network(
-                  product['logo'],
-                ),
-                duration: Duration(milliseconds: 300)),
-          ],
+          ),
         )
             : Container(),
         isBuy
@@ -1022,14 +1031,12 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
       if (response.statusCode == 200) {
         var ret = response.data;
         if (ret['code'].toString() == '200') {
-          Scaffold.of(context)
-              .showSnackBar(SnackBar(content: Text('加入购物车成功!')));
+          //Scaffold.of(context)              .showSnackBar(SnackBar(content: Text('加入购物车成功!')));
         } else {
-          Scaffold.of(context)
-              .showSnackBar(SnackBar(content: Text(ret['msg'].toString())));
+          //Scaffold.of(context)              .showSnackBar(SnackBar(content: Text(ret['msg'].toString())));
         }
       } else {
-        Scaffold.of(context).showSnackBar(SnackBar(content: Text('网络请求错误')));
+        //Scaffold.of(context).showSnackBar(SnackBar(content: Text('网络请求错误')));
       }
     }
   }

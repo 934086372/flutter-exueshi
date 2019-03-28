@@ -16,4 +16,6 @@ class MyIcons {
 
   static const IconData like = IconData(0xe668, fontFamily: 'appIcons');
   static const IconData like_border = IconData(0xe669, fontFamily: 'appIcons');
+  static const IconData alipay = IconData(0xe654, fontFamily: 'appIcons');
+  static const IconData wepay = IconData(0xe7b6, fontFamily: 'appIcons');
 }

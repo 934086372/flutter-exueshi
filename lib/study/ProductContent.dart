@@ -153,6 +153,10 @@ class _ProductContentState extends State<ProductContent>
             : Container(
           child: buildBody(context),
           color: Colors.white,
+          height: MediaQuery
+              .of(context)
+              .size
+              .height,
         ));
   }
 
@@ -226,8 +230,7 @@ class _ProductContentState extends State<ProductContent>
                       leading: Icon(MyIcons.document),
                       title: Text('资料'),
                       onTap: () {
-                        Navigator.of(context)
-                            .push(PageRouter(DocumentStudy()));
+                        Navigator.of(context).push(PageRouter(DocumentStudy()));
                       },
                     );
                   })
@@ -237,32 +240,50 @@ class _ProductContentState extends State<ProductContent>
         ],
       );
     } else {
-      return SingleChildScrollView(
-        child: Column(
-          children: List.generate(prodChapters.length, (index) {
-            // 判断是否有分组名称
-            var category = prodChapters[index];
-            var groupName = category['groupName'].toString();
-            var childList = category['list'];
-            print(childList);
-            if (groupName == '未分类') {
-              return Column(
-                children: List.generate(childList.length, (index) {
-                  return renderItem(childList[index]);
-                }),
-              );
-            } else {
-              return ExpansionTile(
-                initiallyExpanded: true,
-                title: Text(groupName),
-                children: List.generate(childList.length, (index) {
-                  return renderItem(childList[index]);
-                }),
-              );
-            }
-          }),
+      return Column(children: <Widget>[
+        showVideoPlayer
+            ? _controller.value.initialized
+            ? videoPlayer(false)
+            : AspectRatio(
+          child: Container(
+            width: MediaQuery
+                .of(context)
+                .size
+                .width,
+            color: Colors.black,
+          ),
+          aspectRatio: 16.0 / 9.0,
+        )
+            : Container(),
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
+              children: List.generate(prodChapters.length, (index) {
+                // 判断是否有分组名称
+                var category = prodChapters[index];
+                var groupName = category['groupName'].toString();
+                var childList = category['list'];
+                print(childList);
+                if (groupName == '未分类') {
+                  return Column(
+                    children: List.generate(childList.length, (index) {
+                      return renderItem(childList[index]);
+                    }),
+                  );
+                } else {
+                  return ExpansionTile(
+                    initiallyExpanded: true,
+                    title: Text(groupName),
+                    children: List.generate(childList.length, (index) {
+                      return renderItem(childList[index]);
+                    }),
+                  );
+                }
+              }),
+            ),
+          ),
         ),
-      );
+      ]);
     }
   }
 
@@ -294,6 +315,9 @@ class _ProductContentState extends State<ProductContent>
       onTap: () {
         switch (item['type'].toString()) {
           case '视频':
+            print(item);
+            getVideoPlayUrl(item['videoID']);
+            //_controller = VideoPlayerController.network(dataSource);
             break;
           case '试卷':
             Navigator.of(context).push(PageRouter(PaperIndex()));
@@ -514,6 +538,25 @@ class _ProductContentState extends State<ProductContent>
           ],
         ))));
     print(result);
+  }
+
+  void getVideoPlayUrl(videoID) async {
+    Ajax ajax = new Ajax(baseUrl: 'http://blank.exueshi.com');
+    Response response =
+    await ajax.post('/api/Vod/getplayurl', data: {'code': videoID});
+    if (response.statusCode == 200) {
+      var ret = response.data;
+      print(ret);
+      if (ret != null && ret['VideoBase'] != null) {
+        var videoUrl = ret['PlayInfoList']['PlayInfo'][0]['PlayURL'];
+        print(videoUrl);
+        _controller.pause();
+        _controller = VideoPlayerController.network(videoUrl)
+          ..initialize().then((_) {
+            setState(() {});
+          });
+      }
+    }
   }
 
   @override

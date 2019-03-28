@@ -4,7 +4,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
+import 'package:flutter_exueshi/common/PageRouter.dart';
 import 'package:flutter_exueshi/components/SlideListTile.dart';
+import 'package:flutter_exueshi/product/OrderConfirm.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Cart extends StatefulWidget {
@@ -223,7 +225,22 @@ class Page extends State<Cart> with TickerProviderStateMixin {
                   padding: EdgeInsets.only(
                       left: 25.0, top: 17.0, right: 25.0, bottom: 17.0),
                 ),
-                onTap: () {},
+                onTap: () {
+                  // 判断有没有选中
+                  if (selectedItem.length <= 0) {
+                    Scaffold.of(context).showSnackBar(
+                        new SnackBar(content: Text('请先选择要结算的上品')));
+                  } else {
+                    List prods = List();
+                    cartList.forEach((item) {
+                      if (selectedItem.contains(item['prodID'])) {
+                        prods.add(item);
+                      }
+                    });
+                    Navigator.of(context)
+                        .push(PageRouter(OrderConfirm(prods: prods)));
+                  }
+                },
               ))
         ],
       ),

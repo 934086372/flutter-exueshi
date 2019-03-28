@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
 import 'package:flutter_exueshi/common/PageRouter.dart';
+import 'package:flutter_exueshi/components/SlideListTile.dart';
 import 'package:flutter_html_view/flutter_html_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -34,6 +35,7 @@ class _MyMessageState extends State<MyMessage> {
         centerTitle: true,
       ),
       body: renderPage(),
+      backgroundColor: Colors.white,
     );
   }
 
@@ -70,46 +72,38 @@ class _MyMessageState extends State<MyMessage> {
   }
 
   Widget renderItem(item) {
-    print(item);
-    Key key = Key(item['noticeID'].toString());
-    return Dismissible(
-      key: key,
-      confirmDismiss: _confirmDelete,
-      background: Container(
-        color: Colors.red,
-        child: Align(alignment: Alignment.centerRight, child: Text('删除')),
-      ),
-      child: ListTile(
-        title: Row(
-          children: <Widget>[
-            Text(
-              '【' + item['optType'] + '】',
-              style: TextStyle(color: Color.fromRGBO(0, 149, 219, 1)),
-            ),
-            Expanded(
-              child: Text(
-                item['noticeTitle'],
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+    return SlideListTile(
+      child: Container(
+        color: Colors.white,
+        child: ListTile(
+          title: Row(
+            children: <Widget>[
+              Text(
+                '【' + item['optType'] + '】',
+                style: TextStyle(color: Color.fromRGBO(0, 149, 219, 1)),
               ),
-            ),
-            Text(
-              item['publishTime'].toString().substring(0, 10),
-              style: TextStyle(
-                  fontSize: 14.0, color: Color.fromRGBO(153, 153, 153, 1)),
-            )
-          ],
+              Expanded(
+                child: Text(
+                  item['noticeTitle'],
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Text(
+                item['publishTime'].toString().substring(0, 10),
+                style: TextStyle(
+                    fontSize: 14.0, color: Color.fromRGBO(153, 153, 153, 1)),
+              )
+            ],
+          ),
+          subtitle: Text(item['noticeContent']),
+          onTap: () {
+            Navigator.of(context).push(PageRouter(MyMessageDetail(item: item)));
+          },
         ),
-        subtitle: Text(item['noticeContent']),
-        onTap: () {
-          Navigator.of(context).push(PageRouter(MyMessageDetail(item: item)));
-        },
       ),
+      menu: <Widget>[],
     );
-  }
-
-  Future<bool> _confirmDelete(DismissDirection dismissDirection) async {
-    return false;
   }
 
   void getMessageList() async {

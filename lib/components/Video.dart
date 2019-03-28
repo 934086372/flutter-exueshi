@@ -9,6 +9,7 @@
 
 import 'dart:ui';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
@@ -96,11 +97,15 @@ class _VideoState extends State<Video> with SingleTickerProviderStateMixin {
         setState(() {
           _duration = _controller.value.duration.toString().split(_patten)[0];
         });
-      }).catchError((e) {
-        print(_controller.value.errorDescription);
+      }, onError: (error) {
+        print('初始化失败');
+        print(error);
+      }).catchError((_) {
+        print(_);
       });
 
     _controller.addListener(() {
+      print(_controller.value.hashCode);
       setState(() {
         timeLabel = _controller.value.position.toString().split(_patten)[0];
       });
@@ -133,6 +138,19 @@ class _VideoState extends State<Video> with SingleTickerProviderStateMixin {
                   .size
                   .width,
               color: Colors.black,
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    CupertinoActivityIndicator(),
+                    Text(
+                      '加载中...',
+                      style:
+                      TextStyle(color: Colors.white, fontSize: 10.0),
+                    )
+                  ],
+                ),
+              ),
             ),
             aspectRatio: 16.0 / 9.0,
           ),
@@ -245,7 +263,9 @@ class _VideoState extends State<Video> with SingleTickerProviderStateMixin {
               child: Row(
                 children: <Widget>[
                   _playAndPauseBtn(), // 播放|暂停按钮
-                  Text(
+                  isLive
+                      ? Container()
+                      : Text(
                     timeLabel + '/' + _duration,
                     style: TextStyle(color: Colors.white),
                   ),
@@ -324,7 +344,8 @@ class _VideoState extends State<Video> with SingleTickerProviderStateMixin {
     SystemChrome.setPreferredOrientations([]);
   }
 
-  Container exchangeDefinitionBtn() {
+  // 切换清晰度
+  Widget exchangeDefinitionBtn() {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 5.0),
       padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 1.0),
@@ -356,7 +377,6 @@ class _VideoState extends State<Video> with SingleTickerProviderStateMixin {
     );
   }
 }
-
 
 // 进度条
 class VideoProgressBar extends StatefulWidget {

@@ -284,8 +284,30 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
         autoplay: true,
         duration: 5,
         onTap: (index) {
-          Navigator.of(context)
-              .push(PageRouter(BannerDetail(bannerItem: _banners[index])));
+          print(_banners[index]['adLink']);
+          String link = _banners[index]['adLink'].toString();
+
+          Pattern _pattern = '&optType=openinapp';
+          if (link.contains(_pattern)) {
+            // 处理掉链接中 的 '#' ，防止 Uri 无法解析参数
+            link = link.replaceAll(new RegExp('/#/'), '/');
+            Uri _uri = Uri.parse(link);
+
+            var parameters = _uri.queryParameters;
+            if (parameters['prodID'] != null) {
+              Navigator.push(context,
+                  PageRouter(ProdDetail(prodID: parameters['prodID'])));
+              return;
+            }
+            if (parameters['optDestination'] != null) {
+              if (parameters['optDestination'] == 'couponMarket') {
+                // 判断是否登录
+              }
+            }
+          } else {
+            Navigator.of(context)
+                .push(PageRouter(BannerDetail(bannerItem: _banners[index])));
+          }
         },
       ),
     );
