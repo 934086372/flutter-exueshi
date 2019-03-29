@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
 import 'package:flutter_html_view/flutter_html_view.dart';
@@ -39,23 +40,28 @@ class _RenderExerciseState extends State<RenderExercise>
 
   @override
   Widget build(BuildContext context) {
-    print(exData);
     switch (pageLoadStatus) {
       case 1:
         return Center(
-          child: CircularProgressIndicator(),
+          child: CupertinoActivityIndicator(),
         );
         break;
       case 2:
-        return SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              HtmlView(data: exData[0]['question'].toString())
-            ],
-          ),
+        return Stack(
+          children: <Widget>[
+            renderWaterMark(),
+            Positioned.fill(
+                child: Column(
+                  children: <Widget>[
+                    Expanded(
+                        child: SingleChildScrollView(
+                          child: renderQuestion(),
+                        )),
+                    renderBottomBar()
+                  ],
+                )),
+          ],
         );
-
         break;
       case 3:
         return Center(
@@ -72,6 +78,153 @@ class _RenderExerciseState extends State<RenderExercise>
           child: Text('未知错误'),
         );
     }
+  }
+
+  Widget renderWaterMark() {
+    return Positioned.fill(
+        child: Container(
+          color: Colors.white,
+          child: GridView.count(
+            crossAxisCount: 3,
+            children: List.generate(12, (index) {
+              return Transform.rotate(
+                angle: -5 / 12,
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Text('易学仕在线',
+                          style: TextStyle(
+                              fontSize: 12.0,
+                              color: Color.fromRGBO(153, 153, 153, 0.2))),
+                      Text('15310486021',
+                          style: TextStyle(
+                              fontSize: 12.0,
+                              color: Color.fromRGBO(153, 153, 153, 0.2)))
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ),
+        ));
+  }
+
+  Widget renderBottomBar() {
+    return Container(
+      height: 50.0,
+      child: Row(
+        children: <Widget>[Text('已掌握'), Icon(Icons.edit)],
+      ),
+    );
+  }
+
+  Widget renderQuestion() {
+    // 题目数据
+    Map item = exData[0];
+
+    print(item);
+
+    // 题型
+    int questionType = item['question_types'];
+    print(questionType);
+
+    switch (questionType) {
+      case 1:
+        break;
+    }
+
+    // 标题
+    String title = '<div>' + item['question'].toString().trim() + '</div>';
+
+    // 题目选项
+    List options = item['answer'];
+
+    // 标准答案
+    String answer = item['question_standard_answer'];
+
+
+    print(item['question_standard_answer'].length);
+
+    // 题目解析
+    String analysis = item['question_analyze'];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        renderQuestionTitle(title),
+        renderOptions(options, answer),
+        renderDivider(),
+        renderAnalysis(analysis)
+      ],
+    );
+  }
+
+  Widget renderDivider() {
+    return Container(
+      height: 10.0,
+      color: Color.fromRGBO(241, 241, 241, 0.7),
+    );
+  }
+
+  Widget renderQuestionTitle(title) {
+    return Container(
+        padding: EdgeInsets.symmetric(vertical: 10.0),
+        color: Color.fromRGBO(255, 255, 255, 0),
+        child: HtmlView(data: title));
+  }
+
+  Widget renderOptions(options, answer) {
+    return Container(
+      padding: EdgeInsets.all(10.0),
+      child: Column(
+        children: List.generate(options.length, (index) {
+          String optionItem =
+              '<div>' + options[index].toString().trim() + '</div>';
+          //bool isCorrect = int.parse(answer) == index;
+          bool isCorrect = false;
+          return Row(
+            children: <Widget>[
+              isCorrect
+                  ? Icon(
+                Icons.check_circle,
+                color: Colors.blue,
+              )
+                  : Icon(
+                Icons.radio_button_unchecked,
+                color: Color.fromRGBO(153, 153, 153, 1),
+              ),
+              Expanded(
+                child: HtmlView(
+                  data: optionItem,
+                ),
+              )
+            ],
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget renderAnalysis(analysis) {
+    return Container(
+      padding: EdgeInsets.all(10.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            '题目解析：',
+            style: TextStyle(
+                color: Colors.black,
+                fontSize: 16.0,
+                fontWeight: FontWeight.w700),
+          ),
+          HtmlView(
+            data: analysis,
+          )
+        ],
+      ),
+    );
   }
 
   void getEx() async {

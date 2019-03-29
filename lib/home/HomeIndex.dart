@@ -16,7 +16,7 @@ import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_exueshi/common/PageRouter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:event_bus/event_bus.dart';
+import 'package:flutter_exueshi/common/EventBus.dart';
 
 class HomeIndex extends StatefulWidget {
   @override
@@ -48,8 +48,6 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
   @override
   // TODO: implement wantKeepAlive
   bool get wantKeepAlive => true;
-
-  EventBus eventBus = new EventBus();
 
   // 获取登录数据
   _getPreference() async {
@@ -149,7 +147,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
               GestureDetector(
                 onTap: () {
                   print('more');
-                  eventBus.fire('changeMainTab');
+                  eventBus.emit('changeMainTab', '2');
                 },
                 child: Container(
                   margin: EdgeInsets.all(20.0),

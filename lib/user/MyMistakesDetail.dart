@@ -25,6 +25,9 @@ class _MyMistakesDetailState extends State<MyMistakesDetail> {
 
   get paperID => widget.paperID;
 
+  int count = 1;
+  int currentIndex = 1;
+
   @override
   void initState() {
     // TODO: implement initState
@@ -55,7 +58,7 @@ class _MyMistakesDetailState extends State<MyMistakesDetail> {
                 children: <Widget>[
                   Icon(Icons.apps),
                   Text(
-                    '1/25',
+                    currentIndex.toString() + '/' + count.toString(),
                     style: TextStyle(fontSize: 10.0),
                   )
                 ],
@@ -77,19 +80,20 @@ class _MyMistakesDetailState extends State<MyMistakesDetail> {
         break;
       case 2:
         return PageView.builder(
-            itemCount: exerciseData.length,
-            itemBuilder: (context, index) {
-              print(exerciseData[index]['exerciseID']);
-              return RenderExercise(
-                exid: exerciseData[index]['exerciseID'],
-                prodID: prodID,
-                paperID: paperID,
-              );
-//              print(base64.decode(exItem));
-//              return SingleChildScrollView(
-//                child: Text(base64.decode(exItem).toString()),
-//              );
+          itemCount: exerciseData.length,
+          itemBuilder: (context, index) {
+            return RenderExercise(
+              exid: exerciseData[index]['exerciseID'],
+              prodID: prodID,
+              paperID: paperID,
+            );
+          },
+          onPageChanged: (index) {
+            setState(() {
+              currentIndex = index + 1;
             });
+          },
+        );
 
         break;
       case 3:
@@ -129,7 +133,8 @@ class _MyMistakesDetailState extends State<MyMistakesDetail> {
         var ret = response.data;
         if (ret['code'].toString() == '200') {
           exerciseData = ret['data'];
-          print(exerciseData);
+          print(exerciseData.length);
+          count = exerciseData.length;
           pageLoadStatus = 2;
         } else {
           pageLoadStatus = 3;

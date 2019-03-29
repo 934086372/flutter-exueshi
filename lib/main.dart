@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
+import 'package:flutter_exueshi/common/EventBus.dart';
 
 import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -76,19 +77,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   String alreadyUse;
 
-  EventBus eventBus = new EventBus();
-
   void init() {
-    pages..add(HomeIndex())..add(ProductIndex())..add(StudyIndex())..add(UserIndex());
-
-    eventBus.on().listen((event) {
-      print(event);
-      if (event == 'changeMainTab') {
-        setState(() {
-          _currentIndex = 1;
-        });
-      }
-    });
+    pages..add(HomeIndex())..add(ProductIndex())..add(StudyIndex())..add(
+        UserIndex());
   }
 
   void _pageChange(int index) {
@@ -103,6 +94,13 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
     init();
     _getMainData();
+
+    // 查看更多
+    eventBus.on('changeMainTab', (arg) {
+      print(arg);
+      _pageController.jumpToPage(1);
+    });
+
   }
 
   @override
@@ -187,8 +185,14 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget _bootView() {
     return Scaffold(
         body: Container(
-          width: MediaQuery.of(context).size.width,
-          height: MediaQuery.of(context).size.height,
+          width: MediaQuery
+              .of(context)
+              .size
+              .width,
+          height: MediaQuery
+              .of(context)
+              .size
+              .height,
           child: Stack(children: <Widget>[
             Swiper(
                 loop: false,
@@ -230,7 +234,10 @@ class _MyHomePageState extends State<MyHomePage> {
             Positioned(
               child: _useBtn(),
               bottom: 80.0,
-              width: MediaQuery.of(context).size.width,
+              width: MediaQuery
+                  .of(context)
+                  .size
+                  .width,
             )
           ]),
         ));
