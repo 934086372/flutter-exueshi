@@ -320,7 +320,8 @@ class _ProductContentState extends State<ProductContent>
             //_controller = VideoPlayerController.network(dataSource);
             break;
           case '试卷':
-            Navigator.of(context).push(PageRouter(PaperIndex()));
+            Navigator.of(context).push(PageRouter(PaperIndex(
+                prodID: prodID, paperID: item['paperID'], orderID: orderID)));
             break;
           case '资料':
             Navigator.of(context).push(PageRouter(DocumentStudy()));

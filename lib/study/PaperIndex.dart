@@ -1,16 +1,86 @@
+import 'dart:convert';
+
+import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_exueshi/common/Ajax.dart';
 import 'package:flutter_exueshi/common/PageRouter.dart';
 import 'package:flutter_exueshi/components/MyIcons.dart';
+import 'package:flutter_exueshi/components/Rating.dart';
+import 'package:flutter_exueshi/study/Comment.dart';
 import 'package:flutter_exueshi/study/ExamPaper.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PaperIndex extends StatefulWidget {
+  final String prodID;
+  final String paperID;
+  final String orderID;
+
+  const PaperIndex({Key key, this.paperID, this.prodID, this.orderID})
+      : super(key: key);
+
   @override
   _PaperIndexState createState() => _PaperIndexState();
 }
 
 class _PaperIndexState extends State<PaperIndex> {
+  String get prodID => widget.prodID;
+
+  String get paperID => widget.paperID;
+
+  String get orderID => widget.orderID;
+
+  int pageLoadStatus = 1;
+  Map paperData = new Map();
+
+  int rating = 5;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    getPaper();
+    print('初始化');
+  }
+
   @override
   Widget build(BuildContext context) {
+    return renderPage();
+  }
+
+  Widget renderPage() {
+    switch (pageLoadStatus) {
+      case 1:
+        return Center(
+          child: CupertinoActivityIndicator(),
+        );
+        break;
+      case 2:
+        return renderPageContent();
+        break;
+      case 3:
+        return Center(
+          child: Text('暂无数据'),
+        );
+        break;
+      case 4:
+        return Center(
+          child: Text('网络请求错误'),
+        );
+        break;
+      default:
+        return Center(
+          child: Text('未知错误'),
+        );
+    }
+  }
+
+  Widget renderPageContent() {
+    print('rating:' + rating.toString());
+
+    String paperName = paperData['title'];
+    String paperDesc = paperData['description'];
+
     return Scaffold(
       body: Column(
         children: <Widget>[
@@ -23,6 +93,7 @@ class _PaperIndexState extends State<PaperIndex> {
                   right: 0,
                   bottom: 0,
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Row(
                         children: <Widget>[
@@ -48,13 +119,15 @@ class _PaperIndexState extends State<PaperIndex> {
                                 color: Colors.white,
                                 size: 24.0,
                               ),
-                              onPressed: () {})
+                              onPressed: () {
+                                showCommentSheet();
+                              })
                         ],
                       ),
                       Expanded(
                         child: Center(
                           child: Text(
-                            '《新大纲考点补充精讲班》常见问题解答',
+                            paperName,
                             style:
                             TextStyle(color: Colors.white, fontSize: 20.0),
                           ),
@@ -63,7 +136,7 @@ class _PaperIndexState extends State<PaperIndex> {
                       Container(
                         padding: EdgeInsets.all(15.0),
                         child: Text(
-                          '闲鱼是阿里巴巴旗下闲置交易平台App客户端（iOS版和安卓版）。会员只要使用淘宝或支付宝账户登录，无需经过复杂的开店流程',
+                          paperDesc,
                           style: TextStyle(color: Colors.white),
                         ),
                       ),
@@ -104,8 +177,7 @@ class _PaperIndexState extends State<PaperIndex> {
                         top: 10.0,
                         child: GestureDetector(
                           onTap: () {
-                            Navigator.of(context).push(
-                                PageRouter(ExamPaper()));
+                            Navigator.of(context).push(PageRouter(ExamPaper()));
                           },
                           child: Container(
                             width: 130.0,
@@ -113,13 +185,13 @@ class _PaperIndexState extends State<PaperIndex> {
                             child: Center(
                               child: Text(
                                 '开始做题',
-                                style: TextStyle(
-                                    color: Colors.white, fontSize: 18.0),
+                                style:
+                                TextStyle(color: Colors.white, fontSize: 18.0),
                               ),
                             ),
                             decoration: BoxDecoration(
-                                borderRadius: BorderRadius.all(
-                                    Radius.circular(65.0)),
+                                borderRadius:
+                                BorderRadius.all(Radius.circular(65.0)),
                                 gradient: LinearGradient(colors: <Color>[
                                   Color.fromRGBO(0, 170, 255, 1),
                                   Color.fromRGBO(68, 204, 255, 1)
@@ -134,5 +206,54 @@ class _PaperIndexState extends State<PaperIndex> {
     );
   }
 
+  // 显示评价窗口
+  void showCommentSheet() {
+    // 新开了一个界面，与父界面的数据
+    showModalBottomSheet(
+        context: context,
+        builder: (context) {
+          return Comment();
+        });
+  }
 
+  void getPaper() async {
+    Ajax ajax = new Ajax();
+
+    Response response = await ajax.post('/api/StudyPaper/getPaper', data: {
+      'prodID': prodID,
+      'paperID': paperID,
+    });
+    if (response.statusCode == 200) {
+      Map ret = response.data;
+      print(ret);
+      if (ret['code'].toString() == '200') {
+        paperData = ret['data'];
+        pageLoadStatus = 2;
+      } else {
+        pageLoadStatus = 3;
+      }
+    } else {
+      pageLoadStatus = 4;
+    }
+
+    SharedPreferences _pref = await SharedPreferences.getInstance();
+    String _user = _pref.getString('userData');
+    if (_user != null) {
+      Map user = json.decode(_user);
+      Response response2 =
+      await ajax.post('/api/user/study/paper/flow/info', data: {
+        'userID': user['userID'],
+        'paperID': paperID,
+        'orderID': orderID,
+      });
+      print(response2);
+      if (response2.statusCode == 200) {
+        Map ret = response2.data;
+        if (ret['code'].toString() == '200') {}
+      }
+    }
+
+    setState(() {});
+  }
 }
+
