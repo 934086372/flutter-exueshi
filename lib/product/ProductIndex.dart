@@ -117,6 +117,7 @@ class Page extends State<ProductIndex>
               ? Container(
             padding: EdgeInsets.symmetric(vertical: 10.0),
             margin: EdgeInsets.only(top: 10.0),
+            color: Colors.transparent,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[

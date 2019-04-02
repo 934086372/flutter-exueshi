@@ -81,7 +81,7 @@ class _ProductContentState extends State<ProductContent>
     _tabController = TabController(length: 3, vsync: this);
 
     _controller = VideoPlayerController.network(
-        'http://vedio.exueshi.com/26c9073d9d3f448896b80924ffc30a1c/9b065e10ca3241d4bd763090ce18d0a6-23ed88f2a1a26984ec60a497bcc1d316.m3u8')
+        'http://vedio.exueshi.com/c8334fd8186f424cb401a3344a9308ff/66336273a7c24827a25afc068597b649-64bf89ebdf00708a0cc740d55c6853c4-ld.mp4')
       ..initialize().then((_) {
         setState(() {});
       });

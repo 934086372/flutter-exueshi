@@ -67,27 +67,27 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
     // TODO: implement build
     return Scaffold(
         body: Stack(
+      children: <Widget>[
+        Column(
           children: <Widget>[
-            Column(
-              children: <Widget>[
-                AppBar(
-                  elevation: 0.0,
-                  title: Text('产品详情'),
-                  centerTitle: true,
-                  actions: <Widget>[
-                    IconButton(
-                        icon: Icon(Icons.shopping_cart),
-                        onPressed: () {
-                          Navigator.of(context).push(PageRouter(Cart()));
-                        })
-                  ],
-                ),
-                Expanded(
-                  child: renderPage(),
-                )
+            AppBar(
+              elevation: 0.0,
+              title: Text('产品详情'),
+              centerTitle: true,
+              actions: <Widget>[
+                IconButton(
+                    icon: Icon(Icons.shopping_cart),
+                    onPressed: () {
+                      Navigator.of(context).push(PageRouter(Cart()));
+                    })
               ],
             ),
-            /*AnimatedPositioned(
+            Expanded(
+              child: renderPage(),
+            )
+          ],
+        ),
+        /*AnimatedPositioned(
             right: 150,
             bottom: 20,
             width: 50,
@@ -101,8 +101,8 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
               borderRadius: BorderRadius.all(Radius.circular(50)),
             ),
             duration: Duration(milliseconds: 300))*/
-          ],
-        ));
+      ],
+    ));
   }
 
   Widget renderPage() {
@@ -188,40 +188,51 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
         ),
         isBuy
             ? Container(
-          child: Ink(
-            decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                  colors: <Color>[
-                    Color.fromRGBO(0, 145, 219, 1),
-                    Color.fromRGBO(0, 175, 219, 1)
-                  ],
-                )),
-            child: FlatButton(
-              onPressed: () {
-                Navigator.of(context)
-                    .push(PageRouter(ProductContent(product: product)));
-              },
-              child: Container(
-                alignment: Alignment.center,
-                padding: EdgeInsets.symmetric(
-                    vertical: 15.0, horizontal: 20.0),
-                child: Text(
-                  '前往学习',
-                  style: TextStyle(color: Colors.white, fontSize: 16.0),
+                child: Ink(
+                  decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: <Color>[
+                      Color.fromRGBO(0, 145, 219, 1),
+                      Color.fromRGBO(0, 175, 219, 1)
+                    ],
+                  )),
+                  child: FlatButton(
+                    onPressed: () {
+                      Navigator.of(context)
+                          .push(PageRouter(ProductContent(product: product)));
+                    },
+                    child: Container(
+                      alignment: Alignment.center,
+                      padding: EdgeInsets.symmetric(
+                          vertical: 15.0, horizontal: 20.0),
+                      child: Text(
+                        '前往学习',
+                        style: TextStyle(color: Colors.white, fontSize: 16.0),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          ),
-        )
+              )
             : Container(),
         isBuy
             ? Container()
-            : Expanded(
-          child: Ink(
-            decoration: BoxDecoration(
-                gradient: LinearGradient(
+            : Ink(
+                padding: EdgeInsets.symmetric(horizontal: 15.0),
+                child: InkWell(
+                  onTap: addCart,
+                  child: Container(
+                    alignment: Alignment.center,
+                    padding: EdgeInsets.only(top: 15.0, bottom: 15.0),
+                    child: Text(
+                      '加入购物车',
+                      style: TextStyle(color: Colors.white, fontSize: 16.0),
+                    ),
+                  ),
+                ),
+                decoration: BoxDecoration(
+                    gradient: LinearGradient(
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                   colors: <Color>[
@@ -229,46 +240,32 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
                     Color.fromRGBO(242, 161, 0, 1)
                   ],
                 )),
-            /*padding: EdgeInsets.all(0.0),*/
-
-            child: FlatButton(
-              onPressed: addCart,
-              child: Container(
-                alignment: Alignment.center,
-                padding: EdgeInsets.only(top: 15.0, bottom: 15.0),
-                child: Text(
-                  '加入购物车',
-                  style: TextStyle(color: Colors.white, fontSize: 16.0),
-                ),
               ),
-            ),
-          ),
-        ),
         isBuy
             ? Container()
-            : Expanded(
-            child: Ink(
-              child: FlatButton(
-                onPressed: () {},
-                child: Container(
-                  alignment: Alignment.center,
-                  padding: EdgeInsets.only(top: 15.0, bottom: 15.0),
-                  child: Text(
-                    '立即购买',
-                    style: TextStyle(color: Colors.white, fontSize: 16.0),
+            : Ink(
+                padding: EdgeInsets.symmetric(horizontal: 15.0),
+                child: InkWell(
+                  onTap: () {},
+                  child: Container(
+                    alignment: Alignment.center,
+                    padding: EdgeInsets.only(top: 15.0, bottom: 15.0),
+                    child: Text(
+                      '立即购买',
+                      style: TextStyle(color: Colors.white, fontSize: 16.0),
+                    ),
                   ),
                 ),
+                decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                  begin: Alignment.topRight,
+                  end: Alignment.bottomLeft,
+                  colors: <Color>[
+                    Color.fromRGBO(242, 126, 0, 1),
+                    Color.fromRGBO(242, 102, 0, 1)
+                  ],
+                )),
               ),
-              decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topRight,
-                    end: Alignment.bottomLeft,
-                    colors: <Color>[
-                      Color.fromRGBO(242, 126, 0, 1),
-                      Color.fromRGBO(242, 102, 0, 1)
-                    ],
-                  )),
-            )),
       ]),
     );
   }
@@ -292,7 +289,7 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
                           child: TabBar(
                               controller: _controller,
                               unselectedLabelColor:
-                              Color.fromRGBO(51, 51, 51, 1),
+                                  Color.fromRGBO(51, 51, 51, 1),
                               labelColor: Color.fromRGBO(0, 145, 219, 1),
                               indicatorWeight: 1.0,
                               tabs: <Tab>[
@@ -497,14 +494,14 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
                             child: TabBar(
                                 controller: _controllerChild,
                                 unselectedLabelColor:
-                                Color.fromRGBO(102, 102, 102, 1),
+                                    Color.fromRGBO(102, 102, 102, 1),
                                 labelColor: Color.fromRGBO(51, 51, 51, 1),
                                 indicatorWeight: 1.0,
                                 indicatorColor: Colors.white,
                                 labelStyle:
-                                TextStyle(fontWeight: FontWeight.bold),
+                                    TextStyle(fontWeight: FontWeight.bold),
                                 unselectedLabelStyle:
-                                TextStyle(fontWeight: FontWeight.normal),
+                                    TextStyle(fontWeight: FontWeight.normal),
                                 tabs: _tabs),
                             color: Color.fromRGBO(255, 255, 255, 1),
                           ))),
