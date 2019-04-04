@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
 import 'package:flutter_html_textview/flutter_html_textview.dart';
+import 'package:flutter_html_view/flutter_html_view.dart';
 
 class ExamPaper extends StatefulWidget {
   @override
@@ -13,8 +14,8 @@ class ExamPaper extends StatefulWidget {
 
 class _ExamPaperState extends State<ExamPaper> {
   var _exIDs;
-  var data_exCache;
-  var data_exIDs;
+  var exCache;
+  var exIDs;
 
   Map _answers = new Map();
 
@@ -38,21 +39,23 @@ class _ExamPaperState extends State<ExamPaper> {
             IconButton(icon: Icon(Icons.card_membership), onPressed: () {})
           ],
         ),
-        body: data_exCache == null
+        body: exCache == null
             ? Center(
                 child: CupertinoActivityIndicator(),
               )
             : PageView.builder(
                 controller: _pageController,
-                itemCount: data_exCache.length,
+          itemCount: exCache.length,
                 itemBuilder: (context, index) {
-                  if (data_exCache[index]['type'] == 'section') {
-                    String _sectionTitle = data_exCache[index]['title'];
+                  print(exCache[index]);
+
+                  if (exCache[index]['type'] == 'section') {
+                    String _sectionTitle = exCache[index]['title'];
                     return Center(
                       child: Text('$_sectionTitle'),
                     );
                   } else {
-                    return _renderExItem(data_exCache[index]);
+                    return _renderExItem(exCache[index]);
                   }
                 },
                 onPageChanged: (index) {
@@ -118,7 +121,7 @@ class _ExamPaperState extends State<ExamPaper> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        HtmlTextView(data: title),
+        HtmlView(data: title),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: List.generate(item['answer'].length, (index) {
@@ -170,7 +173,7 @@ class _ExamPaperState extends State<ExamPaper> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        HtmlTextView(data: title), // 题目标题
+        HtmlView(data: title), // 题目标题
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: List.generate(2, (index) {
@@ -274,12 +277,12 @@ class _ExamPaperState extends State<ExamPaper> {
           _ids.add(item['exid']);
         }
 
-        data_exCache = _exCache;
-        data_exIDs = _ids;
+        exCache = _exCache;
+        exIDs = _ids;
       }
     }
 
-    //setState(() {});
+    setState(() {});
 
     _completer.complete();
 

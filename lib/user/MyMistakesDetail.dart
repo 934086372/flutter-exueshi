@@ -133,7 +133,6 @@ class _MyMistakesDetailState extends State<MyMistakesDetail> {
         var ret = response.data;
         if (ret['code'].toString() == '200') {
           exerciseData = ret['data'];
-          print(exerciseData.length);
           count = exerciseData.length;
           pageLoadStatus = 2;
         } else {

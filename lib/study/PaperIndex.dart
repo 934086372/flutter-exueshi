@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
 import 'package:flutter_exueshi/common/PageRouter.dart';
 import 'package:flutter_exueshi/components/MyIcons.dart';
-import 'package:flutter_exueshi/components/Rating.dart';
 import 'package:flutter_exueshi/study/Comment.dart';
 import 'package:flutter_exueshi/study/ExamPaper.dart';
 import 'package:shared_preferences/shared_preferences.dart';

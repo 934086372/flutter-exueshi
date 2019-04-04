@@ -209,7 +209,7 @@ class Page extends State<Cart> with TickerProviderStateMixin {
             style: TextStyle(fontSize: 17.0),
           ),
           Text(
-            '￥${orderAmount}',
+            '￥' + orderAmount.toString(),
             style: TextStyle(
                 fontSize: 17.0, color: Color.fromRGBO(255, 102, 0, 1)),
           ),

@@ -42,9 +42,6 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
   TabController _controller;
   TabController _controllerChild;
 
-  AnimationController _animationController;
-  Animation _animation;
-
   @override
   void initState() {
     // TODO: implement initState
@@ -66,43 +63,45 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     // TODO: implement build
     return Scaffold(
+        backgroundColor: Colors.white,
         body: Stack(
-      children: <Widget>[
-        Column(
           children: <Widget>[
-            AppBar(
-              elevation: 0.0,
-              title: Text('产品详情'),
-              centerTitle: true,
-              actions: <Widget>[
-                IconButton(
-                    icon: Icon(Icons.shopping_cart),
-                    onPressed: () {
-                      Navigator.of(context).push(PageRouter(Cart()));
-                    })
+            Column(
+              children: <Widget>[
+                AppBar(
+                  elevation: 0.0,
+                  title: Text('产品详情'),
+                  centerTitle: true,
+                  actions: <Widget>[
+                    IconButton(
+                        icon: Icon(Icons.shopping_cart),
+                        onPressed: () {
+                          Navigator.of(context).push(PageRouter(Cart()));
+                        })
+                  ],
+                ),
+                Expanded(
+                  child: renderPage(),
+                )
               ],
             ),
-            Expanded(
-              child: renderPage(),
-            )
+//            AnimatedPositioned(
+//                left: 0,
+//                right: 0,
+//                bottom: 0,
+//                width: 20,
+//                height: 20,
+//                curve: Curves.easeIn,
+//                child: ClipRRect(
+//                  child: Image.network(
+//                    product['logo'],
+//                    width: 50,
+//                  ),
+//                  borderRadius: BorderRadius.all(Radius.circular(50)),
+//                ),
+//                duration: Duration(milliseconds: 300))
           ],
-        ),
-        /*AnimatedPositioned(
-            right: 150,
-            bottom: 20,
-            width: 50,
-            height: 50,
-            curve: Curves.easeIn,
-            child: ClipRRect(
-              child: Image.network(
-                product['logo'],
-                width: 50,
-              ),
-              borderRadius: BorderRadius.all(Radius.circular(50)),
-            ),
-            duration: Duration(milliseconds: 300))*/
-      ],
-    ));
+        ));
   }
 
   Widget renderPage() {
@@ -278,7 +277,10 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
                 (BuildContext context, bool innerBoxIsScrolled) {
               return <Widget>[
                 SliverToBoxAdapter(
-                  child: Image.network(product['logo']),
+                  child: Image.network(
+                    product['logo'],
+                    width: double.infinity,
+                  ),
                 ),
                 SliverPersistentHeader(
                     pinned: true,
@@ -319,104 +321,122 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
             ])));
   }
 
-  // 详情页
+  // 产品详情Tab页
   Widget _tabPage1(product) {
-    return ListView(
-      children: <Widget>[
-        Container(
-          padding:
-              EdgeInsets.only(left: 10.0, top: 15.0, right: 10.0, bottom: 15.0),
-          child: Text(
-            product['prodName'].toString(),
-            style:
-                TextStyle(fontSize: 17.0, color: Color.fromRGBO(51, 51, 51, 1)),
-          ),
-        ),
-        Container(
-          padding: EdgeInsets.only(
-            left: 10.0,
-            right: 10.0,
-          ),
-          child: Row(
-            children: <Widget>[
-              Text(product['realPrice'].toString(),
-                  style: TextStyle(
-                      color: Color.fromRGBO(255, 102, 0, 1), fontSize: 18.0)),
-              Container(
-                margin: EdgeInsets.only(left: 5.0),
-                padding: EdgeInsets.only(left: 5.0, right: 5.0),
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.all(Radius.circular(2.5)),
-                    border: Border.all(color: Color.fromRGBO(255, 102, 0, 1))),
-                child: Text(product['prodType'].toString(),
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Container(
+            color: Colors.white,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Container(
+                  padding: EdgeInsets.only(
+                      left: 10.0, top: 15.0, right: 10.0, bottom: 15.0),
+                  child: Text(
+                    product['prodName'].toString(),
                     style: TextStyle(
-                        fontSize: 11.0, color: Color.fromRGBO(255, 102, 0, 1))),
-              ),
-              Expanded(child: Container()),
-              Text(
-                product['avgRating'].toString() + '分',
-                style: TextStyle(color: Color.fromRGBO(255, 102, 0, 1)),
-              ),
-            ],
+                        fontSize: 17.0, color: Color.fromRGBO(51, 51, 51, 1)),
+                  ),
+                ),
+                Container(
+                  padding: EdgeInsets.only(
+                    left: 10.0,
+                    right: 10.0,
+                  ),
+                  child: Row(
+                    children: <Widget>[
+                      Text(product['realPrice'].toString(),
+                          style: TextStyle(
+                              color: Color.fromRGBO(255, 102, 0, 1),
+                              fontSize: 18.0)),
+                      Container(
+                        margin: EdgeInsets.only(left: 5.0),
+                        padding: EdgeInsets.only(left: 5.0, right: 5.0),
+                        decoration: BoxDecoration(
+                            borderRadius:
+                            BorderRadius.all(Radius.circular(2.5)),
+                            border: Border.all(
+                                color: Color.fromRGBO(255, 102, 0, 1))),
+                        child: Text(product['prodType'].toString(),
+                            style: TextStyle(
+                                fontSize: 11.0,
+                                color: Color.fromRGBO(255, 102, 0, 1))),
+                      ),
+                      Expanded(child: Container()),
+                      Text(
+                        product['avgRating'].toString() + '分',
+                        style: TextStyle(color: Color.fromRGBO(255, 102, 0, 1)),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  margin: EdgeInsets.only(top: 10.0, bottom: 10.0),
+                  padding: EdgeInsets.only(
+                    left: 10.0,
+                    right: 10.0,
+                  ),
+                  child: Row(
+                    children: <Widget>[
+                      Text('原价: ' + product['price'].toString(),
+                          style: TextStyle(
+                              decoration: TextDecoration.lineThrough,
+                              color: Color.fromRGBO(102, 102, 102, 1))),
+                      Expanded(child: Container()),
+                      Text(
+                        '2018.9.2前有效',
+                        style:
+                        TextStyle(color: Color.fromRGBO(102, 102, 102, 1)),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: EdgeInsets.only(
+                    left: 10.0,
+                    right: 10.0,
+                    bottom: 15.0,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: <Widget>[
+                      Text(product['learnPeopleCount'].toString() + '人在学习',
+                          style: TextStyle(
+                            color: Color.fromRGBO(102, 102, 102, 1),
+                          )),
+                      Expanded(child: Container()),
+                      Text(
+                        product['area'].toString(),
+                        style: TextStyle(
+                            color: Color.fromRGBO(102, 102, 102, 1),
+                            fontSize: 11.0),
+                      ),
+                      Text(
+                        '  适用',
+                        style: TextStyle(
+                            color: Color.fromRGBO(102, 102, 102, 1),
+                            fontSize: 12.0),
+                      )
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        Container(
-          margin: EdgeInsets.only(top: 10.0, bottom: 10.0),
-          padding: EdgeInsets.only(
-            left: 10.0,
-            right: 10.0,
+          Container(
+            decoration: BoxDecoration(
+                border: Border(
+                    top: BorderSide(
+                        width: 10.0, color: Color.fromRGBO(241, 241, 241, 1)))),
           ),
-          child: Row(
-            children: <Widget>[
-              Text('原价: ' + product['price'].toString(),
-                  style: TextStyle(
-                      decoration: TextDecoration.lineThrough,
-                      color: Color.fromRGBO(102, 102, 102, 1))),
-              Expanded(child: Container()),
-              Text(
-                '2018.9.2前有效',
-                style: TextStyle(color: Color.fromRGBO(102, 102, 102, 1)),
-              ),
-            ],
-          ),
-        ),
-        Container(
-          padding: EdgeInsets.only(
-            left: 10.0,
-            right: 10.0,
-            bottom: 15.0,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: <Widget>[
-              Text(product['learnPeopleCount'].toString() + '人在学习',
-                  style: TextStyle(
-                    color: Color.fromRGBO(102, 102, 102, 1),
-                  )),
-              Expanded(child: Container()),
-              Text(
-                product['area'].toString(),
-                style: TextStyle(
-                    color: Color.fromRGBO(102, 102, 102, 1), fontSize: 11.0),
-              ),
-              Text(
-                '  适用',
-                style: TextStyle(
-                    color: Color.fromRGBO(102, 102, 102, 1), fontSize: 12.0),
-              )
-            ],
-          ),
-        ),
-        Container(
-          decoration: BoxDecoration(
-              border: Border(
-                  top: BorderSide(
-                      width: 10.0, color: Color.fromRGBO(241, 241, 241, 1)))),
-        ),
-        HtmlView(
-          data: product['prodDetail'].toString(),
-        )
-      ],
+          HtmlView(
+            data: product['prodDetail'].toString(),
+          )
+        ],
+      ),
     );
   }
 
@@ -446,6 +466,7 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
           ),
         ));
         _tabViews.add(ListView(
+          padding: EdgeInsets.all(0.0),
           children: _getChapterItem(_chapter['videos']),
         ));
       }
@@ -461,6 +482,7 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
           ),
         ));
         _tabViews.add(ListView(
+          padding: EdgeInsets.all(0.0),
           children: _getChapterItem(_chapter['papers']),
         ));
       }
@@ -476,6 +498,7 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
           ),
         ));
         _tabViews.add(ListView(
+          padding: EdgeInsets.all(0.0),
           children: _getChapterItem(_chapter['documents']),
         ));
       }
@@ -511,8 +534,12 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
                   controller: _controllerChild, children: _tabViews)));
     } else {
       // 其它类型产品
-      return ListView(
-        children: _getChapterItem(_chapter),
+      return Container(
+        color: Colors.white,
+        child: ListView(
+          padding: EdgeInsets.all(0.0),
+          children: _getChapterItem(_chapter),
+        ),
       );
     }
   }
@@ -594,40 +621,40 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             if (_commentList.length > 0) {
-              return Container(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    _commentHeader(),
-                    Expanded(
-                        child: ListView.builder(
-                            itemCount: _commentList.length,
-                            itemBuilder: (BuildContext context, int index) {
-                              return _commentItem(index);
-                            })),
-                  ],
-                ),
-              );
+              return ListView.builder(
+                  padding: EdgeInsets.all(0.0),
+                  itemCount: _commentList.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    return _commentItem(index);
+                  });
             } else {
               return Center(
-                child: Text('暂无数据'),
+                child: Text('暂无评价'),
               );
             }
           } else {
             return Center(
-              child: Text('加载中...'),
+              child: CupertinoActivityIndicator(),
             );
           }
         });
   }
 
   Widget _commentHeader() {
-    var five = _commentStar['five'];
-    var four = _commentStar['four'];
-    var three = _commentStar['three'];
-    var second = _commentStar['second'];
-    var one = _commentStar['one'];
+    var five = int.parse(_commentStar['five']);
+    var four = int.parse(_commentStar['four']);
+    var three = int.parse(_commentStar['three']);
+    var second = int.parse(_commentStar['second']);
+    var one = int.parse(_commentStar['one']);
     var count = five + four + three + second + one;
+
+    double percent5 = five / count;
+    double percent4 = four / count;
+    double percent3 = three / count;
+    double percent2 = second / count;
+    double percent1 = one / count;
+    List percentList = [percent5, percent4, percent3, percent2, percent1];
+    print(percentList);
 
     return Container(
       padding: EdgeInsets.all(10.0),
@@ -671,27 +698,30 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
                 children: List.generate(5, (int index) {
                   return Row(
                     children: <Widget>[
-                      Row(
-                        children: List.generate(5, (int i) {
-                          if (i < 5 - index) {
-                            return Icon(
-                              Icons.star,
-                              size: 12.0,
-                              color: Color.fromRGBO(204, 204, 204, 1),
-                            );
-                          } else {
-                            return Icon(
-                              Icons.star,
-                              size: 12.0,
-                              color: Colors.white,
-                            );
-                          }
-                        }),
+                      Padding(
+                        padding: EdgeInsets.only(right: 10.0),
+                        child: Row(
+                          children: List.generate(5, (int i) {
+                            if (i < 5 - index) {
+                              return Icon(
+                                Icons.star,
+                                size: 12.0,
+                                color: Color.fromRGBO(255, 204, 0, 1),
+                              );
+                            } else {
+                              return Icon(
+                                Icons.star,
+                                size: 12.0,
+                                color: Colors.white,
+                              );
+                            }
+                          }),
+                        ),
                       ),
                       Expanded(
                         child: LinearProgressIndicator(
-                          value: 100.0,
-                        ),
+                            value: percentList[index],
+                            backgroundColor: Color.fromRGBO(241, 241, 241, 1)),
                       ),
                     ],
                   );
@@ -705,6 +735,12 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
   }
 
   Widget _commentItem(index) {
+    if (index == 0) {
+      return _commentHeader();
+    } else {
+      index--;
+    }
+
     var item = _commentList[index];
 
     // 最后一条评论不显示底边
@@ -788,21 +824,25 @@ class Page extends State<ProdDetail> with TickerProviderStateMixin {
                   margin: EdgeInsets.only(top: 5.0),
                   child: Row(
                       children: List.generate(labels.length, (int index) {
-                    return Container(
-                      margin: EdgeInsets.only(right: 5.0),
-                      padding: EdgeInsets.only(left: 2.0, right: 2.0),
-                      child: Text(
-                        labels[index],
-                        style: TextStyle(
-                            color: Color.fromRGBO(255, 102, 0, 1),
-                            fontSize: 10.0),
-                      ),
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.all(Radius.circular(2.5)),
-                          border: Border.all(
-                              color: Color.fromRGBO(255, 102, 0, 1))),
-                    );
-                  })),
+                        print(labels[index]);
+                        return labels[index] == ''
+                            ? Container()
+                            : Container(
+                          margin: EdgeInsets.only(right: 5.0),
+                          padding: EdgeInsets.only(left: 2.0, right: 2.0),
+                          child: Text(
+                            labels[index],
+                            style: TextStyle(
+                                color: Color.fromRGBO(255, 102, 0, 1),
+                                fontSize: 10.0),
+                          ),
+                          decoration: BoxDecoration(
+                              borderRadius:
+                              BorderRadius.all(Radius.circular(2.5)),
+                              border: Border.all(
+                                  color: Color.fromRGBO(255, 102, 0, 1))),
+                        );
+                      })),
                 ),
                 _commentContent(content),
                 _commentReply(replyContent),

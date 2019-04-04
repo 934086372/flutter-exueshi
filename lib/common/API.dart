@@ -14,7 +14,7 @@ class API {
 
   String apiName;
   var data;
-  var api = {'login': ''};
+  Map api = {'login': ''};
 
   API(apiName, {data});
 
@@ -25,5 +25,6 @@ class API {
 
   Future getUserInfo() async {
     SharedPreferences _pref = await SharedPreferences.getInstance();
+    _pref.getString('userData');
   }
 }

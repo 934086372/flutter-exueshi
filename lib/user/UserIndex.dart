@@ -264,10 +264,14 @@ class Page extends State<UserIndex> with AutomaticKeepAliveClientMixin {
         );
         break;
       case 2:
+        return Center(
+          child: Text('未登录'),
+        );
         break;
       case 3:
-        break;
-      case 4:
+        return Center(
+          child: Text('网络错误'),
+        );
         break;
       default:
         return Center(

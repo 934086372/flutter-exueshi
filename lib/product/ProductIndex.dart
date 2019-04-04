@@ -5,9 +5,12 @@ import 'package:flutter/cupertino.dart';
 import "package:flutter/material.dart";
 import 'package:flutter_exueshi/common/Ajax.dart';
 import 'package:flutter_exueshi/common/PageRouter.dart';
+import 'package:flutter_exueshi/common/UserModalRoute.dart';
+import 'package:flutter_exueshi/components/SlideSheet.dart';
 import 'package:flutter_exueshi/product/Cart.dart';
 import 'package:flutter_exueshi/product/ProdDetail.dart';
 import 'package:flutter_exueshi/product/ProdSearch.dart';
+import 'package:flutter_exueshi/product/SwitchProjectAndArea.dart';
 
 class ProductIndex extends StatefulWidget {
   @override
@@ -18,7 +21,7 @@ class ProductIndex extends StatefulWidget {
 }
 
 class Page extends State<ProductIndex>
-    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+    with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   int _pageLoadingStatus = 1; // 页面加载状态
 
   TabController _tabController;
@@ -29,6 +32,10 @@ class Page extends State<ProductIndex>
   var _prodList;
 
   bool showGetMore = false;
+
+  final GlobalKey _childKey = GlobalKey();
+
+  Map _initial = {'project': '专升本', 'area': '重庆'};
 
   @override
   void initState() {
@@ -57,15 +64,47 @@ class Page extends State<ProductIndex>
     // TODO: implement build
     return Scaffold(
       appBar: AppBar(
-        title: Text('选课中心'),
+        leading: IconButton(
+            icon: Icon(Icons.search),
+            onPressed: () {
+              Navigator.of(context).push(PageRouter(ProdSearch()));
+            }),
+        title: GestureDetector(
+          onTap: changeSubjectArea,
+          child: Row(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Builder(builder: (context) {
+                String title = _initial['project'].toString() +
+                    '-' +
+                    _initial['area'].toString();
+                return title.length > 10
+                    ? Expanded(
+                  child: Center(
+                    child: Text(
+                      title,
+                      style: TextStyle(fontSize: 18.0),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                )
+                    : Text(
+                  title,
+                  style: TextStyle(fontSize: 18.0),
+                  overflow: TextOverflow.ellipsis,
+                );
+              }),
+              Icon(
+                Icons.keyboard_arrow_down,
+                size: 20.0,
+              )
+            ],
+          ),
+        ),
         elevation: 0.0,
         centerTitle: true,
         actions: <Widget>[
-          IconButton(
-              icon: Icon(Icons.search),
-              onPressed: () {
-                Navigator.of(context).push(PageRouter(ProdSearch()));
-              }),
           IconButton(
               icon: Icon(Icons.shopping_cart),
               onPressed: () {
@@ -76,6 +115,7 @@ class Page extends State<ProductIndex>
       body: Column(
         children: <Widget>[
           Container(
+            key: _childKey,
             color: Colors.white,
             child: Row(
               children: <Widget>[
@@ -106,13 +146,40 @@ class Page extends State<ProductIndex>
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.format_list_bulleted),
-                  onPressed: () {},
+                  icon: Icon(Icons.menu),
+                  onPressed: () {
+                    RenderBox _box =
+                    _childKey.currentContext.findRenderObject();
+
+                    /*
+                    * 计算顶部透明区域大小
+                    * */
+                    double _topHeight = kToolbarHeight +
+                        MediaQuery
+                            .of(context)
+                            .padding
+                            .top +
+                        _box.size.height;
+                    //showModalPage(_topHeight);
+
+                    SlideSheet.show(
+                        context,
+                        _topHeight,
+                        Container(
+                          color: Colors.white,
+                          height: 200,
+                        ));
+                  },
                 )
               ],
             ),
           ),
-          Expanded(child: _renderPage()),
+          Expanded(
+              child: Stack(
+                children: <Widget>[
+                  _renderPage(),
+                ],
+              )),
           showGetMore
               ? Container(
             padding: EdgeInsets.symmetric(vertical: 10.0),
@@ -136,6 +203,55 @@ class Page extends State<ProductIndex>
         ],
       ),
     );
+  }
+
+  void changeSubjectArea() async {
+    var ret = await Navigator.of(context)
+        .push(PageRouter(SwitchProjectAndArea(data: _initial)));
+    if (ret != null)
+      setState(() {
+        _initial = ret;
+      });
+  }
+
+  void showModalPage(_topHeight) {
+    Navigator.push(context, UserModalRoute(builder: (context) {
+      AnimationController _animationController;
+      Animation _animation;
+
+      _animationController = AnimationController(
+          vsync: this, duration: Duration(milliseconds: 300));
+
+      _animation = CurvedAnimation(
+          parent: _animationController,
+          curve: Interval(0.0, 1.0, curve: Curves.linear))
+        ..addListener(() {
+          setState(() {});
+        });
+
+      return GestureDetector(
+        onTap: () {
+          Navigator.pop(context);
+        },
+        child: Container(
+          margin: EdgeInsets.only(top: _topHeight),
+          color: Colors.black54,
+          child: Column(
+            children: <Widget>[
+              SlideTransition(
+                position: Tween<Offset>(
+                    begin: Offset(0.0, 0.0), end: Offset(0.0, 1.0))
+                    .animate(_animation),
+                child: Container(
+                  color: Colors.white,
+                  height: 150,
+                ),
+              )
+            ],
+          ),
+        ),
+      );
+    }));
   }
 
   Widget _renderPage() {

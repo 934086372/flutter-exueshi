@@ -1,12 +1,10 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
 import 'package:flutter_exueshi/components/MyIcons.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class StudyManage extends StatefulWidget {
   final studyingList;
@@ -21,7 +19,6 @@ class StudyManage extends StatefulWidget {
 }
 
 class _StudyManageState extends State<StudyManage> {
-
   final userID;
 
   final _studyingList;
@@ -103,8 +100,7 @@ class _StudyManageState extends State<StudyManage> {
                     },
                     child: Container(
                       padding: EdgeInsets.symmetric(vertical: 15.0),
-                      child:
-                      Text(_text, style: TextStyle(color: Colors.white)),
+                      child: Text(_text, style: TextStyle(color: Colors.white)),
                     )),
               )
             ],
@@ -124,12 +120,12 @@ class _StudyManageState extends State<StudyManage> {
     }
 
     Ajax ajax = new Ajax();
-    Response response = await ajax.post(
-        '/api/product/getStuProductStatuses', data: {
-      'userID': userID,
-      'prodIDs': _selected.join(','),
-      'studyStatus': '学习完成'
-    });
+    Response response = await ajax.post('/api/product/getStuProductStatuses',
+        data: {
+          'userID': userID,
+          'prodIDs': _selected.join(','),
+          'studyStatus': '学习完成'
+        });
 
     if (response.statusCode == 200) {
       var ret = response.data;

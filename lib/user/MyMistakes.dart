@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
 import 'package:flutter_exueshi/common/PageRouter.dart';
@@ -29,7 +30,7 @@ class _MyMistakesState extends State<MyMistakes> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        elevation: 1.0,
+        elevation: 0.5,
         title: Text('错题集'),
         centerTitle: true,
       ),
@@ -41,7 +42,7 @@ class _MyMistakesState extends State<MyMistakes> {
     switch (pageLoadStatus) {
       case 1:
         return Center(
-          child: CircularProgressIndicator(),
+          child: CupertinoActivityIndicator(),
         );
         break;
       case 2:
@@ -51,6 +52,7 @@ class _MyMistakesState extends State<MyMistakes> {
             itemBuilder: (context, index) {
               var group = mistakes[index];
               return ExpansionTile(
+                  initiallyExpanded: true,
                   title: Text(group['prodName'].toString()),
                   children: List.generate(group['papers'].length, (i) {
                     var item = group['papers'][i];

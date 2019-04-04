@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -44,6 +45,7 @@ class _MyCollectionsState extends State<MyCollections>
         centerTitle: true,
       ),
       body: renderPage(),
+      backgroundColor: Colors.white,
     );
   }
 
@@ -125,14 +127,14 @@ class _MyCollectionsState extends State<MyCollections>
     }
     if (data == null) {
       return Center(
-        child: CircularProgressIndicator(),
+        child: CupertinoActivityIndicator(),
       );
     }
 
     return ListView.builder(
         itemCount: data.length,
         itemBuilder: (context, index) {
-          return Text('${index}');
+          return Text(index.toString());
         });
   }
 
@@ -199,6 +201,7 @@ class _MyCollectionsState extends State<MyCollections>
         if (ret['code'].toString() == '200') {
           result = ret['data'];
           print('远程请求：' + result.toString());
+          pageLoadStatus = 2;
         } else {
           result = [];
         }

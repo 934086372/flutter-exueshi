@@ -85,10 +85,10 @@ class _AddressPickerState extends State<AddressPicker> {
       String firstChar = item['pinyin'].toString().substring(0, 1);
       indexSet.add(firstChar);
     });
-    List _L = indexSet.toList();
-    _L.sort((left, right) => left.compareTo(right));
+    List _tmpList = indexSet.toList();
+    _tmpList.sort((left, right) => left.compareTo(right));
 
-    _L.forEach((index) {
+    _tmpList.forEach((index) {
       var groupList = [];
       data['citys'].forEach((item) {
         String firstChar = item['pinyin'].toString().substring(0, 1);

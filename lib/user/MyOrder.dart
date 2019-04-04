@@ -122,6 +122,10 @@ class _MyOrderState extends State<MyOrder> with SingleTickerProviderStateMixin {
           child: Text('数据请求错误'),
         );
         break;
+      default:
+        return Center(
+          child: Text('未知错误'),
+        );
     }
   }
 

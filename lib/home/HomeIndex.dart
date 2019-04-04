@@ -1,12 +1,12 @@
 import 'dart:async';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
 import 'package:flutter_exueshi/home/BannerDetail.dart';
 import 'package:flutter_exueshi/home/NoticeDetail.dart';
 import 'package:flutter_exueshi/home/SwitchCity.dart';
-import 'package:flutter_exueshi/home/VideoTest.dart';
 import 'package:flutter_exueshi/product/Cart.dart';
 import 'package:flutter_exueshi/product/ProdSearch.dart';
 import 'package:flutter_exueshi/sign/Login.dart';
@@ -44,6 +44,8 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
 
   var loginData;
   double clientWidth;
+
+  int cartCount = 0;
 
   @override
   // TODO: implement wantKeepAlive
@@ -87,8 +89,6 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
 
     Ajax ajax = new Ajax();
 
-    print(city);
-
     Response response = await ajax
         .post('/api/Product/getProductBannerBulletion', data: {'area': city});
 
@@ -117,6 +117,15 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
     }
 
     _pageLoadingStatus = 2;
+
+    // 购物车数据
+    SharedPreferences _pref = await SharedPreferences.getInstance();
+    int _cartCount = _pref.getInt('cartCount');
+    print(_cartCount);
+    if (_cartCount != null) {
+      cartCount = _cartCount;
+    }
+
     setState(() {});
 
     completer.complete(true);
@@ -227,14 +236,16 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                     Icons.shopping_cart,
                   ),
                 ),
-                Positioned(
+                cartCount > 0
+                    ? Positioned(
                   top: 5,
                   right: 0,
                   child: Container(
                     child: Center(
                         child: Text(
-                          '50',
-                          style: TextStyle(fontSize: 8.0, color: Colors.white),
+                          cartCount.toString(),
+                          style:
+                          TextStyle(fontSize: 8.0, color: Colors.white),
                         )),
                     decoration: BoxDecoration(
                         color: Colors.red, shape: BoxShape.circle),
@@ -242,6 +253,7 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
                     height: 16.0,
                   ),
                 )
+                    : Container()
               ],
             ),
             onTap: () {

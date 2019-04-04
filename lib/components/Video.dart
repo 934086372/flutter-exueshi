@@ -89,8 +89,6 @@ class _VideoState extends State<Video> with SingleTickerProviderStateMixin {
 
         // 检查视频比例
         Size videoSize = _controller.value.size;
-        double videoWidth = videoSize.width;
-        double videoHeight = videoSize.height;
 
         realAspectRatio = videoSize.aspectRatio;
         _controller.pause();

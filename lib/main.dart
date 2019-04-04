@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
-import 'package:event_bus/event_bus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
@@ -100,7 +99,6 @@ class _MyHomePageState extends State<MyHomePage> {
       print(arg);
       _pageController.jumpToPage(1);
     });
-
   }
 
   @override
@@ -167,7 +165,7 @@ class _MyHomePageState extends State<MyHomePage> {
         var ret = response.data;
         if (ret['code'].toString() == '200') {
           var data = ret['data'];
-          _pref.setString('cartCount', data['prodCount']);
+          _pref.setInt('cartCount', data['prodCount']);
         }
       }
     } else {}
