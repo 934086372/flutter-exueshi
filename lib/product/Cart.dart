@@ -48,35 +48,38 @@ class Page extends State<Cart> with TickerProviderStateMixin {
               ))
         ],
       ),
-      body: Column(
-        children: <Widget>[_body(), _footer()],
-      ),
+      body: renderBody(),
     );
   }
 
-  Widget _body() {
+  Widget renderBody() {
     switch (pageLoadStatus) {
       case 1:
         return Center(child: CupertinoActivityIndicator());
         break;
       case 2:
-        return Expanded(
-          child: ListView.builder(
-              itemCount: cartList.length,
-              itemBuilder: (BuildContext context, int index) {
-                return SlideListTile(
-                  child: renderItem(cartList[index]),
-                  menu: <Widget>[
-                    FlatButton(
-                        onPressed: () {},
-                        child: Center(
-                            child: Text(
+        return Column(
+          children: <Widget>[
+            Expanded(
+              child: ListView.builder(
+                  itemCount: cartList.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    return SlideListTile(
+                      child: renderItem(cartList[index]),
+                      menu: <Widget>[
+                        FlatButton(
+                            onPressed: () {},
+                            child: Center(
+                                child: Text(
                               '删除',
                               style: TextStyle(color: Colors.white),
                             )))
-                  ],
-                );
-              }),
+                      ],
+                    );
+                  }),
+            ),
+            _footer()
+          ],
         );
         break;
       case 3:
@@ -110,13 +113,13 @@ class Page extends State<Cart> with TickerProviderStateMixin {
             child: GestureDetector(
               child: isSelected
                   ? Icon(
-                Icons.check_circle,
-                color: Color.fromRGBO(0, 170, 255, 1),
-              )
+                      Icons.check_circle,
+                      color: Color.fromRGBO(0, 170, 255, 1),
+                    )
                   : Icon(
-                Icons.radio_button_unchecked,
-                color: Color.fromRGBO(204, 204, 204, 1),
-              ),
+                      Icons.radio_button_unchecked,
+                      color: Color.fromRGBO(204, 204, 204, 1),
+                    ),
               onTap: () {
                 if (isSelected) {
                   selectedItem.remove(item['prodID']);
@@ -191,13 +194,13 @@ class Page extends State<Cart> with TickerProviderStateMixin {
               padding: const EdgeInsets.all(10.0),
               child: _selectAll
                   ? Icon(
-                Icons.check_circle,
-                color: Color.fromRGBO(0, 170, 255, 1),
-              )
+                      Icons.check_circle,
+                      color: Color.fromRGBO(0, 170, 255, 1),
+                    )
                   : Icon(
-                Icons.radio_button_unchecked,
-                color: Color.fromRGBO(204, 204, 204, 1),
-              ),
+                      Icons.radio_button_unchecked,
+                      color: Color.fromRGBO(204, 204, 204, 1),
+                    ),
             ),
           ),
           Text('全选'),

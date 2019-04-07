@@ -73,10 +73,7 @@ class Page extends State<StudyIndex>
                   ],
                   position: RelativeRect.fromLTRB(
                       0,
-                      kToolbarHeight + MediaQuery
-                          .of(context)
-                          .padding
-                          .top,
+                      kToolbarHeight + MediaQuery.of(context).padding.top,
                       0,
                       0),
                   elevation: 5.0);
@@ -158,17 +155,28 @@ class Page extends State<StudyIndex>
         return Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text('登录后查看更多内容'),
-            RaisedButton(
-              onPressed: () {
+            Padding(
+              padding: const EdgeInsets.only(bottom: 15.0),
+              child: Text(
+                '登录后查看更多内容',
+                style: TextStyle(color: Color.fromRGBO(153, 153, 153, 1)),
+              ),
+            ),
+            GestureDetector(
+              onTap: () {
                 Navigator.of(context).push(PageRouter(Login()));
               },
-              child: Text(
-                '立即登录',
-                style: TextStyle(color: Colors.white),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 25.0, vertical: 10.0),
+                decoration: BoxDecoration(
+                    color: Colors.lightBlueAccent,
+                    borderRadius: BorderRadius.all(Radius.circular(30.0))),
+                child: Text(
+                  '立即登录',
+                  style: TextStyle(color: Colors.white, fontSize: 16.0),
+                ),
               ),
-              color: Colors.lightBlueAccent,
-            )
+            ),
           ],
         );
         break;
@@ -242,10 +250,10 @@ class Page extends State<StudyIndex>
                       ClipRRect(
                         child: Center(
                             child: FadeInImage.assetNetwork(
-                              placeholder: 'assets/images/loading.gif',
-                              image: item['logo'],
-                              fit: BoxFit.cover,
-                            )),
+                          placeholder: 'assets/images/loading.gif',
+                          image: item['logo'],
+                          fit: BoxFit.cover,
+                        )),
                         borderRadius: BorderRadius.all(Radius.circular(5.0)),
                       ),
                       Container(
@@ -271,12 +279,12 @@ class Page extends State<StudyIndex>
                     children: <Widget>[
                       Expanded(
                           child: Text(
-                            item['prodName'],
-                            style: TextStyle(color: Colors.black),
-                            maxLines: 2,
-                            softWrap: false,
-                            overflow: TextOverflow.ellipsis,
-                          )),
+                        item['prodName'],
+                        style: TextStyle(color: Colors.black),
+                        maxLines: 2,
+                        softWrap: false,
+                        overflow: TextOverflow.ellipsis,
+                      )),
                       _lastStudyItem(item['lastStudyItem']),
                       _validShow(item),
                     ],
@@ -298,11 +306,11 @@ class Page extends State<StudyIndex>
         _text = item['validEndTime'] + ' 前有效';
         break;
       case '天数':
-      // 使用支付时间 + 有效天数
+        // 使用支付时间 + 有效天数
         DateTime _payTime = DateTime.parse(item['payTime']);
         print(_payTime);
         DateTime _validEndTime =
-        _payTime.add(Duration(days: item['validDays']));
+            _payTime.add(Duration(days: item['validDays']));
         print(_validEndTime);
         _text = _payTime.year.toString() +
             '-' +
