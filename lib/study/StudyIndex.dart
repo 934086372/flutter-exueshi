@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
 import 'package:flutter_exueshi/common/PageRouter.dart';
 import 'package:flutter_exueshi/components/MyIcons.dart';
+import 'package:flutter_exueshi/components/SlideSheet.dart';
 import 'package:flutter_exueshi/sign/Login.dart';
 import 'package:flutter_exueshi/study/ProductContent.dart';
 import 'package:flutter_exueshi/study/StudyManage.dart';
@@ -31,6 +32,9 @@ class Page extends State<StudyIndex>
 
   var userID;
 
+  String type = '全部';
+  List menu = ['全部', '产品', '资料', '试卷', '视频'];
+
   @override
   void initState() {
     // TODO: implement initState
@@ -40,48 +44,21 @@ class Page extends State<StudyIndex>
   }
 
   @override
+  void didUpdateWidget(StudyIndex oldWidget) {
+    // TODO: implement didUpdateWidget
+    super.didUpdateWidget(oldWidget);
+    print(type);
+  }
+
+  @override
   Widget build(BuildContext context) {
     // TODO: implement build
     return Scaffold(
       appBar: AppBar(
-        elevation: 0.0,
-        leading: Container(
-          width: 100,
-          child: MaterialButton(
-            child: Row(
-              children: <Widget>[
-                Text(
-                  '全部',
-                ),
-                Icon(
-                  Icons.keyboard_arrow_down,
-                  size: 14.0,
-                )
-              ],
-            ),
-            padding: EdgeInsets.only(left: 10.0),
-            onPressed: () {
-              print('点击了类型筛选');
-              showMenu(
-                  context: context,
-                  items: <PopupMenuEntry>[
-                    PopupMenuItem(child: Text('全部')),
-                    PopupMenuItem(child: Text('产品')),
-                    PopupMenuItem(child: Text('视频')),
-                    PopupMenuItem(child: Text('资料')),
-                    PopupMenuItem(child: Text('试卷'))
-                  ],
-                  position: RelativeRect.fromLTRB(
-                      0,
-                      kToolbarHeight + MediaQuery.of(context).padding.top,
-                      0,
-                      0),
-                  elevation: 5.0);
-            },
-          ),
-        ),
         centerTitle: true,
         title: Text('我的学习'),
+        elevation: 0.0,
+        leading: renderLeftMenu(),
         actions: <Widget>[
           InkWell(
             child: Container(
@@ -100,27 +77,7 @@ class Page extends State<StudyIndex>
           ),
         ],
       ),
-      body: Column(
-        children: <Widget>[
-          Container(
-            child: TabBar(
-              tabs: <Tab>[
-                Tab(
-                  text: '我的学习',
-                ),
-                Tab(text: '学习完成'),
-              ],
-              labelColor: Colors.blue,
-              unselectedLabelColor: Colors.black,
-              controller: _tabController,
-            ),
-            color: Color.fromRGBO(255, 255, 255, 1),
-          ),
-          Expanded(
-            child: _renderPage(),
-          ),
-        ],
-      ),
+      body: _renderPage(),
     );
   }
 
@@ -132,12 +89,32 @@ class Page extends State<StudyIndex>
         );
         break;
       case 2:
-        return TabBarView(
-          physics: AlwaysScrollableScrollPhysics(),
-          controller: _tabController,
+        return Column(
           children: <Widget>[
-            _studyingList(),
-            _studiedList(),
+            Container(
+              child: TabBar(
+                tabs: <Tab>[
+                  Tab(
+                    text: '我的学习',
+                  ),
+                  Tab(text: '学习完成'),
+                ],
+                labelColor: Colors.blue,
+                unselectedLabelColor: Colors.black,
+                controller: _tabController,
+              ),
+              color: Color.fromRGBO(255, 255, 255, 1),
+            ),
+            Expanded(
+              child: TabBarView(
+                physics: AlwaysScrollableScrollPhysics(),
+                controller: _tabController,
+                children: <Widget>[
+                  _studyingList(),
+                  _studiedList(),
+                ],
+              ),
+            ),
           ],
         );
         break;
@@ -186,6 +163,79 @@ class Page extends State<StudyIndex>
         );
         break;
     }
+  }
+
+  Widget renderLeftMenu() {
+    return Container(
+      width: 100,
+      child: MaterialButton(
+        child: Row(
+          children: <Widget>[
+            Text(
+              type,
+            ),
+            Icon(
+              Icons.keyboard_arrow_down,
+              size: 14.0,
+            )
+          ],
+        ),
+        padding: EdgeInsets.only(left: 10.0),
+        onPressed: () {
+          double paddingTop =
+              kToolbarHeight + MediaQuery
+                  .of(context)
+                  .padding
+                  .top;
+          SlideSheet.show(
+              context,
+              paddingTop,
+              Container(
+                color: Color.fromRGBO(251, 251, 251, 1),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: List.generate(menu.length, (index) {
+                    return renderMenuItem(menu[index]);
+                  }),
+                ),
+              ));
+        },
+      ),
+    );
+  }
+
+  Widget renderMenuItem(text) {
+    bool isSelected = type == text;
+    return GestureDetector(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
+        child: Row(
+          children: <Widget>[
+            Expanded(
+                child: Text(
+                  text,
+                  style: TextStyle(
+                      color:
+                      isSelected ? Colors.blue : Color.fromRGBO(51, 51, 51, 1)),
+                )),
+            isSelected
+                ? Icon(
+              Icons.check,
+              size: 20.0,
+              color: Colors.blue,
+            )
+                : Container()
+          ],
+        ),
+      ),
+      onTap: () {
+        pageLoadStatus = 1;
+        type = text;
+        SlideSheet.dismiss();
+        setState(() {});
+        _getMyStudyList();
+      },
+    );
   }
 
   Widget _studyingList() {
@@ -394,7 +444,7 @@ class Page extends State<StudyIndex>
       "userID": user['userID'],
       "page": 1,
       "studyStatus": '正在学习',
-      "type": '全部',
+      "type": type,
       "num": 500
     });
 
@@ -411,7 +461,7 @@ class Page extends State<StudyIndex>
       "userID": user['userID'],
       "page": 1,
       "studyStatus": '学习完成',
-      "type": '全部',
+      "type": type,
       "num": 500
     });
 
