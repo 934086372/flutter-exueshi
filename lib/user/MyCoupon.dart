@@ -1,8 +1,11 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
+import 'package:flutter_exueshi/common/PageRouter.dart';
+import 'package:flutter_exueshi/user/CouponCenter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MyCoupon extends StatefulWidget {
@@ -40,12 +43,13 @@ class _MyCouponState extends State<MyCoupon> with TickerProviderStateMixin {
         elevation: 1.0,
         title: Container(
           decoration: BoxDecoration(
-              color: Colors.white,
+              color: Color.fromRGBO(241, 241, 241, 1),
               borderRadius: BorderRadius.all(Radius.circular(5.0))),
           child: TextField(
             decoration: InputDecoration(
-                hintText: '请输入兑换码',
-                fillColor: Colors.white,
+                hintText: '请输入优惠券兑换码',
+                hintStyle: TextStyle(fontSize: 14.0),
+                fillColor: Color.fromRGBO(241, 241, 241, 1),
                 contentPadding:
                     EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
                 border: InputBorder.none),
@@ -55,7 +59,7 @@ class _MyCouponState extends State<MyCoupon> with TickerProviderStateMixin {
         actions: <Widget>[
           FlatButton(
             padding: EdgeInsets.symmetric(horizontal: 5.0),
-            child: Text('兑换', style: TextStyle(color: Colors.white)),
+            child: Text('兑换', style: TextStyle(fontSize: 16.0)),
             onPressed: () {},
           )
         ],
@@ -82,14 +86,19 @@ class _MyCouponState extends State<MyCoupon> with TickerProviderStateMixin {
                       child: renderTabView(index),
                     );
                   }))),
-          Container(
-            color: Colors.white,
-            padding: EdgeInsets.symmetric(vertical: 12.0),
-            child: Center(
-              child: Text(
-                '去领券中心',
-                style: TextStyle(
-                    color: Color.fromRGBO(0, 145, 219, 1), fontSize: 16.0),
+          GestureDetector(
+            onTap: () {
+              Navigator.of(context).push(PageRouter(CouponCenter()));
+            },
+            child: Container(
+              color: Colors.white,
+              padding: EdgeInsets.symmetric(vertical: 12.0),
+              child: Center(
+                child: Text(
+                  '去领券中心',
+                  style: TextStyle(
+                      color: Color.fromRGBO(0, 145, 219, 1), fontSize: 16.0),
+                ),
               ),
             ),
           )
@@ -115,14 +124,13 @@ class _MyCouponState extends State<MyCoupon> with TickerProviderStateMixin {
 
     if (data == null)
       return Center(
-        child: CircularProgressIndicator(),
+        child: CupertinoActivityIndicator(),
       );
 
     return ListView.builder(
         itemCount: data.length,
         itemBuilder: (context, index) {
           var item = data[index];
-          print(item);
 
           String validText;
           if (item['validType'] == '永久') {

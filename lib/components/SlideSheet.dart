@@ -4,17 +4,19 @@ class SlideSheet {
   static SlideSheetView slideSheetView;
 
   static show(BuildContext context, double paddingTop, Widget widget) {
-    var overlayState = Overlay.of(context);
+    /*
+    * 检查是否已有打开窗口，有则关闭
+    *
+    * */
+    slideSheetView?._dismissed();
 
+    var overlayState = Overlay.of(context);
     AnimationController _animationController = AnimationController(
         vsync: overlayState, duration: Duration(milliseconds: 100))
       ..forward();
     Animation animation = Tween(begin: Offset(0.0, -0.1), end: Offset(0.0, 0.0))
-        .animate(
-            CurvedAnimation(parent: _animationController, curve: Curves.linear))
-          ..addListener(() {
-            print(_animationController.value);
-          });
+        .animate(CurvedAnimation(
+        parent: _animationController, curve: Curves.linear));
 
     OverlayEntry overlayEntry = new OverlayEntry(builder: (context) {
       return Positioned.fill(
@@ -23,9 +25,9 @@ class SlideSheet {
             onTap: () {
               SlideSheet.dismiss();
             },
-            child: Container(
-              color: Color.fromRGBO(0, 0, 0, 0.3),
-              child: Column(
+            child: Scaffold(
+              backgroundColor: Color.fromRGBO(0, 0, 0, 0.4),
+              body: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
@@ -44,7 +46,7 @@ class SlideSheet {
   }
 
   static dismiss() {
-    slideSheetView._dismissed();
+    slideSheetView?._dismissed();
   }
 }
 
@@ -80,7 +82,7 @@ class SlideSheetView {
   }
 
   _dismissed() {
-    if (dismissed) {
+    if (this.dismissed) {
       return;
     }
     this.dismissed = true;

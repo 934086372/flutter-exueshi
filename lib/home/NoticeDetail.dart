@@ -17,15 +17,8 @@ class Notice extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
+        centerTitle: true,
         elevation: 0.0,
-        actions: <Widget>[
-          IconButton(
-              icon: Icon(Icons.share, color: Colors.white),
-              onPressed: () {
-                print('分享');
-                Share.share(bulletionLink);
-              })
-        ],
       ),
       body: Builder(builder: (context) {
         return WebView(

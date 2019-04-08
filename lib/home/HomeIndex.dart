@@ -6,12 +6,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
 import 'package:flutter_exueshi/home/BannerDetail.dart';
 import 'package:flutter_exueshi/home/NoticeDetail.dart';
+import 'package:flutter_exueshi/home/ProdList.dart';
 import 'package:flutter_exueshi/home/SwitchCity.dart';
 import 'package:flutter_exueshi/product/Cart.dart';
 import 'package:flutter_exueshi/product/ProdSearch.dart';
 import 'package:flutter_exueshi/sign/Login.dart';
 import 'package:flutter_exueshi/product/ProdDetail.dart';
 import 'package:flutter_exueshi/study/LivingRoom.dart';
+import 'package:flutter_exueshi/user/CouponCenter.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_exueshi/common/PageRouter.dart';
@@ -300,8 +302,8 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
           Pattern _pattern = '&optType=openinapp';
           if (link.contains(_pattern)) {
             // 处理掉链接中 的 '#' ，防止 Uri 无法解析参数
-            link = link.replaceAll(new RegExp('/#/'), '/');
-            Uri _uri = Uri.parse(link);
+            String _link = link.replaceAll(new RegExp('/#/'), '/');
+            Uri _uri = Uri.parse(_link);
 
             var parameters = _uri.queryParameters;
             if (parameters['prodID'] != null) {
@@ -312,6 +314,17 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
             if (parameters['optDestination'] != null) {
               if (parameters['optDestination'] == 'couponMarket') {
                 // 判断是否登录
+                Widget _page = new CouponCenter();
+                if (loginData == null) {
+                  _page = new Login();
+                }
+                Navigator.of(context).push(PageRouter(_page));
+              }
+              if (parameters['optDestination'] == 'prodList') {
+                //
+                String searchParams = link.toString().split('?')[1];
+                Navigator.of(context)
+                    .push(PageRouter(ProdList(searchParams: searchParams)));
               }
             }
           } else {
@@ -667,7 +680,6 @@ class Page extends State<HomeIndex> with AutomaticKeepAliveClientMixin {
 
   Widget _buildCourseItem(index) {
     var item = _products[index];
-
     return InkWell(
       child: Container(
         height: 100.0,

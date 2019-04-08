@@ -65,7 +65,6 @@ flutter:
   - assets/images/bg_ex_blank.png
   - assets/images/about.jpg
   - assets/images/bg_border.png
-  - assets/videos/video.mp4
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.io/assets-and-images/#resolution-aware.

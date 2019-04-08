@@ -6,6 +6,8 @@ import "package:flutter/material.dart";
 import 'package:flutter_exueshi/common/Ajax.dart';
 import 'package:flutter_exueshi/common/PageRouter.dart';
 import 'package:flutter_exueshi/common/UserModalRoute.dart';
+import 'package:flutter_exueshi/components/Button.dart';
+import 'package:flutter_exueshi/components/LabelList.dart';
 import 'package:flutter_exueshi/components/SlideSheet.dart';
 import 'package:flutter_exueshi/product/Cart.dart';
 import 'package:flutter_exueshi/product/ProdDetail.dart';
@@ -22,7 +24,7 @@ class ProductIndex extends StatefulWidget {
 
 class Page extends State<ProductIndex>
     with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
-  int _pageLoadingStatus = 1; // 页面加载状态
+  int pageLoadStatus = 1; // 页面加载状态
 
   TabController _tabController;
   ScrollController _scrollController = ScrollController();
@@ -35,15 +37,36 @@ class Page extends State<ProductIndex>
 
   final GlobalKey _childKey = GlobalKey();
 
+  int prodType = 0;
+
   Map _initial = {'project': '专升本', 'area': '重庆'};
+
+  List orderList = ['综合排序', '最热优先', '最新优先', '价格升序', '价格降序'];
+  String orderItem;
+
+  List subjectList = ['语文', '数学', '英语', '计算机'];
+  Set selectedSubject;
+
+  AnimationController _animationController;
+  Animation _animation;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    _tabController = TabController(length: 6, vsync: this);
 
-    _getProductList();
+    _tabController = TabController(length: 6, vsync: this)
+      ..addListener(() {
+        SlideSheet.dismiss();
+        int _tabIndex = _tabController.index;
+        if (_tabController.indexIsChanging) {
+          setState(() {
+            prodType = _tabIndex;
+            pageLoadStatus = 1;
+            refreshProdList();
+          });
+        }
+      });
 
     // 监听页面滚动到底部
     _scrollController.addListener(() {
@@ -57,6 +80,15 @@ class Page extends State<ProductIndex>
         // 加载更多
       }
     });
+
+    _animationController =
+    AnimationController(vsync: this, duration: Duration(milliseconds: 500))
+      ..forward();
+
+    _animation = Tween(begin: Offset(0.0, -1.0), end: Offset(0.0, 0.0)).animate(
+        CurvedAnimation(parent: _animationController, curve: Curves.linear));
+
+    _getProductList();
   }
 
   @override
@@ -67,47 +99,17 @@ class Page extends State<ProductIndex>
         leading: IconButton(
             icon: Icon(Icons.search),
             onPressed: () {
+              SlideSheet.dismiss();
               Navigator.of(context).push(PageRouter(ProdSearch()));
             }),
-        title: GestureDetector(
-          onTap: changeSubjectArea,
-          child: Row(
-            mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Builder(builder: (context) {
-                String title = _initial['project'].toString() +
-                    '-' +
-                    _initial['area'].toString();
-                return title.length > 10
-                    ? Expanded(
-                  child: Center(
-                    child: Text(
-                      title,
-                      style: TextStyle(fontSize: 18.0),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                )
-                    : Text(
-                  title,
-                  style: TextStyle(fontSize: 18.0),
-                  overflow: TextOverflow.ellipsis,
-                );
-              }),
-              Icon(
-                Icons.keyboard_arrow_down,
-                size: 20.0,
-              )
-            ],
-          ),
-        ),
+        title: renderTitle(),
         elevation: 0.0,
         centerTitle: true,
         actions: <Widget>[
           IconButton(
               icon: Icon(Icons.shopping_cart),
               onPressed: () {
+                SlideSheet.dismiss();
                 Navigator.of(context).push(PageRouter(Cart()));
               })
         ],
@@ -145,32 +147,7 @@ class Page extends State<ProductIndex>
                     isScrollable: true,
                   ),
                 ),
-                IconButton(
-                  icon: Icon(Icons.menu),
-                  onPressed: () {
-                    RenderBox _box =
-                    _childKey.currentContext.findRenderObject();
-
-                    /*
-                    * 计算顶部透明区域大小
-                    * */
-                    double _topHeight = kToolbarHeight +
-                        MediaQuery
-                            .of(context)
-                            .padding
-                            .top +
-                        _box.size.height;
-                    //showModalPage(_topHeight);
-
-                    SlideSheet.show(
-                        context,
-                        _topHeight,
-                        Container(
-                          color: Colors.white,
-                          height: 200,
-                        ));
-                  },
-                )
+                renderMenu()
               ],
             ),
           ),
@@ -180,32 +157,14 @@ class Page extends State<ProductIndex>
                   _renderPage(),
                 ],
               )),
-          showGetMore
-              ? Container(
-            padding: EdgeInsets.symmetric(vertical: 10.0),
-            margin: EdgeInsets.only(top: 10.0),
-            color: Colors.transparent,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                CupertinoActivityIndicator(),
-                Padding(
-                  padding: const EdgeInsets.only(left: 10.0),
-                  child: Text(
-                    '加载中',
-                    style: TextStyle(fontSize: 14.0),
-                  ),
-                )
-              ],
-            ),
-          )
-              : Container(),
+          renderBottom()
         ],
       ),
     );
   }
 
   void changeSubjectArea() async {
+    SlideSheet.dismiss();
     var ret = await Navigator.of(context)
         .push(PageRouter(SwitchProjectAndArea(data: _initial)));
     if (ret != null)
@@ -214,48 +173,8 @@ class Page extends State<ProductIndex>
       });
   }
 
-  void showModalPage(_topHeight) {
-    Navigator.push(context, UserModalRoute(builder: (context) {
-      AnimationController _animationController;
-      Animation _animation;
-
-      _animationController = AnimationController(
-          vsync: this, duration: Duration(milliseconds: 300));
-
-      _animation = CurvedAnimation(
-          parent: _animationController,
-          curve: Interval(0.0, 1.0, curve: Curves.linear))
-        ..addListener(() {
-          setState(() {});
-        });
-
-      return GestureDetector(
-        onTap: () {
-          Navigator.pop(context);
-        },
-        child: Container(
-          margin: EdgeInsets.only(top: _topHeight),
-          color: Colors.black54,
-          child: Column(
-            children: <Widget>[
-              SlideTransition(
-                position: Tween<Offset>(
-                    begin: Offset(0.0, 0.0), end: Offset(0.0, 1.0))
-                    .animate(_animation),
-                child: Container(
-                  color: Colors.white,
-                  height: 150,
-                ),
-              )
-            ],
-          ),
-        ),
-      );
-    }));
-  }
-
   Widget _renderPage() {
-    switch (_pageLoadingStatus) {
+    switch (pageLoadStatus) {
       case 1:
         return Center(
           child: CupertinoActivityIndicator(),
@@ -275,7 +194,7 @@ class Page extends State<ProductIndex>
                 return _renderCourseItem(_prodList[index], index);
               }),
             ),
-            onRefresh: _getProductList);
+            onRefresh: refreshProdList);
         break;
       case 3:
         return Center(
@@ -295,48 +214,231 @@ class Page extends State<ProductIndex>
     }
   }
 
-  Widget renderAppBar() {
-    return Row(
-      children: <Widget>[],
+  Widget renderTitle() {
+    return GestureDetector(
+      onTap: changeSubjectArea,
+      child: Row(
+        mainAxisSize: MainAxisSize.max,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Builder(builder: (context) {
+            String title = _initial['project'].toString() +
+                '-' +
+                _initial['area'].toString();
+            return title.length > 10
+                ? Expanded(
+              child: Center(
+                child: Text(
+                  title,
+                  style: TextStyle(fontSize: 18.0),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            )
+                : Text(
+              title,
+              style: TextStyle(fontSize: 18.0),
+              overflow: TextOverflow.ellipsis,
+            );
+          }),
+          Icon(
+            Icons.keyboard_arrow_down,
+            size: 20.0,
+          )
+        ],
+      ),
     );
   }
 
-  Future _getProductList() async {
-    Completer _completer = new Completer();
-
-    Ajax ajax = new Ajax();
-    Response response = await ajax.post('/api/Product/getProducts', data: {
-      'page': _page,
-      'num': 10,
-      'type': 'ProdCenterREC',
-      'search': {'area': '重庆'}
-    });
-
-    if (response.statusCode == 200) {
-      var ret = response.data;
-
-      if (ret['code'].toString() == '200') {
-        if (_prodList == null) {
-          _prodList = ret['data'];
-        } else {
-          _prodList.addAll(ret['data']);
-        }
-      }
-    }
-
-    setState(() {
-      _pageLoadingStatus = 2;
-      showGetMore = false;
-    });
-
-    await Future.delayed(Duration(seconds: 1), () {
-      _completer.complete(null);
-    });
-
-    return _completer.future;
+  Widget renderMenu() {
+    return IconButton(
+      icon: Icon(Icons.menu),
+      onPressed: showModalSheet,
+    );
   }
 
-// 课程item组件
+  void showModalSheet() {
+    RenderBox _box = _childKey.currentContext.findRenderObject();
+
+    /*
+        * 计算顶部透明区域大小
+        * */
+    double _topHeight =
+        kToolbarHeight + MediaQuery
+            .of(context)
+            .padding
+            .top + _box.size.height;
+
+    double _defaultHeight = MediaQuery
+        .of(context)
+        .size
+        .height * 0.5;
+
+    SlideSheet.show(
+        context,
+        _topHeight,
+        GestureDetector(
+          onTap: () {},
+          child: Container(
+            color: Colors.white,
+            height: _defaultHeight,
+            child: Scaffold(
+              body: renderMenuContent(),
+              backgroundColor: Color.fromRGBO(251, 251, 251, 1),
+            ),
+          ),
+        ));
+  }
+
+  Widget renderMenuContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                        horizontal: 10.0, vertical: 15.0),
+                    child: Text(
+                      '产品排序',
+                      style: TextStyle(color: Color.fromRGBO(102, 102, 102, 1)),
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.only(
+                        left: 10.0, right: 10.0, bottom: 10.0),
+                    child: LabelList(
+                      data: orderList,
+                      initialValue: orderItem,
+                      onChanged: (v) {
+                        orderItem = v;
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                        horizontal: 10.0, vertical: 15.0),
+                    child: Text(
+                      '学科选择',
+                      style: TextStyle(color: Color.fromRGBO(102, 102, 102, 1)),
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.only(
+                        left: 10.0, right: 10.0, bottom: 10.0),
+                    child: LabelList(
+                      data: subjectList,
+                      isMultipleSelect: true,
+                      initialValue: selectedSubject,
+                      onChanged: (v) {
+                        selectedSubject = v;
+                      },
+                    ),
+                  )
+                ],
+              ),
+            )),
+        Row(
+          children: <Widget>[
+            Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      orderItem = null;
+                      selectedSubject = null;
+                      showModalSheet();
+                    });
+                  },
+                  child: Container(
+                    color: Colors.white,
+                    padding: EdgeInsets.symmetric(vertical: 10.0),
+                    child: Center(
+                      child: Text(
+                        '重置',
+                        style: TextStyle(fontSize: 16.0, color: Colors.black54),
+                      ),
+                    ),
+                  ),
+                )),
+            Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    SlideSheet.dismiss();
+                    setState(() {
+                      pageLoadStatus = 1;
+                      refreshProdList();
+                    });
+                  },
+                  child: Container(
+                    padding: EdgeInsets.symmetric(vertical: 10.0),
+                    color: Colors.lightBlueAccent,
+                    child: Center(
+                      child: Text(
+                        '确定',
+                        style: TextStyle(fontSize: 16.0, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ))
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget renderBottom() {
+    if (showGetMore == false) return Container();
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return SlideTransition(
+          position: _animation,
+          child: child,
+        );
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 10.0),
+        margin: EdgeInsets.only(top: 10.0),
+        color: Colors.transparent,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            CupertinoActivityIndicator(),
+            Padding(
+              padding: const EdgeInsets.only(left: 10.0),
+              child: Text(
+                '加载中',
+                style: TextStyle(fontSize: 14.0),
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 10.0),
+      margin: EdgeInsets.only(top: 10.0),
+      color: Colors.transparent,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          CupertinoActivityIndicator(),
+          Padding(
+            padding: const EdgeInsets.only(left: 10.0),
+            child: Text(
+              '加载中',
+              style: TextStyle(fontSize: 14.0),
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  // 课程item组件
   Widget _renderCourseItem(item, index) {
     String _learnPeopleCount = item['learnPeopleCount'].toString() + '人已学习';
 
@@ -429,6 +531,134 @@ class Page extends State<ProductIndex>
         ),
       ),
     );
+  }
+
+  Map buildSearch() {
+    // 筛选条件
+    Map searchData = {'area': _initial['area'], 'catName': _initial['project']};
+    if (selectedSubject != null)
+      searchData.addAll({'course': selectedSubject.toList()});
+
+    String prodTypeText;
+    switch (prodType) {
+      case 0:
+        break;
+      case 1:
+        prodTypeText = '试卷';
+        break;
+      case 2:
+        prodTypeText = '视频';
+        break;
+      case 3:
+        prodTypeText = '套餐';
+        break;
+      case 4:
+        prodTypeText = '计划';
+        break;
+      case 5:
+        prodTypeText = '资料';
+        break;
+      default:
+    }
+    if (prodTypeText != null) searchData.addAll({'prodType': prodTypeText});
+    return searchData;
+  }
+
+  Map buildOrder() {
+    Map order;
+    switch (orderItem) {
+      case '综合排序':
+        break;
+      case '最热优先':
+        order = {'saleMoneySum': 'desc'};
+        break;
+      case '最新优先':
+        order = {'saleOnTime': 'desc'};
+        break;
+      case '价格降序':
+        order = {'price': 'desc'};
+        break;
+      case '价格升序':
+        order = {'price': 'asc'};
+        break;
+      default:
+        break;
+    }
+
+    return order;
+  }
+
+  Map buildQueryData(page) {
+    Map queryData = {
+      'page': page,
+      'num': 10,
+      'type': 'ProdCenterREC',
+      'search': buildSearch()
+    };
+    Map order = buildOrder();
+    if (order != null) {
+      queryData.addAll({'order': order});
+    }
+    return queryData;
+  }
+
+  Future _getProductList() async {
+    Completer _completer = new Completer();
+
+    Ajax ajax = new Ajax();
+    Response response = await ajax.post('/api/Product/getProducts',
+        data: buildQueryData(_page));
+
+    if (response.statusCode == 200) {
+      var ret = response.data;
+
+      if (ret['code'].toString() == '200') {
+        if (_prodList == null) {
+          _prodList = ret['data'];
+        } else {
+          _prodList.addAll(ret['data']);
+        }
+        pageLoadStatus = 2;
+      } else {
+        if (_page == 1) {
+          pageLoadStatus = 3;
+        }
+      }
+    } else {
+      pageLoadStatus = 4;
+    }
+
+    setState(() {
+      showGetMore = false;
+    });
+
+    await Future.delayed(Duration(seconds: 1), () {
+      _completer.complete(null);
+    });
+
+    return _completer.future;
+  }
+
+  // 下拉刷新重新加载数据
+  Future refreshProdList() async {
+    Completer _completer = new Completer();
+    Ajax ajax = new Ajax();
+    Response response =
+    await ajax.post('/api/Product/getProducts', data: buildQueryData(1));
+    if (response.statusCode == 200) {
+      var ret = response.data;
+      if (ret['code'].toString() == '200') {
+        _prodList = ret['data'];
+        pageLoadStatus = 2;
+      } else {
+        pageLoadStatus = 3;
+      }
+    } else {
+      pageLoadStatus = 4;
+    }
+    setState(() {});
+    _completer.complete(null);
+    return _completer.future;
   }
 
   @override
