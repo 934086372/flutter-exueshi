@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProdSearch extends StatefulWidget {
   @override
@@ -15,15 +16,23 @@ class _ProdSearchState extends State<ProdSearch> {
   int pageLoadStatus = 1;
   var prodList;
 
-  String searchContent;
+  var searchContent;
+
+  Set searchHistory = new Set();
+
+  void init() async {
+    SharedPreferences _pref = await SharedPreferences.getInstance();
+    if (_pref.getStringList('searchHistory') != null) {
+      searchHistory = _pref.getStringList('searchHistory').toSet();
+      setState(() {});
+    }
+  }
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    textEditingController.addListener(() {
-      print(textEditingController.text);
-    });
+    init();
   }
 
   @override
@@ -68,13 +77,7 @@ class _ProdSearchState extends State<ProdSearch> {
                     decoration: InputDecoration(
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.symmetric(vertical: 5.0)),
-                    onSubmitted: (v) {
-                      // 搜索
-                      setState(() {
-                        searchContent = v;
-                      });
-                      getSearchData();
-                    },
+                    onSubmitted: search,
                   ),
                 ),
                 GestureDetector(
@@ -107,7 +110,9 @@ class _ProdSearchState extends State<ProdSearch> {
   Widget renderBody() {
     switch (pageLoadStatus) {
       case 1:
-        return Center(
+        return searchHistory.length > 0
+            ? renderSearchHistory()
+            : Center(
           child: Text('还没有搜索历史'),
         );
         break;
@@ -131,6 +136,32 @@ class _ProdSearchState extends State<ProdSearch> {
     }
   }
 
+  Widget renderSearchHistory() {
+    return Column(
+      children: <Widget>[
+        Padding(
+          padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
+          child: Text('最近搜索'),
+        ),
+        Wrap(
+          children: List.generate(searchHistory.length, (index) {
+            return Container(
+              decoration: BoxDecoration(
+                  color: Color.fromRGBO(226, 226, 226, 1),
+                  border: Border.all(
+                    color: Color.fromRGBO(226, 226, 226, 1),
+                  ),
+                  borderRadius: BorderRadius.circular(30.0)),
+              padding: EdgeInsets.symmetric(vertical: 5.0, horizontal: 15.0),
+              child: Text(searchContent[index],
+                  style: TextStyle(color: Colors.white, fontSize: 12.0)),
+            );
+          }),
+        )
+      ],
+    );
+  }
+
   Widget renderSearchData() {
     return Column(
       children: <Widget>[
@@ -149,6 +180,23 @@ class _ProdSearchState extends State<ProdSearch> {
     );
   }
 
+  void search(text) async {
+    // 点击搜索，存储搜索历史
+    if (text.toString().trim() != '') {
+      searchContent = text;
+      SharedPreferences _pref = await SharedPreferences.getInstance();
+      if (_pref.getStringList('searchHistory') != null) {
+        searchHistory = _pref.getStringList('searchHistory').toSet();
+      }
+      searchHistory.add(text);
+      print(searchHistory.toList());
+      _pref.setStringList('searchHistory', searchHistory.toList());
+
+      setState(() {});
+      getSearchData();
+    }
+  }
+
   Map buildQueryData() {
     Map map = {
       'type': 'ProdCenterREC',
@@ -160,8 +208,6 @@ class _ProdSearchState extends State<ProdSearch> {
   }
 
   void getSearchData() async {
-    print(buildQueryData());
-    return;
     Ajax ajax = new Ajax();
     Response response =
         await ajax.post('/api/Product/getProducts', data: buildQueryData());
