@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
 import 'package:flutter_exueshi/common/PageRouter.dart';
@@ -25,7 +26,8 @@ class _HelpState extends State<Help> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        elevation: 1.0,
+        backgroundColor: Colors.white,
+        elevation: 0.5,
         title: Text('帮助中心'),
         centerTitle: true,
         actions: <Widget>[
@@ -64,7 +66,7 @@ class _HelpState extends State<Help> {
     switch (pageLoadStatus) {
       case 1:
         return Center(
-          child: CircularProgressIndicator(),
+          child: CupertinoActivityIndicator(),
         );
         break;
       case 2:

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
 import 'package:flutter_exueshi/common/PageRouter.dart';
@@ -16,11 +17,10 @@ class MyOrder extends StatefulWidget {
 class _MyOrderState extends State<MyOrder> with SingleTickerProviderStateMixin {
   TabController tabController;
 
-  var orderAll;
-  var orderPaying;
-  var orderFinish;
-  var orderClose;
-
+  List orderAll = new List();
+  List orderPaying = new List();
+  List orderFinish = new List();
+  List orderClose = new List();
   int pageLoadStatus = 1;
 
   @override
@@ -61,7 +61,7 @@ class _MyOrderState extends State<MyOrder> with SingleTickerProviderStateMixin {
       body: TabBarView(
           controller: tabController,
           children: List.generate(4, (index) {
-            return renderTabView();
+            return renderTabView(index);
           })),
     );
   }
@@ -71,46 +71,80 @@ class _MyOrderState extends State<MyOrder> with SingleTickerProviderStateMixin {
     SharedPreferences _pref = await SharedPreferences.getInstance();
     String _user = _pref.getString('userData');
 
-    int status;
-
     if (_user != null) {
       var userData = json.decode(_user);
 
+      Map searchData = {
+        'userID': userData['userID'],
+        'page': 1,
+        'num': 500,
+      };
+
       Ajax ajax = Ajax();
-      Response response = await ajax.post('/api/order/getOrders',
-          data: {'userID': userData['userID'], 'page': 1, 'num': 500});
+      Response response =
+      await ajax.post('/api/order/getOrders', data: searchData);
 
       if (response.statusCode == 200) {
         var ret = response.data;
         if (ret['code'].toString() == '200') {
-          print(ret);
           orderAll = ret['data'];
-          status = 2;
+          orderAll.forEach((item) {
+            switch (item['orderStatus']) {
+              case '待支付':
+                orderPaying.add(item);
+                break;
+              case '已支付':
+                orderFinish.add(item);
+                break;
+              case '已取消':
+                orderClose.add(item);
+                break;
+            }
+          });
+          pageLoadStatus = 2;
         } else {
-          status = 3;
+          pageLoadStatus = 3;
         }
       } else {
-        status = 4;
+        pageLoadStatus = 4;
       }
     }
-    setState(() {
-      pageLoadStatus = status;
-    });
+    setState(() {});
   }
 
-  Widget renderTabView() {
+  Widget renderTabView(index) {
+    List data;
+    switch (index) {
+      case 0:
+        data = orderAll;
+        break;
+      case 1:
+        data = orderPaying;
+        break;
+      case 2:
+        data = orderFinish;
+        break;
+      case 3:
+        data = orderClose;
+        break;
+    }
+
     switch (pageLoadStatus) {
       case 1:
         return Center(
-          child: CircularProgressIndicator(),
+          child: CupertinoActivityIndicator(),
         );
         break;
       case 2:
-        return ListView.builder(
-            itemCount: orderAll.length,
+        return data.length > 0
+            ? ListView.builder(
+            itemCount: data.length,
             itemBuilder: (context, index) {
-              return renderOrderItem(orderAll[index]);
-            });
+              return renderOrderItem(data[index]);
+            })
+            : Center(
+          child: Text('暂无数据'),
+        );
         break;
       case 3:
         return Center(
@@ -130,8 +164,6 @@ class _MyOrderState extends State<MyOrder> with SingleTickerProviderStateMixin {
   }
 
   Widget renderOrderItem(orderItem) {
-    print(orderItem);
-
     return Container(
       margin: const EdgeInsets.only(top: 10.0),
       color: Colors.white,
@@ -160,8 +192,6 @@ class _MyOrderState extends State<MyOrder> with SingleTickerProviderStateMixin {
   }
 
   Widget renderContent(item) {
-    print(item);
-
     return Container(
       height: 100,
       margin: EdgeInsets.only(bottom: 10.0),
@@ -234,7 +264,6 @@ class _MyOrderState extends State<MyOrder> with SingleTickerProviderStateMixin {
               )
             ]),
         onPressed: () {
-          print(item);
           Navigator.of(context).push(PageRouter(ProdDetail(
             prodID: item['prodID'],
           )));
