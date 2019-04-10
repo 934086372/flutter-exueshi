@@ -418,24 +418,6 @@ class Page extends State<ProductIndex>
         ),
       ),
     );
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 10.0),
-      margin: EdgeInsets.only(top: 10.0),
-      color: Colors.transparent,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          CupertinoActivityIndicator(),
-          Padding(
-            padding: const EdgeInsets.only(left: 10.0),
-            child: Text(
-              '加载中',
-              style: TextStyle(fontSize: 14.0),
-            ),
-          )
-        ],
-      ),
-    );
   }
 
   // 课程item组件

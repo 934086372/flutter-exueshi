@@ -25,6 +25,8 @@ class _SlideListTileState extends State<SlideListTile>
     return size.width;
   }
 
+  GlobalKey menuKey = new GlobalKey();
+
   @override
   void initState() {
     // TODO: implement initState
@@ -85,7 +87,6 @@ class _SlideListTileState extends State<SlideListTile>
   Widget build(BuildContext context) {
     super.build(context);
 
-    print(_moveController.value);
     Widget content =
         SlideTransition(position: _moveAnimation, child: widget.child);
 
@@ -96,6 +97,7 @@ class _SlideListTileState extends State<SlideListTile>
             color: Colors.red,
             alignment: Alignment.centerRight,
             child: Row(
+              key: menuKey,
               mainAxisAlignment: MainAxisAlignment.end,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: widget.menu,
