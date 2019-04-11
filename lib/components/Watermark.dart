@@ -10,17 +10,18 @@ class Watermark extends StatelessWidget {
   final String title;
   final String subTitle;
   final Widget widget;
+  final Size size;
 
-  const Watermark({Key key, this.title = '易学仕网校', this.subTitle, this.widget})
+  const Watermark({Key key,
+    this.title = '易学仕网校',
+    this.subTitle,
+    @required this.widget,
+    @required this.size})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    RenderBox box = context.findRenderObject();
-    print(box.size);
-
-    double aspectRatio =
-        (box.size.width / 3) / (box.size.height / 4); // 计算每一块的宽高比
+    double aspectRatio = (size.width / 3) / (size.height / 4); // 计算每一块的宽高比
 
     return Stack(
       children: <Widget>[
@@ -45,11 +46,13 @@ class Watermark extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   Text(title,
+                      overflow: TextOverflow.clip,
                       style: TextStyle(
                           fontSize: 12.0,
                           color: Color.fromRGBO(153, 153, 153, 0.2))),
                   subTitle != null
                       ? Text(subTitle,
+                      overflow: TextOverflow.clip,
                           style: TextStyle(
                               fontSize: 12.0,
                               color: Color.fromRGBO(153, 153, 153, 0.2)))
