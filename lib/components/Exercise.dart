@@ -13,25 +13,35 @@ class Exercise extends StatefulWidget {
 class _ExerciseState extends State<Exercise> {
   Map get item => widget.item;
 
+  String groupTitle;
+  String title;
+  String analysis;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    print(item['subject_addon']);
+    if (item['subject'] != null && item['subject'].toString().trim() != '') {
+      groupTitle = '<div>' + filterHtml(item['subject']) + '</div>';
+    }
+    title = '<div>' + filterHtml(item['question'].toString().trim()) + '</div>';
+
+    // 题目解析
+    analysis = filterHtml(item['question_analyze'].toString());
+  }
+
   @override
   Widget build(BuildContext context) {
     return renderQuestion();
   }
 
   Widget renderQuestion() {
-    print(item);
+    print(item['subject']);
 
     // 题型
     int questionType = item['question_types'];
     print(questionType);
-
-    switch (questionType) {
-      case 1:
-        break;
-    }
-
-    // 标题
-    String title = '<div>' + item['question'].toString().trim() + '</div>';
 
     // 题目选项
     List options = item['answer'];
@@ -39,19 +49,61 @@ class _ExerciseState extends State<Exercise> {
     // 标准答案
     String answer = item['question_standard_answer'];
 
-    print(item['question_standard_answer'].length);
-
-    // 题目解析
-    String analysis = item['question_analyze'].toString();
+    String exType;
+    switch (questionType) {
+      case 1:
+        exType = '单选题';
+        break;
+      case 2:
+        exType = '多选题';
+        break;
+      case 3:
+        exType = '填空题';
+        break;
+      case 4:
+        exType = '简答题';
+        break;
+      case 5:
+        exType = '计算题';
+        break;
+      case 6:
+        exType = '判断题';
+        options = ['正确', '错误'];
+        break;
+      case 8:
+        exType = '翻译题';
+        break;
+      case 9:
+        exType = '写作题';
+        break;
+      default:
+        exType = '未知题型';
+        break;
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        renderQuestionTitle(title),
+        renderGroupTitle(),
+        renderQuestionTitle(),
         renderOptions(options, answer),
         renderDivider(),
-        renderAnalysis(analysis)
+        renderAnalysis()
       ],
+    );
+  }
+
+  Widget renderGroupTitle() {
+    print(groupTitle);
+    if (groupTitle == null) return Container();
+    return Container(
+      height: 200,
+      color: Color.fromRGBO(245, 245, 245, 0.8),
+      child: SingleChildScrollView(
+        child: HtmlView(
+          data: groupTitle,
+        ),
+      ),
     );
   }
 
@@ -62,7 +114,7 @@ class _ExerciseState extends State<Exercise> {
     );
   }
 
-  Widget renderQuestionTitle(title) {
+  Widget renderQuestionTitle() {
     return Container(
         padding: EdgeInsets.symmetric(vertical: 10.0),
         color: Color.fromRGBO(255, 255, 255, 0),
@@ -101,7 +153,8 @@ class _ExerciseState extends State<Exercise> {
     );
   }
 
-  Widget renderAnalysis(analysis) {
+  // 渲染题目解析部分
+  Widget renderAnalysis() {
     return Container(
       padding: EdgeInsets.all(10.0),
       child: Column(
@@ -120,5 +173,17 @@ class _ExerciseState extends State<Exercise> {
         ],
       ),
     );
+  }
+
+  // 过滤 HTML 中无法被解析的标签
+  String filterHtml(data) {
+    String tmp = data.toString();
+    Pattern p1 = '<o:p>';
+    Pattern p2 = '</o:p>';
+    Pattern p3 = '&nbsp;';
+    tmp = tmp.replaceAll(p1, '');
+    tmp = tmp.replaceAll(p2, '');
+    tmp = tmp.replaceAll(p3, ' ');
+    return tmp;
   }
 }

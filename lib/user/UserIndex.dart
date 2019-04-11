@@ -407,7 +407,7 @@ class Page extends State<UserIndex> with AutomaticKeepAliveClientMixin {
     }
   }
 
-  void routerManage(item) {
+  void routerManage(item) async {
     Widget page;
 
     switch (item) {
@@ -449,7 +449,9 @@ class Page extends State<UserIndex> with AutomaticKeepAliveClientMixin {
       page = Login();
     }
 
-    Navigator.of(context).push(PageRouter(page));
+    await Navigator.of(context).push(PageRouter(page));
+
+    if (isLogin == false) setState(() {});
   }
 
   void goLogin() {

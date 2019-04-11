@@ -79,8 +79,24 @@ class _MyNotesExState extends State<MyNotesEx> {
   }
 
   Widget renderBody() {
+    double height = MediaQuery
+        .of(context)
+        .size
+        .height -
+        kToolbarHeight -
+        MediaQuery
+            .of(context)
+            .padding
+            .top;
+    double width = MediaQuery
+        .of(context)
+        .size
+        .width;
+    Size size = new Size(width, height);
+
     return Watermark(
       subTitle: '15310486021',
+      size: size,
       widget: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -130,7 +146,7 @@ class _MyNotesExState extends State<MyNotesEx> {
   Widget renderMyNoteItem(item) {
     print(item);
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10.0),
+      padding: EdgeInsets.all(10.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -166,21 +182,28 @@ class _MyNotesExState extends State<MyNotesEx> {
 
   Widget renderStarNoteItem(item) {
     return Container(
+      padding: EdgeInsets.all(10.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Row(
             children: <Widget>[
               CircleAvatar(
-                child: Image.network(item['portrait']),
+                child: Image.network(
+                  item['portrait'],
+                ),
               ),
               Expanded(
-                  child: Column(
-                children: <Widget>[
-                  Text(item['userName']),
-                  Text(item['createTime']),
-                ],
-              )),
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 10.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(item['userName']),
+                        Text(item['createTime']),
+                      ],
+                    ),
+                  )),
               Padding(
                 padding: EdgeInsets.only(right: 5.0),
                 child: Text(item['likeCount'].toString()),
@@ -189,7 +212,7 @@ class _MyNotesExState extends State<MyNotesEx> {
             ],
           ),
           Padding(
-            padding: EdgeInsets.only(left: 25.0, top: 10.0, right: 10.0),
+            padding: EdgeInsets.only(left: 50.0, top: 10.0, right: 10.0),
             child: Text(
               item['remark'],
               maxLines: 5,

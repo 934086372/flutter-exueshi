@@ -7,6 +7,7 @@
 *
 * */
 
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
@@ -40,7 +41,7 @@ class Video extends StatefulWidget {
   _VideoState createState() => _VideoState();
 }
 
-class _VideoState extends State<Video> with SingleTickerProviderStateMixin {
+class _VideoState extends State<Video> with TickerProviderStateMixin {
   VideoPlayerController _controller;
 
   String get url => widget.url;
@@ -74,6 +75,41 @@ class _VideoState extends State<Video> with SingleTickerProviderStateMixin {
 
   double realAspectRatio = 16.0 / 9.0;
 
+  void listener() {
+    print(_controller.value);
+    setState(() {
+      if (cleanMode == false && _controller.value.isPlaying) {
+        Timer(Duration(seconds: 3), () {
+          setState(() {
+            cleanMode = true;
+          });
+        });
+      }
+
+      String timeText = _controller.value.position.toString().split(_patten)[0];
+      if (_controller.value.duration.inHours > 1) {
+        timeLabel = timeText;
+      } else {
+        List timeArray = timeText.split(RegExp(':'));
+        timeLabel = timeArray[1] + ':' + timeArray[2];
+      }
+    });
+  }
+
+  void initDuration() {
+    setState(() {
+      print(_controller.value.duration.toString());
+      String durationText =
+      _controller.value.duration.toString().split(_patten)[0];
+      List durationArray = durationText.split(RegExp(':'));
+      if (_controller.value.duration.inHours > 1) {
+        _duration = durationText;
+      } else {
+        _duration = durationArray[1] + ':' + durationArray[2];
+      }
+    });
+  }
+
   @override
   void initState() {
     // TODO: implement initState
@@ -85,29 +121,16 @@ class _VideoState extends State<Video> with SingleTickerProviderStateMixin {
     _controller = VideoPlayerController.network(url)
       ..initialize().then((_) {
         print('初始化完成');
-        print(_controller.value);
-
-        // 检查视频比例
-        Size videoSize = _controller.value.size;
-
-        realAspectRatio = videoSize.aspectRatio;
+        realAspectRatio = _controller.value.size.aspectRatio;
         _controller.pause();
-        setState(() {
-          _duration = _controller.value.duration.toString().split(_patten)[0];
-        });
+        initDuration();
       }, onError: (error) {
         print('初始化失败');
-        print(error);
       }).catchError((_) {
         print(_);
       });
 
-    _controller.addListener(() {
-      print(_controller.value.hashCode);
-      setState(() {
-        timeLabel = _controller.value.position.toString().split(_patten)[0];
-      });
-    });
+    _controller.addListener(listener);
   }
 
   @override
@@ -121,39 +144,55 @@ class _VideoState extends State<Video> with SingleTickerProviderStateMixin {
   void didUpdateWidget(Video oldWidget) {
     // TODO: implement didUpdateWidget
     super.didUpdateWidget(oldWidget);
+    print(oldWidget.url);
+    print(url);
+    if (url != oldWidget.url) {
+      // 切换视频时，先清除之前的视频
+      _controller.dispose();
+      _controller = VideoPlayerController.network(url)
+        ..initialize().then((_) {
+          print('切换视频源后初始化完成');
+          // 检查视频比例
+          realAspectRatio = _controller.value.size.aspectRatio;
+          _controller.play();
+          initDuration();
+        }, onError: (error) {
+          print('初始化失败');
+        }).catchError((_) {
+          print(_);
+        })
+        ..addListener(listener);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: Container(
-          child: _controller.value.initialized
-              ? player()
-              : AspectRatio(
-            child: Container(
-              width: MediaQuery
-                  .of(context)
-                  .size
-                  .width,
-              color: Colors.black,
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    CupertinoActivityIndicator(),
-                    Text(
-                      '加载中...',
-                      style:
-                      TextStyle(color: Colors.white, fontSize: 10.0),
-                    )
-                  ],
-                ),
-              ),
+      body: _controller.value.initialized
+          ? player()
+          : AspectRatio(
+        child: Container(
+          width: MediaQuery
+              .of(context)
+              .size
+              .width,
+          color: Colors.black,
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                CupertinoActivityIndicator(),
+                Text(
+                  '加载中...',
+                  style: TextStyle(color: Colors.white, fontSize: 10.0),
+                )
+              ],
             ),
-            aspectRatio: 16.0 / 9.0,
           ),
         ),
-        resizeToAvoidBottomInset: true);
+        aspectRatio: 16.0 / 9.0,
+      ),
+    );
   }
 
   // 播放器
@@ -175,6 +214,12 @@ class _VideoState extends State<Video> with SingleTickerProviderStateMixin {
                 onTap: () {
                   setState(() {
                     cleanMode = !cleanMode;
+                    if (cleanMode) {
+                      Timer(Duration(seconds: 5), () {
+                        cleanMode = true;
+                        setState(() {});
+                      });
+                    }
                     if (isFullscreen) {
                       if (cleanMode) {
                         SystemChrome.setEnabledSystemUIOverlays([]);
@@ -211,13 +256,9 @@ class _VideoState extends State<Video> with SingleTickerProviderStateMixin {
 
   // 播放器的标题栏
   Widget playerTitle() {
-    if (!isFullscreen && !enableTitleInSmall) {
-      return Container();
-    }
+    if (!isFullscreen && !enableTitleInSmall) return Container();
 
-    if (title == '') {
-      return Container();
-    }
+    if (title == '') return Container();
 
     // 状态栏高度
     double statusBarHeight = MediaQuery.of(context).padding.top;
@@ -246,29 +287,33 @@ class _VideoState extends State<Video> with SingleTickerProviderStateMixin {
 
   // 播放器的底部控制条
   Widget playerControllerBar() {
+    TextStyle style = TextStyle(color: Colors.white, fontSize: 12.0);
     return BackdropFilter(
       filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
       child: Container(
         color: Color.fromRGBO(0, 0, 0, 0.3),
         child: Column(
           children: <Widget>[
-            VideoProgressBar(
-              controller: _controller,
-            ), // 进度条
+            // 进度条
             Padding(
               padding:
               const EdgeInsets.symmetric(horizontal: 5.0, vertical: 2.0),
               child: Row(
                 children: <Widget>[
                   _playAndPauseBtn(), // 播放|暂停按钮
-                  isLive
-                      ? Container()
-                      : Text(
-                    timeLabel + '/' + _duration,
-                    style: TextStyle(color: Colors.white),
-                  ),
                   Expanded(
-                    child: Container(),
+                    child: isLive
+                        ? Container()
+                        : Row(
+                      children: <Widget>[
+                        Text(timeLabel, style: style),
+                        Expanded(
+                            child: VideoProgressBar(
+                              controller: _controller,
+                            )),
+                        Text(_duration, style: style),
+                      ],
+                    ),
                   ),
                   //barrageBtn(),
                   exchangeDefinitionBtn(),
@@ -287,7 +332,6 @@ class _VideoState extends State<Video> with SingleTickerProviderStateMixin {
     return Switch(
         value: isShowDanmu,
         onChanged: (v) {
-          print(v);
           setState(() {
             isShowDanmu = !isShowDanmu;
           });
@@ -299,7 +343,7 @@ class _VideoState extends State<Video> with SingleTickerProviderStateMixin {
     return GestureDetector(
       child: Icon(
         isFullscreen ? Icons.fullscreen_exit : Icons.fullscreen,
-        size: 35,
+        size: 30,
         color: Colors.white,
       ),
       onTap: () {
@@ -344,16 +388,18 @@ class _VideoState extends State<Video> with SingleTickerProviderStateMixin {
 
   // 切换清晰度
   Widget exchangeDefinitionBtn() {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 5.0),
-      padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 1.0),
-      child: Text(
-        '高清',
-        style: TextStyle(color: Colors.white, fontSize: 12.0),
+    return GestureDetector(
+      child: Container(
+        margin: EdgeInsets.symmetric(horizontal: 5.0),
+        padding: const EdgeInsets.all(5.0),
+        child: Text(
+          '高清',
+          style: TextStyle(color: Colors.white, fontSize: 12.0),
+        ),
       ),
-      decoration: BoxDecoration(
-          color: Color.fromRGBO(0, 170, 255, 0.8),
-          borderRadius: BorderRadius.all(Radius.circular(5.0))),
+      onTap: () {
+        print('切换清晰度');
+      },
     );
   }
 
@@ -362,7 +408,7 @@ class _VideoState extends State<Video> with SingleTickerProviderStateMixin {
     return GestureDetector(
       child: Icon(
         _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
-        size: 35,
+        size: 30,
         color: Colors.white,
       ),
       onTap: () {
@@ -400,7 +446,6 @@ class _VideoProgressBarState extends State<VideoProgressBar> {
     int duration = controller.value.duration.inMicroseconds;
 
     controller.addListener(() {
-      //double width = MediaQuery.of(context).size.width;
       double width = 100;
       int position = controller.value.position.inMicroseconds;
       double currentProgress = position / duration * width;
@@ -415,28 +460,20 @@ class _VideoProgressBarState extends State<VideoProgressBar> {
 
   @override
   Widget build(BuildContext context) {
-    print(progress);
-
-    return Container(
-      child: Stack(
-        children: <Widget>[
-          Container(
-            height: 2.0,
-            decoration: BoxDecoration(
-              color: Colors.white,
-            ),
-          ),
-          Positioned(
-              child: Container(
-                width: progress,
-                height: 2.0,
-                decoration: BoxDecoration(
-                  color: Color.fromRGBO(0, 170, 255, 1),
-                ),
-              ))
-        ],
-      ),
-    );
+    return Slider(
+        value: progress,
+        min: 0,
+        max: 100,
+        activeColor: Color.fromRGBO(0, 170, 255, 1),
+        inactiveColor: Colors.white,
+        onChanged: (v) {
+          setState(() {
+            progress = v;
+            int milliSeconds =
+                controller.value.duration.inMilliseconds * v ~/ 100;
+            controller.seekTo(Duration(milliseconds: milliSeconds));
+          });
+        });
   }
 }
 
@@ -538,16 +575,18 @@ class _VideoPlayerFullscreenState extends State<VideoPlayerFullscreen> {
         color: Color.fromRGBO(0, 0, 0, 0.3),
         child: Column(
           children: <Widget>[
-            VideoProgressBar(
-              controller: _controller,
-            ), // 进度条
+//            VideoProgressBar(
+//              controller: _controller,
+//            ), // 进度条
             Padding(
               padding:
               const EdgeInsets.symmetric(horizontal: 5.0, vertical: 2.0),
               child: Row(
                 children: <Widget>[
                   _playAndPauseBtn(), // 播放|暂停按钮
-
+                  VideoProgressBar(
+                    controller: _controller,
+                  ),
                   Expanded(
                     child: Container(),
                   ),

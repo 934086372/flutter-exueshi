@@ -4,6 +4,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
+import 'package:flutter_exueshi/components/Exercise.dart';
+import 'package:flutter_exueshi/components/MyIcons.dart';
 import 'package:flutter_html_textview/flutter_html_textview.dart';
 import 'package:flutter_html_view/flutter_html_view.dart';
 
@@ -32,36 +34,39 @@ class _ExamPaperState extends State<ExamPaper> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          elevation: 1.0,
-          title: Text('考试模式'),
-          actions: <Widget>[
-            IconButton(icon: Icon(Icons.card_membership), onPressed: () {})
-          ],
-        ),
-        body: exCache == null
-            ? Center(
-                child: CupertinoActivityIndicator(),
-              )
-            : PageView.builder(
-                controller: _pageController,
-          itemCount: exCache.length,
-                itemBuilder: (context, index) {
-                  print(exCache[index]);
+      appBar: AppBar(
+        elevation: 0.5,
+        title: Text('考试模式'),
+        centerTitle: true,
+        actions: <Widget>[
+          IconButton(icon: Icon(MyIcons.answer_sheet), onPressed: () {})
+        ],
+      ),
+      body: exCache == null
+          ? Center(
+        child: CupertinoActivityIndicator(),
+      )
+          : PageView.builder(
+        controller: _pageController,
+        itemCount: exCache.length,
+        itemBuilder: (context, index) {
+          print(exCache[index]);
 
-                  if (exCache[index]['type'] == 'section') {
-                    String _sectionTitle = exCache[index]['title'];
-                    return Center(
-                      child: Text('$_sectionTitle'),
-                    );
-                  } else {
-                    return _renderExItem(exCache[index]);
-                  }
-                },
-                onPageChanged: (index) {
-                  print(index);
-                },
-              ));
+          if (exCache[index]['type'] == 'section') {
+            String _sectionTitle = exCache[index]['title'];
+            return Center(
+              child: Text('$_sectionTitle'),
+            );
+          } else {
+            return _renderExItem(exCache[index]);
+          }
+        },
+        onPageChanged: (index) {
+          print(index);
+        },
+      ),
+      backgroundColor: Colors.white,
+    );
   }
 
   /*
@@ -91,6 +96,8 @@ class _ExamPaperState extends State<ExamPaper> {
     bool isSingleChoiceEx = item['question_types'] == 1;
     bool isMultipleChoiceEx = item['question_types'] == 2;
     bool isJudgementEx = item['question_types'] == 6;
+
+    return Exercise(item: item);
 
     return Container(
       child: Column(

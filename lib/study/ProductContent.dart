@@ -2,11 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
 import 'package:flutter_exueshi/common/PageRouter.dart';
 import 'package:flutter_exueshi/components/MyIcons.dart';
+import 'package:flutter_exueshi/components/Video.dart';
 import 'package:flutter_exueshi/study/DocumentStudy.dart';
 import 'package:flutter_exueshi/study/PaperIndex.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,6 +28,8 @@ class _ProductContentState extends State<ProductContent>
     with SingleTickerProviderStateMixin {
   get product => widget.product;
 
+  int pageLoadStatus = 1;
+
   String userID;
   String prodID;
   String prodType;
@@ -35,8 +39,15 @@ class _ProductContentState extends State<ProductContent>
 
   var prodChapters;
 
+  List videoList = new List();
+  var activeVideoItem;
+  var activeDocItem;
+  var activePaperItem;
+  int activeTabIndex = 0;
+  var activeItem;
+  String activeVideoUrl;
+
   TabController _tabController;
-  VideoPlayerController _controller;
 
   bool _showVideoControllerBar = true;
 
@@ -80,23 +91,9 @@ class _ProductContentState extends State<ProductContent>
 
     _tabController = TabController(length: 3, vsync: this);
 
-    _controller = VideoPlayerController.network(
-        'http://vedio.exueshi.com/c8334fd8186f424cb401a3344a9308ff/66336273a7c24827a25afc068597b649-64bf89ebdf00708a0cc740d55c6853c4-ld.mp4')
-      ..initialize().then((_) {
-        setState(() {});
-      });
-
-    // 监听
-    _controller.addListener(() {
-      setState(() {
-        _progressText = _controller.value.position.toString().split(_patten)[0];
-      });
-    });
-
     _tabController.addListener(() {
       if (_tabController.indexIsChanging) return;
       setState(() {
-        print(_tabController.index);
         showVideoPlayer = _tabController.index == 0;
       });
     });
@@ -106,66 +103,73 @@ class _ProductContentState extends State<ProductContent>
     // 获取是否非WiFi情况下播放视频的配置
     SharedPreferences _pref = await SharedPreferences.getInstance();
     bool allowPlayNotWifi = _pref.getBool('allowPlayNotWifi');
-
-    print(allowPlayNotWifi);
-  }
-
-  Future<void> getProdInfo() async {
-    SharedPreferences _prefs = await SharedPreferences.getInstance();
-    var user = json.decode(_prefs.getString('userData'));
-
-    userID = user['userID'];
-
-    print(product['prodID']);
-    print(product['prodType']);
-
-    Ajax ajax = new Ajax();
-    Response response = await ajax.post('/api/Product/getProductLists', data: {
-      'userID': userID,
-      'prodID': prodID,
-      'type': type,
-      'orderID': orderID
-    });
-
-    print(response);
-    if (response.statusCode == 200) {
-      var ret = response.data;
-      if (ret['code'].toString() == '200') {
-        setState(() {
-          prodChapters = ret['data'];
-        });
-      } else {}
-    } else {}
   }
 
   @override
   Widget build(BuildContext context) {
-    _duration = _controller.value.duration.toString().split(_patten)[0];
-
     return Scaffold(
-        appBar: AppBar(
-          elevation: 0.0,
-          title: Text('目录'),
-          centerTitle: true,
-        ),
-        body: prodChapters == null
-            ? Center(child: CircularProgressIndicator())
-            : Container(
-          child: buildBody(context),
-          color: Colors.white,
-          height: MediaQuery
-              .of(context)
-              .size
-              .height,
-        ));
+      appBar: AppBar(
+        elevation: 0.0,
+        title: Text('目录'),
+        centerTitle: true,
+      ),
+      body: renderPage(),
+      backgroundColor: Colors.white,
+    );
+  }
+
+  Widget renderPage() {
+    switch (pageLoadStatus) {
+      case 1:
+        return Center(
+          child: CupertinoActivityIndicator(),
+        );
+        break;
+      case 2:
+        return buildBody(context);
+        break;
+      case 3:
+        return Center(
+          child: Text('数据加载失败'),
+        );
+        break;
+      case 4:
+        return Center(
+          child: Text('网络请求失败'),
+        );
+        break;
+      case 5:
+        return Center(
+          child: Text('未登录'),
+        );
+        break;
+      default:
+        return Center(
+          child: Text('未知错误'),
+        );
+    }
   }
 
   Widget buildBody(BuildContext context) {
-    if (type == 'package') {
-      print(prodChapters['videos']);
-      print(prodChapters['papers']);
-      print(prodChapters['documents']);
+    print(activeVideoUrl);
 
+    Widget videoPlayer;
+    // 视频播放地址还未赋值，处于加载状态
+    if (activeVideoUrl == null) {
+      videoPlayer = Center(child: CupertinoActivityIndicator());
+    } else if (activeVideoUrl == '') {
+      videoPlayer = Center(
+          child: Text(
+            '视频获取失败，请检查视频地址!',
+            style: TextStyle(color: Colors.white),
+          ));
+    } else {
+      videoPlayer = new Video(url: activeVideoUrl);
+    }
+
+    print(context.findRenderObject());
+
+    if (type == 'package') {
       var _videos = prodChapters['videos'];
       var _papers = prodChapters['papers'];
       var _documents = prodChapters['documents'];
@@ -190,25 +194,24 @@ class _ProductContentState extends State<ProductContent>
       return Column(
         children: <Widget>[
           showVideoPlayer
-              ? _controller.value.initialized
-              ? videoPlayer(false)
-              : AspectRatio(
+              ? AspectRatio(
+            aspectRatio: 16.0 / 9.0,
             child: Container(
               width: MediaQuery
                   .of(context)
                   .size
                   .width,
               color: Colors.black,
+              child: videoPlayer,
             ),
-            aspectRatio: 16.0 / 9.0,
           )
               : Container(),
           TabBar(
-            controller: _tabController,
-            tabs: _tabs,
-            labelColor: Color.fromRGBO(51, 51, 51, 1),
-            unselectedLabelColor: Color.fromRGBO(153, 153, 153, 1),
-          ),
+              controller: _tabController,
+              tabs: _tabs,
+              labelColor: Color.fromRGBO(51, 51, 51, 1),
+              unselectedLabelColor: Color.fromRGBO(153, 153, 153, 1),
+              indicatorWeight: 1.0),
           Expanded(
             child: TabBarView(controller: _tabController, children: <Widget>[
               buildListView(_videos),
@@ -242,17 +245,16 @@ class _ProductContentState extends State<ProductContent>
     } else {
       return Column(children: <Widget>[
         showVideoPlayer
-            ? _controller.value.initialized
-            ? videoPlayer(false)
-            : AspectRatio(
+            ? AspectRatio(
+          aspectRatio: 16.0 / 9.0,
           child: Container(
             width: MediaQuery
                 .of(context)
                 .size
                 .width,
             color: Colors.black,
+            child: videoPlayer,
           ),
-          aspectRatio: 16.0 / 9.0,
         )
             : Container(),
         Expanded(
@@ -263,7 +265,6 @@ class _ProductContentState extends State<ProductContent>
                 var category = prodChapters[index];
                 var groupName = category['groupName'].toString();
                 var childList = category['list'];
-                print(childList);
                 if (groupName == '未分类') {
                   return Column(
                     children: List.generate(childList.length, (index) {
@@ -315,9 +316,7 @@ class _ProductContentState extends State<ProductContent>
       onTap: () {
         switch (item['type'].toString()) {
           case '视频':
-            print(item);
             getVideoPlayUrl(item['videoID']);
-            //_controller = VideoPlayerController.network(dataSource);
             break;
           case '试卷':
             Navigator.of(context).push(PageRouter(PaperIndex(
@@ -343,7 +342,7 @@ class _ProductContentState extends State<ProductContent>
       child: Row(
         children: <Widget>[
           Expanded(
-            child: SwitchBtn(),
+            child: Center(child: SwitchBtn()),
           ),
           Expanded(
             child: Row(
@@ -360,14 +359,12 @@ class _ProductContentState extends State<ProductContent>
   }
 
   ListView buildListView(chapters) {
-    print(chapters.length);
     return ListView.builder(
         itemCount: chapters.length,
         itemBuilder: (context, index) {
           var category = chapters[index];
           var groupName = category['groupName'].toString();
           var childList = category['list'];
-          print(childList);
           if (groupName == '未分类') {
             return Column(
               children: List.generate(childList.length, (index) {
@@ -386,185 +383,200 @@ class _ProductContentState extends State<ProductContent>
         });
   }
 
-  Widget videoPlayer(isFullscreen) {
-    print('isFullscreen:' + isFullscreen.toString());
-
-    return GestureDetector(
-      child: Stack(
-        children: <Widget>[
-          AspectRatio(
-            aspectRatio: 16.0 / 9.0,
-            child: VideoPlayer(_controller),
-          ),
-          !_showVideoControllerBar
-              ? Container()
-              : Positioned(
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 5.0),
-              color: Color.fromRGBO(0, 0, 0, 0.2),
-              child: Row(
-                children: <Widget>[
-                  GestureDetector(
-                    child: Icon(
-                      _controller.value.isPlaying
-                          ? Icons.pause
-                          : Icons.play_arrow,
-                      size: 35,
-                      color: Colors.white,
-                    ),
-                    onTap: () {
-                      setState(() {
-                        _controller.value.isPlaying
-                            ? _controller.pause()
-                            : _controller.play();
-                      });
-                    },
-                  ),
-                  Expanded(
-                      child: Container(
-                          padding: EdgeInsets.symmetric(horizontal: 5.0),
-                          child: VideoProgressIndicator(
-                            _controller,
-                            allowScrubbing: true,
-                          ))),
-                  Text(
-                    _progressText + '/' + _duration,
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 5.0),
-                    child: Text(
-                      '高清',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                  GestureDetector(
-                    child: Icon(
-                      isFullscreen
-                          ? Icons.fullscreen_exit
-                          : Icons.fullscreen,
-                      size: 35,
-                      color: Colors.white,
-                    ),
-                    onTap: () {
-                      isFullscreen = !isFullscreen;
-                      if (isFullscreen) {
-                        SystemChrome.setPreferredOrientations([
-                          DeviceOrientation.landscapeLeft,
-                          DeviceOrientation.landscapeRight
-                        ]);
-                        _videoFullscreen();
-                      } else {
-                        SystemChrome.setPreferredOrientations([
-                          DeviceOrientation.portraitUp,
-                          DeviceOrientation.portraitDown
-                        ]);
-                        Navigator.pop(context);
-                      }
-                    },
-                  )
-                ],
-              ),
-            ),
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: 45,
-          ),
-          _controller.value.isPlaying
-              ? Container()
-              : Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: Container(
-              color: Color.fromRGBO(0, 0, 0, 0.4),
-              child: GestureDetector(
-                child: Icon(
-                  _controller.value.isPlaying
-                      ? Icons.pause_circle_filled
-                      : Icons.play_circle_filled,
-                  size: 60,
-                  color: Color.fromRGBO(255, 255, 255, 0.9),
-                ),
-                onTap: () {
-                  setState(() {
-                    _controller.value.isPlaying
-                        ? _controller.pause()
-                        : _controller.play();
-                  });
-                },
-              ),
-            ),
-          ),
-        ],
-      ),
-      // 单击出现控制条
-      onTap: () {
-        // 点击
-        setState(() {
-          _showVideoControllerBar = !_showVideoControllerBar;
-          if (_showVideoControllerBar) {
-            Timer(Duration(seconds: 5), () {
-              setState(() {
-                _showVideoControllerBar = false;
-              });
-            });
-          }
-        });
-      },
-      // 双击暂停播放
-      onDoubleTap: () {
-        setState(() {
-          _controller.value.isPlaying
-              ? _controller.pause()
-              : _controller.play();
-        });
-      },
-      onVerticalDragEnd: (_details) {
-        print(_details);
-      },
-      onHorizontalDragEnd: (_details) {
-        print(_details);
-      },
-    );
-  }
-
-  _videoFullscreen() async {
-    final result = await Navigator.of(context).push(PageRouter(Scaffold(
-        body: Stack(
-          children: <Widget>[
-            videoPlayer(true),
-          ],
-        ))));
-    print(result);
-  }
-
+  // 获取视频播放地址
   void getVideoPlayUrl(videoID) async {
     Ajax ajax = new Ajax(baseUrl: 'http://blank.exueshi.com');
     Response response =
     await ajax.post('/api/Vod/getplayurl', data: {'code': videoID});
     if (response.statusCode == 200) {
       var ret = response.data;
-      print(ret);
       if (ret != null && ret['VideoBase'] != null) {
-        var videoUrl = ret['PlayInfoList']['PlayInfo'][0]['PlayURL'];
-        print(videoUrl);
-        _controller.pause();
-        _controller = VideoPlayerController.network(videoUrl)
-          ..initialize().then((_) {
-            setState(() {});
-          });
+        activeVideoUrl = ret['PlayInfoList']['PlayInfo'][0]['PlayURL'];
+      } else {
+        activeVideoUrl = '';
       }
+    } else {
+      activeVideoUrl = '';
     }
+    setState(() {});
   }
 
   @override
   void dispose() {
     // TODO: implement dispose
     super.dispose();
-    _controller.dispose();
+  }
+
+  // 获取产品目录数据
+  Future<void> getProdInfo() async {
+    SharedPreferences _prefs = await SharedPreferences.getInstance();
+    String _user = _prefs.getString('userData');
+    if (_user != null) {
+      Map user = json.decode(_user);
+
+      Ajax ajax = new Ajax();
+      Response response = await ajax.post('/api/Product/getProductLists',
+          data: {
+            'userID': user['userID'],
+            'prodID': prodID,
+            'type': type,
+            'orderID': orderID
+          });
+
+      if (response.statusCode == 200) {
+        var ret = response.data;
+        if (ret['code'].toString() == '200') {
+          prodChapters = ret['data'];
+          // 数据的初始化处理
+          handleChapterData(prodChapters);
+          // 抽离纯视频列表数据
+          getVideoList();
+          pageLoadStatus = 2;
+        } else {
+          pageLoadStatus = 3;
+        }
+      } else {
+        pageLoadStatus = 4;
+      }
+    } else {
+      pageLoadStatus = 5;
+    }
+
+    setState(() {});
+  }
+
+  // 预处理目录数据
+  void handleChapterData(prodChapters) {
+    if (lastStudyItem != null) {
+      // 有上次学习记录
+      if (type == 'package') {
+        // 套餐产品，初始化为第一个目录项
+        var videos = prodChapters['videos'];
+        var documents = prodChapters['documents'];
+        var papers = prodChapters['papers'];
+        if (videos != null && videos != false) {
+          activeVideoItem = videos[0]['list'][0];
+        }
+        if (documents != null && documents != false) {
+          activeDocItem = documents[0]['list'][0];
+        }
+        if (papers != null && papers != false) {
+          activePaperItem = papers[0]['list'][0];
+        }
+        switch (lastStudyItem['prodContentType']) {
+          case '视频':
+            videos.forEach((group) {
+              group['list'].forEach((item) {
+                if (item['videoID'] == lastStudyItem['prodContentID'])
+                  activeVideoItem = item;
+              });
+            });
+            showVideoPlayer = true;
+            break;
+          case '资料':
+            documents.forEach((group) {
+              group['list'].forEach((item) {
+                if (item['docID'] == lastStudyItem['prodContentID'])
+                  activeDocItem = item;
+              });
+            });
+            showVideoPlayer = false;
+            break;
+          case '试卷':
+            papers.forEach((group) {
+              group['list'].forEach((item) {
+                if (item['paperID'] == lastStudyItem['prodContentID'])
+                  activePaperItem = item;
+              });
+            });
+            showVideoPlayer = false;
+            break;
+        }
+      } else {
+        prodChapters.forEach((group) {
+          group['list'].forEach((item) {
+            if (item['type'] == lastStudyItem['prodContentType']) {
+              if (item['videoID'] == lastStudyItem['prodContentID']) {
+                activeVideoItem = item;
+                showVideoPlayer = true;
+              } else if (item['docID'] == lastStudyItem['prodContentID']) {
+                activeDocItem = item;
+                showVideoPlayer = false;
+              } else if (item['paperID'] == lastStudyItem['prodContentID']) {
+                activePaperItem = item;
+                showVideoPlayer = false;
+              }
+            }
+          });
+        });
+      }
+    } else {
+      if (type == 'package') {
+        var videos = prodChapters['videos'];
+        var documents = prodChapters['documents'];
+        var papers = prodChapters['papers'];
+
+        /*
+        * 倒排方法进行初始赋值
+        * 1. 默认显示存在的第一个Tab
+        * 2. 默认显示存在第一个目录项
+        *
+        * */
+        if (documents != null && documents != false) {
+          activeDocItem = documents[0]['list'][0];
+          activeTabIndex = 2;
+          activeItem = documents[0]['list'][0];
+          activeItem.addAll({'prodContentType': '资料'});
+        }
+        if (papers != null && papers != false) {
+          activePaperItem = papers[0]['list'][0];
+          activeTabIndex = 1;
+          activeItem = papers[0]['list'][0];
+          activeItem.addAll({'prodContentType': '试卷'});
+        }
+        if (videos != null && videos != false) {
+          activeVideoItem = videos[0]['list'][0];
+          activeTabIndex = 0;
+          activeItem = videos[0]['list'][0];
+          activeItem.addAll({'prodContentType': '视频'});
+          showVideoPlayer = true;
+        }
+      } else {
+        // 非套餐类产品
+        activeItem = prodChapters[0]['list'][0];
+        activeItem.addAll({'prodContentType': activeItem['type']});
+        if (activeItem['type'] == '视频')
+          activeVideoItem = activeItem;
+        else if (activeItem['type'] == '试卷')
+          activePaperItem = activeItem;
+        else if (activeItem['type'] == '资料') activeDocItem = activeItem;
+      }
+    }
+
+    // 判断当前激活视频目录项是否存在, 存在则进行初始化
+    if (activeVideoItem != null) getVideoPlayUrl(activeVideoItem['videoID']);
+  }
+
+  // 获取目录列表中的视频数据
+  void getVideoList() {
+    if (type == 'package') {
+      List _video = prodChapters['videos'];
+      if (_video != null && _video.length > 0) {
+        _video.forEach((group) {
+          group['list'].forEach((item) {
+            videoList.add(item);
+          });
+        });
+      }
+    } else {
+      prodChapters.forEach((group) {
+        group['list'].forEach((item) {
+          if (item['type'] == '视频') {
+            videoList.add(item);
+          }
+        });
+      });
+    }
   }
 }
 
@@ -576,6 +588,8 @@ class SwitchBtn extends StatefulWidget {
 class _SwitchBtnState extends State<SwitchBtn> {
   bool isSelected = false;
 
+  double iconSize = 18.0;
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -585,10 +599,20 @@ class _SwitchBtnState extends State<SwitchBtn> {
         });
       },
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          isSelected ? Icon(MyIcons.like) : Icon(MyIcons.like_border),
+          isSelected
+              ? Icon(
+            MyIcons.like,
+            size: iconSize,
+            color: Color.fromRGBO(68, 68, 68, 1),
+          )
+              : Icon(
+            MyIcons.like_border,
+            size: iconSize,
+          ),
           Padding(
-            padding: EdgeInsets.only(right: 5.0),
+            padding: EdgeInsets.only(left: 5.0),
             child: Text('收藏'),
           )
         ],
