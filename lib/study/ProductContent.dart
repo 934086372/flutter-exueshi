@@ -49,13 +49,9 @@ class _ProductContentState extends State<ProductContent>
 
   TabController _tabController;
 
-  bool _showVideoControllerBar = true;
+  VideoController videoController;
 
-  var _duration;
-  var _progressText = '';
   bool showVideoPlayer = true;
-
-  Pattern _patten = ".";
 
   @override
   void initState() {
@@ -88,6 +84,8 @@ class _ProductContentState extends State<ProductContent>
     _init();
 
     getProdInfo();
+
+    videoController = new VideoController();
 
     _tabController = TabController(length: 3, vsync: this);
 
@@ -164,9 +162,18 @@ class _ProductContentState extends State<ProductContent>
             style: TextStyle(color: Colors.white),
           ));
     } else {
-      videoPlayer = new Video(url: activeVideoUrl);
+      videoPlayer = new Video(
+        url: activeVideoUrl,
+        videoController: videoController,
+      );
     }
 
+    // 测试发弹幕
+    /*videoController.sendBarrage(Text(
+      '测试',
+      style: TextStyle(color: Colors.blue, fontSize: 14.0),
+    ));
+*/
     print(context.findRenderObject());
 
     if (type == 'package') {

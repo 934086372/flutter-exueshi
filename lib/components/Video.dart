@@ -8,6 +8,7 @@
 * */
 
 import 'dart:async';
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
@@ -24,6 +25,8 @@ class Video extends StatefulWidget {
   final bool isLive; // 是否直播
   final bool showBackBtn; //
 
+  final VideoController videoController;
+
   const Video({
     Key key,
     @required this.url,
@@ -33,6 +36,7 @@ class Video extends StatefulWidget {
     this.title = '',
     this.isLive = false,
     this.showBackBtn = false,
+    this.videoController,
   })
       : assert(url != null),
         super(key: key);
@@ -43,6 +47,8 @@ class Video extends StatefulWidget {
 
 class _VideoState extends State<Video> with TickerProviderStateMixin {
   VideoPlayerController _controller;
+
+  VideoController get videoController => widget.videoController;
 
   String get url => widget.url;
 
@@ -58,7 +64,8 @@ class _VideoState extends State<Video> with TickerProviderStateMixin {
 
   var isFullscreen;
 
-  bool isShowDanmu = false;
+  // 是否开启弹幕功能
+  bool enableBarrage = false;
 
   String timeLabel;
   var _duration;
@@ -75,17 +82,45 @@ class _VideoState extends State<Video> with TickerProviderStateMixin {
 
   double realAspectRatio = 16.0 / 9.0;
 
-  void listener() {
-    print(_controller.value);
-    setState(() {
-      if (cleanMode == false && _controller.value.isPlaying) {
-        Timer(Duration(seconds: 3), () {
-          setState(() {
-            cleanMode = true;
-          });
-        });
-      }
+  Timer timer;
 
+  // 自定义动画
+  AnimationController animationController;
+  Animation _heightFactor;
+
+  GlobalKey definitionBtnKey = new GlobalKey();
+
+  bool showDefinitionList = false;
+
+  bool showBarrage = false;
+
+  double clientWidth;
+
+  List<Text> barrageData = [
+    Text(
+      '老铁666',
+      style: TextStyle(color: Colors.white, fontSize: 18.0),
+    )
+  ];
+
+  Timer tmpTimer;
+
+  // 视频播放监听器
+  void listener() {
+    if (!mounted) return;
+
+    print('监听播放器');
+
+    // 自动隐藏控制条
+    if (cleanMode == false) {
+      timer = Timer(Duration(seconds: 5), () {
+        setState(() {
+          cleanMode = true;
+          showDefinitionList = false;
+        });
+      });
+    }
+    setState(() {
       String timeText = _controller.value.position.toString().split(_patten)[0];
       if (_controller.value.duration.inHours > 1) {
         timeLabel = timeText;
@@ -96,9 +131,9 @@ class _VideoState extends State<Video> with TickerProviderStateMixin {
     });
   }
 
+  // 初始化视频时长 label
   void initDuration() {
     setState(() {
-      print(_controller.value.duration.toString());
       String durationText =
       _controller.value.duration.toString().split(_patten)[0];
       List durationArray = durationText.split(RegExp(':'));
@@ -114,6 +149,10 @@ class _VideoState extends State<Video> with TickerProviderStateMixin {
   void initState() {
     // TODO: implement initState
     super.initState();
+
+    animationController =
+        AnimationController(vsync: this, duration: Duration(milliseconds: 200));
+    _heightFactor = animationController.drive(CurveTween(curve: Curves.easeIn));
 
     isFullscreen = enableFull;
 
@@ -131,11 +170,27 @@ class _VideoState extends State<Video> with TickerProviderStateMixin {
       });
 
     _controller.addListener(listener);
+
+    videoController.addListener(() {
+      setState(() {
+        barrageData.addAll(videoController.barrageList);
+      });
+    });
+
+    tmpTimer = Timer.periodic(Duration(milliseconds: 1000), (_) {
+      setState(() {
+        barrageData.add(Text(
+          '我是一条弹幕',
+          style: TextStyle(color: Colors.white),
+        ));
+      });
+    });
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    tmpTimer.cancel();
     // TODO: implement dispose
     super.dispose();
   }
@@ -144,8 +199,6 @@ class _VideoState extends State<Video> with TickerProviderStateMixin {
   void didUpdateWidget(Video oldWidget) {
     // TODO: implement didUpdateWidget
     super.didUpdateWidget(oldWidget);
-    print(oldWidget.url);
-    print(url);
     if (url != oldWidget.url) {
       // 切换视频时，先清除之前的视频
       _controller.dispose();
@@ -167,6 +220,10 @@ class _VideoState extends State<Video> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    clientWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
     return Scaffold(
       body: _controller.value.initialized
           ? player()
@@ -197,6 +254,8 @@ class _VideoState extends State<Video> with TickerProviderStateMixin {
 
   // 播放器
   Widget player() {
+    print(barrageData.length);
+
     return Hero(
       tag: 'videoPlayer',
       child: Stack(
@@ -212,14 +271,18 @@ class _VideoState extends State<Video> with TickerProviderStateMixin {
                   aspectRatio: realAspectRatio,
                 ),
                 onTap: () {
+                  if (cleanMode == false) {
+                    timer?.cancel();
+                    timer = Timer(Duration(seconds: 5), () {
+                      setState(() {
+                        cleanMode = true;
+                      });
+                    });
+                  } else {
+                    showDefinitionList = false;
+                  }
                   setState(() {
                     cleanMode = !cleanMode;
-                    if (cleanMode) {
-                      Timer(Duration(seconds: 5), () {
-                        cleanMode = true;
-                        setState(() {});
-                      });
-                    }
                     if (isFullscreen) {
                       if (cleanMode) {
                         SystemChrome.setEnabledSystemUIOverlays([]);
@@ -230,25 +293,36 @@ class _VideoState extends State<Video> with TickerProviderStateMixin {
                     }
                   });
                 },
+                onDoubleTap: () {
+                  print('双击暂停');
+                },
               ),
             ),
           ),
-          cleanMode
-              ? Container()
-              : Positioned(
+          Positioned(
             child: playerTitle(),
             left: 0,
             right: 0,
             top: 0,
           ),
-          cleanMode
-              ? Container()
-              : Positioned(
+          Positioned(
             child: playerControllerBar(),
             left: 0,
             right: 0,
             bottom: 0,
           ),
+          Positioned(bottom: 45, right: 30, child: renderDefinitionList()),
+          Positioned.fill(
+              child: Stack(
+                children: List.generate(barrageData.length, (index) {
+                  return Barrage(
+                    text: barrageData[index],
+                    onComplete: (v) {
+                      barrageData.remove(barrageData[index]);
+                    },
+                  );
+                }),
+              )),
         ],
       ),
     );
@@ -287,59 +361,88 @@ class _VideoState extends State<Video> with TickerProviderStateMixin {
 
   // 播放器的底部控制条
   Widget playerControllerBar() {
-    TextStyle style = TextStyle(color: Colors.white, fontSize: 12.0);
-    return BackdropFilter(
-      filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-      child: Container(
-        color: Color.fromRGBO(0, 0, 0, 0.3),
-        child: Column(
-          children: <Widget>[
-            // 进度条
-            Padding(
-              padding:
-              const EdgeInsets.symmetric(horizontal: 5.0, vertical: 2.0),
-              child: Row(
-                children: <Widget>[
-                  _playAndPauseBtn(), // 播放|暂停按钮
-                  Expanded(
-                    child: isLive
-                        ? Container()
-                        : Row(
-                      children: <Widget>[
-                        Text(timeLabel, style: style),
-                        Expanded(
-                            child: VideoProgressBar(
-                              controller: _controller,
-                            )),
-                        Text(_duration, style: style),
-                      ],
-                    ),
-                  ),
-                  //barrageBtn(),
-                  exchangeDefinitionBtn(),
-                  fullscreenBtn()
-                ],
-              ),
-            ),
-          ],
+    if (cleanMode) {
+      animationController.reverse().then((_) {
+        if (!mounted) return;
+        setState(() {});
+      });
+    } else {
+      animationController.forward();
+    }
+
+    return AnimatedBuilder(
+      animation: animationController.view,
+      builder: (context, child) {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(0.0),
+          child: Align(
+            heightFactor: _heightFactor.value,
+            child: child,
+          ),
+        );
+      },
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+        child: Container(
+          color: Color.fromRGBO(0, 0, 0, 0.3),
+          padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 2.0),
+          child: Row(
+            children: <Widget>[
+              // 播放|暂停按钮
+              renderPlayPauseBtn(),
+              // 进度条
+              renderProgressBar(),
+              // 弹幕开关
+              renderBarrageBtn(),
+              // 清晰度切换开关
+              renderDefinitionBtn(),
+              // 全屏按钮
+              renderFullscreenBtn()
+            ],
+          ),
         ),
       ),
     );
   }
 
+  Widget renderProgressBar() {
+    // 播放时间字体样式
+    TextStyle style = TextStyle(color: Colors.white, fontSize: 12.0);
+    return Expanded(
+      child: isLive
+          ? Container()
+          : Row(
+        children: <Widget>[
+          Text(timeLabel, style: style),
+          Expanded(
+              child: VideoProgressBar(
+                controller: _controller,
+              )),
+          Text(_duration, style: style),
+        ],
+      ),
+    );
+  }
+
   // 弹幕开关
-  Widget barrageBtn() {
-    return Switch(
-        value: isShowDanmu,
-        onChanged: (v) {
+  Widget renderBarrageBtn() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5.0),
+      child: GestureDetector(
+        onTap: () {
           setState(() {
-            isShowDanmu = !isShowDanmu;
+            showBarrage = !showBarrage;
           });
-        });
+        },
+        child: Icon(
+          showBarrage ? Icons.check_circle : Icons.radio_button_unchecked,
+        ),
+      ),
+    );
   }
 
   // 全屏 | 退出全屏 按钮
-  Widget fullscreenBtn() {
+  Widget renderFullscreenBtn() {
     return GestureDetector(
       child: Icon(
         isFullscreen ? Icons.fullscreen_exit : Icons.fullscreen,
@@ -387,8 +490,9 @@ class _VideoState extends State<Video> with TickerProviderStateMixin {
   }
 
   // 切换清晰度
-  Widget exchangeDefinitionBtn() {
+  Widget renderDefinitionBtn() {
     return GestureDetector(
+      key: definitionBtnKey,
       child: Container(
         margin: EdgeInsets.symmetric(horizontal: 5.0),
         padding: const EdgeInsets.all(5.0),
@@ -399,12 +503,57 @@ class _VideoState extends State<Video> with TickerProviderStateMixin {
       ),
       onTap: () {
         print('切换清晰度');
+        setState(() {
+          showDefinitionList = !showDefinitionList;
+        });
       },
     );
   }
 
+  Widget renderDefinitionList() {
+    if (cleanMode) return Container();
+
+    if (showDefinitionList == false) return Container();
+
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 10.0),
+      decoration: BoxDecoration(
+          color: Color.fromRGBO(0, 0, 0, 0.5),
+          borderRadius: BorderRadius.all(Radius.circular(5.0))),
+      width: 50,
+      child: Column(
+        children: <Widget>[
+          renderDefinitionItem('高清'),
+          Divider(
+            height: 10.0,
+          ),
+          renderDefinitionItem('标清'),
+          Divider(
+            height: 10.0,
+          ),
+          renderDefinitionItem('流畅'),
+        ],
+      ),
+    );
+  }
+
+  Widget renderDefinitionItem(item) {
+    TextStyle style = TextStyle(fontSize: 12.0, color: Colors.white);
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          showDefinitionList = false;
+        });
+      },
+      child: Text(
+        item,
+        style: style,
+      ),
+    );
+  }
+
   // 开始暂停
-  GestureDetector _playAndPauseBtn() {
+  GestureDetector renderPlayPauseBtn() {
     return GestureDetector(
       child: Icon(
         _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
@@ -419,6 +568,80 @@ class _VideoState extends State<Video> with TickerProviderStateMixin {
         });
       },
     );
+  }
+}
+
+class Barrage extends StatefulWidget {
+  final Text text;
+
+  final ValueChanged onComplete;
+
+  const Barrage({Key key, this.text, this.onComplete}) : super(key: key);
+
+  @override
+  _BarrageState createState() => _BarrageState();
+}
+
+class _BarrageState extends State<Barrage> with SingleTickerProviderStateMixin {
+  AnimationController animationController;
+
+  Animation animation;
+
+  Text get text => widget.text;
+
+  ValueChanged get onComplete => widget.onComplete;
+
+  double top = Random().nextDouble() * 200;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    animationController =
+    AnimationController(vsync: this, duration: Duration(seconds: 8))
+      ..forward()
+      ..addListener(() {
+        if (animationController.isCompleted) {
+          onComplete(text);
+        }
+      });
+
+    animation = Tween(begin: Offset(1.0, 0.0), end: Offset(-1.0, 0.0)).animate(
+        CurvedAnimation(parent: animationController, curve: Curves.linear));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    double clientWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+
+    return Positioned(
+      top: top,
+      width: clientWidth,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(0.0),
+        child: AnimatedBuilder(
+          animation: animationController.view,
+          builder: (context, child) {
+            return SlideTransition(
+              position: animation,
+              child: child,
+            );
+          },
+          child: text,
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    animationController.dispose();
+    // TODO: implement dispose
+    super.dispose();
   }
 }
 
@@ -474,6 +697,13 @@ class _VideoProgressBarState extends State<VideoProgressBar> {
             controller.seekTo(Duration(milliseconds: milliSeconds));
           });
         });
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    controller.dispose();
+    super.dispose();
   }
 }
 
@@ -629,5 +859,15 @@ class _VideoPlayerFullscreenState extends State<VideoPlayerFullscreen> {
         Navigator.pop(context);
       },
     );
+  }
+}
+
+class VideoController extends ChangeNotifier {
+  List<Text> barrageList = new List<Text>();
+
+  void sendBarrage(text) {
+    print('发送弹幕');
+    barrageList.add(text);
+    notifyListeners();
   }
 }
