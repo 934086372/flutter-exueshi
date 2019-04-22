@@ -154,7 +154,17 @@ class _ProductContentState extends State<ProductContent>
     Widget videoPlayer;
     // 视频播放地址还未赋值，处于加载状态
     if (activeVideoUrl == null) {
-      videoPlayer = Center(child: CupertinoActivityIndicator());
+      videoPlayer = Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              CupertinoActivityIndicator(),
+              Text(
+                '加载中...',
+                style: TextStyle(color: Colors.white, fontSize: 10.0),
+              )
+            ],
+          ));
     } else if (activeVideoUrl == '') {
       videoPlayer = Center(
           child: Text(

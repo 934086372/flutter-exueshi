@@ -59,29 +59,13 @@ class Page extends State<StudyIndex>
         title: Text('我的学习'),
         elevation: 0.0,
         leading: renderLeftMenu(),
-        actions: <Widget>[
-          InkWell(
-            child: Container(
-              padding: EdgeInsets.only(left: 10.0, right: 10.0),
-              child: Center(
-                child: Text(
-                  '管理',
-                ),
-              ),
-            ),
-            onTap: () {
-              print('点击了管理');
-              Navigator.of(context).push(PageRouter(
-                  StudyManage(studyingList: studyingList, userID: userID)));
-            },
-          ),
-        ],
+        actions: <Widget>[renderRightMenu()],
       ),
-      body: _renderPage(),
+      body: renderPage(),
     );
   }
 
-  Widget _renderPage() {
+  Widget renderPage() {
     switch (pageLoadStatus) {
       case 1:
         return Center(
@@ -129,32 +113,33 @@ class Page extends State<StudyIndex>
         );
         break;
       case 5:
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.only(bottom: 15.0),
-              child: Text(
-                '登录后查看更多内容',
-                style: TextStyle(color: Color.fromRGBO(153, 153, 153, 1)),
-              ),
-            ),
-            GestureDetector(
-              onTap: () {
-                Navigator.of(context).push(PageRouter(Login()));
-              },
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 25.0, vertical: 10.0),
-                decoration: BoxDecoration(
-                    color: Colors.lightBlueAccent,
-                    borderRadius: BorderRadius.all(Radius.circular(30.0))),
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.only(bottom: 15.0),
                 child: Text(
-                  '立即登录',
-                  style: TextStyle(color: Colors.white, fontSize: 16.0),
+                  '登录后查看更多内容',
+                  style: TextStyle(color: Color.fromRGBO(153, 153, 153, 1)),
                 ),
               ),
-            ),
-          ],
+              GestureDetector(
+                onTap: gotoLogin,
+                child: Container(
+                  padding:
+                  EdgeInsets.symmetric(horizontal: 25.0, vertical: 10.0),
+                  decoration: BoxDecoration(
+                      color: Colors.lightBlueAccent,
+                      borderRadius: BorderRadius.all(Radius.circular(30.0))),
+                  child: Text(
+                    '立即登录',
+                    style: TextStyle(color: Colors.white, fontSize: 16.0),
+                  ),
+                ),
+              ),
+            ],
+          ),
         );
         break;
       default:
@@ -166,6 +151,8 @@ class Page extends State<StudyIndex>
   }
 
   Widget renderLeftMenu() {
+    if (pageLoadStatus != 2) return Container();
+
     return Container(
       width: 100,
       child: MaterialButton(
@@ -238,23 +225,41 @@ class Page extends State<StudyIndex>
     );
   }
 
+  Widget renderRightMenu() {
+    if (pageLoadStatus != 2) return Container();
+    return InkWell(
+      child: Container(
+        padding: EdgeInsets.only(left: 10.0, right: 10.0),
+        child: Center(
+          child: Text(
+            '管理',
+          ),
+        ),
+      ),
+      onTap: () {
+        print('点击了管理');
+        Navigator.of(context).push(PageRouter(
+            StudyManage(studyingList: studyingList, userID: userID)));
+      },
+    );
+  }
+
   Widget _studyingList() {
     // 判断是否有课程
-    if (studyingList.toString() == [].toString()) {
+    if (studyingList.toString() == [].toString())
       return Center(
         child: Text('空'),
       );
-    } else {
-      return RefreshIndicator(
-          child: ListView.builder(
-              physics: AlwaysScrollableScrollPhysics(),
-              padding: EdgeInsets.only(top: 10.0),
-              itemCount: studyingList.length,
-              itemBuilder: (context, index) {
-                return _renderCourseItem(studyingList[index], context);
-              }),
-          onRefresh: _refreshStudyingList);
-    }
+
+    return RefreshIndicator(
+        child: ListView.builder(
+            physics: AlwaysScrollableScrollPhysics(),
+            padding: EdgeInsets.only(top: 10.0),
+            itemCount: studyingList.length,
+            itemBuilder: (context, index) {
+              return _renderCourseItem(studyingList[index], context);
+            }),
+        onRefresh: _refreshStudyingList);
   }
 
   Widget _studiedList() {
@@ -476,6 +481,13 @@ class Page extends State<StudyIndex>
 
     setState(() {
       pageLoadStatus = 2;
+    });
+  }
+
+  void gotoLogin() async {
+    await Navigator.of(context).push(PageRouter(Login()));
+    setState(() {
+      _getMyStudyList();
     });
   }
 

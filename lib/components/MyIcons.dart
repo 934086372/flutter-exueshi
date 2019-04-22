@@ -24,4 +24,8 @@ class MyIcons {
   static const IconData appreciate_border =
   IconData(0xe644, fontFamily: 'appIcons');
   static const IconData appreciate = IconData(0xe6e3, fontFamily: 'appIcons');
+
+  static const IconData barrage_on = IconData(0xe61f, fontFamily: 'appIcons');
+
+  static const IconData barrage_off = IconData(0xe61e, fontFamily: 'appIcons');
 }

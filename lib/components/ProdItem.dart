@@ -18,31 +18,37 @@ class ProdItem extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              Container(
-                child: Stack(
-                  alignment: Alignment.bottomLeft,
-                  children: <Widget>[
-                    ClipRRect(
-                      borderRadius: BorderRadius.all(Radius.circular(2.5)),
-                      child: FadeInImage.assetNetwork(
-                        placeholder: 'assets/images/loading.gif',
-                        image: item['logo'],
-                        fit: BoxFit.fill,
+              AspectRatio(
+                aspectRatio: 16.0 / 10.0,
+                child: Container(
+                  child: Stack(
+                    alignment: Alignment.bottomLeft,
+                    children: <Widget>[
+                      ClipRRect(
+                        borderRadius: BorderRadius.all(Radius.circular(2.5)),
+                        child: Center(
+                          child: FadeInImage.assetNetwork(
+                            placeholder: 'assets/images/loading.gif',
+                            image: item['logo'],
+                            fit: BoxFit.fill,
+                            alignment: Alignment.center,
+                          ),
+                        ),
                       ),
-                    ),
-                    Container(
-                      padding: EdgeInsets.only(
-                          left: 6.5, top: 4.0, right: 6.5, bottom: 4.0),
-                      child: Text(
-                        item['status'],
-                        style: TextStyle(fontSize: 11.0, color: Colors.white),
+                      Container(
+                        padding: EdgeInsets.only(
+                            left: 6.5, top: 4.0, right: 6.5, bottom: 4.0),
+                        child: Text(
+                          item['status'],
+                          style: TextStyle(fontSize: 11.0, color: Colors.white),
+                        ),
+                        decoration: BoxDecoration(
+                            color: Color.fromRGBO(0, 0, 0, 0.6),
+                            borderRadius: BorderRadius.only(
+                                bottomLeft: Radius.circular(2.5))),
                       ),
-                      decoration: BoxDecoration(
-                          color: Color.fromRGBO(0, 0, 0, 0.6),
-                          borderRadius: BorderRadius.only(
-                              bottomLeft: Radius.circular(2.5))),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
               Expanded(
