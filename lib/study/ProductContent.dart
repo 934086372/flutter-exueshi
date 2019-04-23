@@ -172,19 +172,13 @@ class _ProductContentState extends State<ProductContent>
             style: TextStyle(color: Colors.white),
           ));
     } else {
+      print(activeVideoItem['videoName']);
       videoPlayer = new Video(
         url: activeVideoUrl,
+        title: activeVideoItem['videoName'],
         videoController: videoController,
       );
     }
-
-    // 测试发弹幕
-    /*videoController.sendBarrage(Text(
-      '测试',
-      style: TextStyle(color: Colors.blue, fontSize: 14.0),
-    ));
-*/
-    print(context.findRenderObject());
 
     if (type == 'package') {
       var _videos = prodChapters['videos'];
@@ -333,13 +327,16 @@ class _ProductContentState extends State<ProductContent>
       onTap: () {
         switch (item['type'].toString()) {
           case '视频':
+            activeVideoItem = item;
             getVideoPlayUrl(item['videoID']);
             break;
           case '试卷':
+            activePaperItem = item;
             Navigator.of(context).push(PageRouter(PaperIndex(
                 prodID: prodID, paperID: item['paperID'], orderID: orderID)));
             break;
           case '资料':
+            activeDocItem = item;
             Navigator.of(context).push(PageRouter(DocumentStudy()));
             break;
         }

@@ -1,10 +1,6 @@
 /*
 * 视频播放器插件
 *
-* 功能列表
-*
-* sh
-*
 * */
 
 import 'dart:async';
@@ -52,15 +48,10 @@ class _VideoState extends State<Video> with TickerProviderStateMixin {
   VideoController get videoController => widget.videoController;
 
   String get url => widget.url;
-
   String get title => widget.title;
-
   double get aspectRatio => widget.aspectRatio;
-
   String get background => widget.background;
-
   bool get enableFull => widget.enableFull;
-
   bool get isLive => widget.isLive;
 
   var isFullscreen;
@@ -68,94 +59,21 @@ class _VideoState extends State<Video> with TickerProviderStateMixin {
   // 是否开启弹幕功能
   bool enableBarrage = false;
 
-  String timeLabel;
-  var _duration;
-
-  Pattern _patten = ".";
-
   bool enableTitleInSmall = false;
 
-  // 是否显示播放器上的其它组件
-  bool showLayerWidget = false;
-
-  // 是否显示控制条
-  bool showControllerBar = true;
-
-  List<SystemUiOverlay> systemUiOverlay = SystemUiOverlay.values;
-
-  double realAspectRatio = 16.0 / 9.0;
+  // 视频真实分辨率
+  double realAspectRatio;
 
   Timer timer;
 
-  // 自定义动画
-  AnimationController animationController;
-  Animation _heightFactor;
-
-  GlobalKey definitionBtnKey = new GlobalKey();
-
-  bool showDefinitionList = false;
-
   bool showBarrage = false;
 
-  double clientWidth;
-
-  List<Text> barrageData = [
-    Text(
-      '老铁666',
-      style: TextStyle(color: Colors.white, fontSize: 18.0),
-    )
-  ];
-
   Timer tmpTimer;
-
-  // 视频播放监听器
-  void listener() {
-    if (!mounted) return;
-
-    print('监听播放器');
-
-    // 自动隐藏控制条
-    if (showLayerWidget == false) {
-      timer = Timer(Duration(seconds: 5), () {
-        setState(() {
-          showLayerWidget = true;
-          showDefinitionList = false;
-        });
-      });
-    }
-    setState(() {
-      String timeText = _controller.value.position.toString().split(_patten)[0];
-      if (_controller.value.duration.inHours > 1) {
-        timeLabel = timeText;
-      } else {
-        List timeArray = timeText.split(RegExp(':'));
-        timeLabel = timeArray[1] + ':' + timeArray[2];
-      }
-    });
-  }
-
-  // 初始化视频时长 label
-  void initDuration() {
-    setState(() {
-      String durationText =
-      _controller.value.duration.toString().split(_patten)[0];
-      List durationArray = durationText.split(RegExp(':'));
-      if (_controller.value.duration.inHours > 1) {
-        _duration = durationText;
-      } else {
-        _duration = durationArray[1] + ':' + durationArray[2];
-      }
-    });
-  }
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-
-    animationController =
-        AnimationController(vsync: this, duration: Duration(milliseconds: 200));
-    _heightFactor = animationController.drive(CurveTween(curve: Curves.easeIn));
 
     isFullscreen = enableFull;
 
@@ -164,25 +82,32 @@ class _VideoState extends State<Video> with TickerProviderStateMixin {
       ..initialize().then((_) {
         realAspectRatio = _controller.value.size.aspectRatio;
         _controller.pause();
-        initDuration();
+        setState(() {});
       }, onError: (error) {
         print('初始化失败');
       }).catchError((_) {
         print(_controller.value);
       });
 
-    _controller.addListener(listener);
-    videoController.showBarrage = showBarrage;
-
-    tmpTimer = Timer.periodic(Duration(milliseconds: 500), (_) {
-      if (showBarrage) {
-        videoController.sendBarrage(Text(
-          '我是一条弹幕' + DateTime.now().toString(),
-          style: TextStyle(color: Colors.white),
-        ));
-      } else {
-        videoController.clear();
+    _controller.addListener(() {
+      print(_controller.value);
+      if (_controller.value.position.inMilliseconds >=
+          _controller.value.duration.inMilliseconds) {
+        _controller.pause();
       }
+    });
+
+    videoController.showBarrage = showBarrage;
+    videoController.title = title;
+
+    print(videoController.title);
+
+    // 测试发送弹幕
+    tmpTimer = Timer.periodic(Duration(milliseconds: 500), (_) {
+      videoController.sendBarrage(Text(
+        '我是一条弹幕' + DateTime.now().toString(),
+        style: TextStyle(color: Colors.white),
+      ));
     });
   }
 
@@ -208,20 +133,17 @@ class _VideoState extends State<Video> with TickerProviderStateMixin {
           // 检查视频比例
           realAspectRatio = _controller.value.size.aspectRatio;
           _controller.play();
-          initDuration();
+          setState(() {});
         }, onError: (error) {
           print('初始化失败');
         }).catchError((_) {
           print(_);
-        })
-        ..addListener(listener);
+        });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    print(_controller.value);
-
     if (_controller.value.initialized) {
       return Scaffold(
         body: Hero(
@@ -229,10 +151,11 @@ class _VideoState extends State<Video> with TickerProviderStateMixin {
           child: Stack(
             children: <Widget>[
               renderBasicUI(), // 基础视频播放
-              renderTitle(), // 视频标题
-              renderControllerBar(),
-              renderDefinitionList(),
-              renderBarrage()
+              Positioned.fill(
+                  child: VideoAdvancedUI(
+                    videoController: videoController,
+                    videoPlayerController: _controller,
+                  ))
             ],
           ),
         ),
@@ -256,7 +179,7 @@ class _VideoState extends State<Video> with TickerProviderStateMixin {
               ),
             ),
           ),
-          aspectRatio: 16.0 / 9.0,
+          aspectRatio: aspectRatio,
         ),
       );
     }
@@ -267,56 +190,430 @@ class _VideoState extends State<Video> with TickerProviderStateMixin {
     return Container(
       color: Colors.black,
       child: Center(
-        child: GestureDetector(
-          child: isFullscreen
-              ? Container()
-              : AspectRatio(
-                  child: VideoPlayer(_controller),
-                  aspectRatio: realAspectRatio,
-                ),
-          onTap: () {
-            /*
-            * 监听播放器点击事件
-            *
-            * toggle 播放器上其它显示Widget,
-            *
-            * 显示状态下，5秒后自定隐藏其它Widget
-            *
-            * */
-            if (showLayerWidget == false) {
-              timer?.cancel();
-              timer = Timer(Duration(seconds: 5), () {
-                setState(() {
-                  showLayerWidget = true;
-                });
-              });
-            } else {
-              showDefinitionList = false;
-            }
-            setState(() {
-              showLayerWidget = !showLayerWidget;
-              if (isFullscreen) {
-                if (showLayerWidget) {
-                  SystemChrome.setEnabledSystemUIOverlays([]);
-                } else {
-                  SystemChrome.setEnabledSystemUIOverlays(systemUiOverlay);
-                }
-              }
-            });
+        child: isFullscreen
+            ? Container()
+            : AspectRatio(
+          child: VideoPlayer(_controller),
+          aspectRatio: realAspectRatio,
+        ),
+      ),
+    );
+  }
+}
+
+/*
+* 弹幕视图
+* */
+class BarrageListView extends StatefulWidget {
+  final VideoController videoController;
+  final double height;
+
+  const BarrageListView({Key key, this.videoController, this.height})
+      : super(key: key);
+
+  @override
+  _BarrageListViewState createState() => _BarrageListViewState();
+}
+
+class _BarrageListViewState extends State<BarrageListView> {
+  VideoController get videoController => widget.videoController;
+
+  List<Text> barrageData = new List();
+
+  double get height => widget.height;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    videoController.addListener(() {
+      if (!mounted) return;
+      if (videoController.showBarrage) {
+        setState(() {
+          barrageData.addAll(videoController.barrageList);
+        });
+      } else {
+        setState(() {
+          barrageData.clear();
+        });
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+        child: IgnorePointer(
+          ignoring: true,
+          child: Stack(
+            overflow: Overflow.clip,
+            children: List.generate(barrageData.length, (index) {
+              return Barrage(
+                boxHeight: height,
+                text: barrageData[index],
+                onComplete: (v) {
+                  //barrageData.remove(v);
+                },
+              );
+            }),
+          ),
+        ));
+  }
+}
+
+/*
+*
+* 渲染单个弹幕
+*
+* */
+class Barrage extends StatefulWidget {
+  final Text text;
+  final ValueChanged onComplete;
+  final double boxHeight;
+
+  const Barrage({Key key, this.text, this.onComplete, this.boxHeight})
+      : super(key: key);
+
+  @override
+  _BarrageState createState() => _BarrageState();
+}
+
+class _BarrageState extends State<Barrage> with SingleTickerProviderStateMixin {
+  AnimationController animationController;
+
+  Animation animation;
+
+  Text get text => widget.text;
+
+  ValueChanged get onComplete => widget.onComplete;
+
+  double get boxHeight => widget.boxHeight;
+
+  double singleHeight = 20.0;
+
+  double top = 0.0;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    // 根据高度计算最大行数，尽量避免重行
+    int max = boxHeight ~/ singleHeight;
+    top = Random().nextInt(max) * singleHeight;
+
+    animationController =
+    AnimationController(vsync: this, duration: Duration(seconds: 8))
+      ..forward()
+      ..addListener(() {
+        if (!mounted) return;
+        if (animationController.isCompleted) {
+          onComplete(text);
+        }
+      });
+
+    animation = Tween(begin: Offset(1.0, 0.0), end: Offset(-1.0, 0.0)).animate(
+        CurvedAnimation(parent: animationController, curve: Curves.linear));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    double clientWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+
+    return Positioned(
+      top: top,
+      width: clientWidth,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(0.0),
+        child: AnimatedBuilder(
+          animation: animationController.view,
+          builder: (context, child) {
+            return SlideTransition(
+              position: animation,
+              child: child,
+            );
           },
-          onDoubleTap: () {
-            print('双击暂停');
-          },
+          child: text,
         ),
       ),
     );
   }
 
+  @override
+  void dispose() {
+    animationController.dispose();
+    // TODO: implement dispose
+    super.dispose();
+  }
+}
+
+// 带时间标签的视频播放进度条组件
+class VideoProgressBar extends StatefulWidget {
+  final VideoPlayerController videoPlayerController;
+
+  const VideoProgressBar({Key key, this.videoPlayerController})
+      : super(key: key);
+
+  @override
+  _VideoProgressBarState createState() => _VideoProgressBarState();
+}
+
+class _VideoProgressBarState extends State<VideoProgressBar> {
+  VideoPlayerController get controller => widget.videoPlayerController;
+
+  String timeLabel;
+  String durationLabel;
+
+  double progress = 0.0;
+  TextStyle style = TextStyle(color: Colors.white, fontSize: 12.0);
+
+  Pattern pattern = '.';
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    // 视频总时长
+    int duration = controller.value.duration.inMicroseconds;
+
+    // 初始化视频时长 label
+    setState(() {
+      String durationText =
+      controller.value.duration.toString().split(pattern)[0];
+      List durationArray = durationText.split(RegExp(':'));
+      if (controller.value.duration.inHours > 1) {
+        durationLabel = durationText;
+        timeLabel = '00:00:00';
+      } else {
+        durationLabel = durationArray[1] + ':' + durationArray[2];
+        timeLabel = '00:00';
+      }
+    });
+
+    controller.addListener(() {
+      if (!mounted) return;
+
+      double width = 100;
+      int position = controller.value.position.inMicroseconds;
+      double currentProgress = position / duration * width;
+
+      setState(() {
+        String timeText =
+        controller.value.position.toString().split(pattern)[0];
+        if (controller.value.duration.inHours > 1) {
+          timeLabel = timeText;
+        } else {
+          List timeArray = timeText.split(RegExp(':'));
+          timeLabel = timeArray[1] + ':' + timeArray[2];
+        }
+        if (currentProgress > progress) progress = currentProgress;
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        Text(timeLabel, style: style),
+        Expanded(
+            child: Slider(
+                value: progress,
+                min: 0,
+                max: 100,
+                activeColor: Color.fromRGBO(0, 170, 255, 1),
+                inactiveColor: Colors.white,
+                onChanged: (v) {
+                  setState(() {
+                    progress = v;
+                    int milliSeconds =
+                        controller.value.duration.inMilliseconds * v ~/ 100;
+                    controller.seekTo(Duration(milliseconds: milliSeconds));
+                  });
+                })),
+        Text(durationLabel, style: style),
+      ],
+    );
+  }
+}
+
+/*
+* 自定义视频控制器
+*
+* */
+class VideoController extends ChangeNotifier {
+  String title = '';
+  bool isFullscreen = false;
+  bool isLive = false;
+  bool enableTitleInSmall = false;
+  bool showBarrage = false;
+  double aspectRatio = 16.0 / 9.0;
+  List<Text> barrageList = new List<Text>();
+
+  void sendBarrage(text) {
+    barrageList = [text];
+    notifyListeners();
+  }
+
+  void removeBarrage(text) {
+    barrageList.remove(text);
+  }
+
+  void clear() {
+    barrageList.clear();
+    notifyListeners();
+  }
+}
+
+/*
+* 视频播放器UI操作层
+* */
+class VideoAdvancedUI extends StatefulWidget {
+  final VideoPlayerController videoPlayerController; // 视频播放的控制器
+  final VideoController videoController; // 自定义控制器
+
+  const VideoAdvancedUI(
+      {Key key, this.videoPlayerController, this.videoController})
+      : super(key: key);
+
+  @override
+  _VideoAdvancedUIState createState() => _VideoAdvancedUIState();
+}
+
+class _VideoAdvancedUIState extends State<VideoAdvancedUI>
+    with TickerProviderStateMixin {
+  VideoPlayerController get videoPlayerController =>
+      widget.videoPlayerController;
+
+  VideoController get videoController => widget.videoController;
+
+  // 是否全屏
+  bool isFullscreen;
+
+  // 小窗口是否显示标题栏
+  bool enableTitleInSmall;
+
+  // 标题
+  String title;
+
+  // 播放器比例
+  double aspectRatio;
+
+  // 是否直播
+  bool isLive;
+
+  // 是否显示UI界面
+  bool showLayerWidget = true;
+
+  // 自定义动画
+  AnimationController animationController;
+  Animation _heightFactor;
+
+  // 自动隐藏UI显示层的延时执行的计时器
+  Timer timer;
+
+  // 是否显示清晰度列表，默认是不显示，点击切换清晰度按钮后切换
+  bool showDefinitionList = false;
+
+  // 是否显示弹幕
+  bool showBarrage;
+
+  // 缓存系统UI布局
+  List<SystemUiOverlay> systemUiOverlay = SystemUiOverlay.values;
+
+  // 分割正则
+  Pattern patten = ".";
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    isFullscreen = videoController.isFullscreen;
+    enableTitleInSmall = videoController.enableTitleInSmall;
+    title = videoController.title;
+    isLive = videoController.isLive;
+    showBarrage = videoController.showBarrage;
+    aspectRatio = videoController.aspectRatio;
+
+    // 初始化控制栏的动画
+    animationController =
+        AnimationController(vsync: this, duration: Duration(milliseconds: 200));
+    _heightFactor = animationController.drive(CurveTween(curve: Curves.easeIn));
+
+    // 5秒后自动隐藏控制栏
+    timer = Timer(Duration(seconds: 5), () {
+      hideControl();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (showLayerWidget) {
+      animationController.forward();
+    } else {
+      animationController.reverse().then((_) {
+        if (!mounted) return;
+        if (animationController.isCompleted) setState(() {});
+      });
+    }
+    return GestureDetector(
+      child: Container(
+        color: Colors.transparent,
+        child: Stack(
+          children: <Widget>[
+            renderTitle(), // 视频标题
+            renderControllerBar(),
+            renderDefinitionList(),
+            renderBarrage()
+          ],
+        ),
+      ),
+      onTap: () {
+        /*
+          * 监听播放器点击事件
+          *
+          * toggle 播放器上其它显示Widget,
+          *
+          * 显示状态下，5秒后自定隐藏其它Widget
+          *
+          * */
+        if (showLayerWidget) {
+          // 已经显示状态下，清除定时器，并隐藏界面
+          timer?.cancel();
+          hideControl();
+        } else {
+          // 未显示状态下，立即显示，并设置5s后自动隐藏
+          setState(() {
+            showLayerWidget = true;
+            if (isFullscreen)
+              SystemChrome.setEnabledSystemUIOverlays(systemUiOverlay);
+          });
+          timer = Timer(Duration(seconds: 5), () {
+            hideControl();
+          });
+        }
+      },
+    );
+  }
+
   // 播放器的标题栏
   Widget renderTitle() {
-    if (!isFullscreen && !enableTitleInSmall) return Container();
+    // 是否全屏
+    if (isFullscreen) {
+      if (title == null) title = '';
+    } else {
+      // 设置了小窗口不显示标题栏
+      if (enableTitleInSmall == false) return Container();
 
-    if (title == '') return Container();
+      // 标题为空时不显示标题栏
+      if (title == null || title == '') return Container();
+    }
 
     // 状态栏高度
     double statusBarHeight = MediaQuery.of(context).padding.top;
@@ -324,41 +621,46 @@ class _VideoState extends State<Video> with TickerProviderStateMixin {
       top: 0,
       left: 0,
       right: 0,
-      child: Container(
-        padding: EdgeInsets.only(top: statusBarHeight),
-        child: Row(
-          children: <Widget>[
-            IconButton(
-                icon: Icon(
-                  Icons.arrow_back,
-                  color: Colors.white,
-                ),
-                onPressed: () {}),
-            Expanded(
-                child: Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: Colors.white),
-                )),
-          ],
+      child: AnimatedBuilder(
+        animation: animationController.view,
+        builder: (context, child) {
+          return ClipRRect(
+            borderRadius: BorderRadius.circular(0.0),
+            child: Align(
+              heightFactor: _heightFactor.value,
+              child: child,
+            ),
+          );
+        },
+        child: Container(
+          padding: EdgeInsets.only(top: statusBarHeight),
+          child: Row(
+            children: <Widget>[
+              IconButton(
+                  icon: Icon(
+                    Icons.arrow_back,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  }),
+              Expanded(
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: Colors.white),
+                  )),
+            ],
+          ),
+          decoration: BoxDecoration(color: Color.fromRGBO(0, 0, 0, 0.6)),
         ),
-        decoration: BoxDecoration(color: Color.fromRGBO(0, 0, 0, 0.6)),
       ),
     );
   }
 
   // 播放器的底部控制条
   Widget renderControllerBar() {
-    if (showLayerWidget) {
-      animationController.reverse().then((_) {
-        if (!mounted) return;
-        if (animationController.isCompleted) setState(() {});
-      });
-    } else {
-      animationController.forward();
-    }
-
     return Positioned(
       left: 0,
       right: 0,
@@ -403,15 +705,15 @@ class _VideoState extends State<Video> with TickerProviderStateMixin {
   Widget renderPlayPauseBtn() {
     return GestureDetector(
       child: Icon(
-        _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
+        videoPlayerController.value.isPlaying ? Icons.pause : Icons.play_arrow,
         size: 30,
         color: Colors.white,
       ),
       onTap: () {
         setState(() {
-          _controller.value.isPlaying
-              ? _controller.pause()
-              : _controller.play();
+          videoPlayerController.value.isPlaying
+              ? videoPlayerController.pause()
+              : videoPlayerController.play();
         });
       },
     );
@@ -421,21 +723,11 @@ class _VideoState extends State<Video> with TickerProviderStateMixin {
   Widget renderProgressBar() {
     // 若为直播不显示进度条
     if (isLive) return Expanded(child: Container());
-
-    // 播放时间字体样式
-    TextStyle style = TextStyle(color: Colors.white, fontSize: 12.0);
     return Expanded(
         child: Container(
           margin: EdgeInsets.symmetric(horizontal: 5.0),
-          child: Row(
-            children: <Widget>[
-              Text(timeLabel, style: style),
-              Expanded(
-                  child: VideoProgressBar(
-                    controller: _controller,
-                  )),
-              Text(_duration, style: style),
-            ],
+          child: VideoProgressBar(
+            videoPlayerController: videoPlayerController,
           ),
         ));
   }
@@ -463,17 +755,21 @@ class _VideoState extends State<Video> with TickerProviderStateMixin {
 
   // 渲染弹幕列表
   Widget renderBarrage() {
+    // 不显示弹幕
     if (showBarrage == false) return Container();
-    return BarrageListView(
-      videoController: videoController,
-      initialData: barrageData,
-    );
+
+    // 显示弹幕
+    double height = MediaQuery
+        .of(context)
+        .size
+        .width / aspectRatio - 40.0;
+
+    return BarrageListView(videoController: videoController, height: height);
   }
 
   // 切换清晰度
   Widget renderDefinitionBtn() {
     return GestureDetector(
-      key: definitionBtnKey,
       child: Container(
         margin: EdgeInsets.symmetric(horizontal: 5.0),
         child: Text(
@@ -491,7 +787,7 @@ class _VideoState extends State<Video> with TickerProviderStateMixin {
 
   // 渲染清晰度列表
   Widget renderDefinitionList() {
-    if (showLayerWidget) return Container();
+    if (showLayerWidget == false) return Container();
     if (showDefinitionList == false) return Container();
     return Positioned(
       bottom: 45,
@@ -545,11 +841,10 @@ class _VideoState extends State<Video> with TickerProviderStateMixin {
       ),
       onTap: () {
         if (isFullscreen) {
-          SystemChrome.setEnabledSystemUIOverlays(systemUiOverlay);
-          SystemChrome.setPreferredOrientations(
-              [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
-          Navigator.pop(context, {'controller': _controller});
+          // 退出全屏
+          Navigator.pop(context);
         } else {
+          // 进入全屏
           enterFullscreen();
         }
       },
@@ -558,247 +853,74 @@ class _VideoState extends State<Video> with TickerProviderStateMixin {
 
   // 进入全屏
   void enterFullscreen() async {
+    videoController.isFullscreen = true;
     await Navigator.of(context).push(PageRouteBuilder(
+      settings: RouteSettings(isInitialRoute: false),
       pageBuilder: (context, animation1, animation2) {
         return FadeTransition(
           opacity: animation1,
-          child: VideoPlayerFullscreen(controller: _controller),
+          child: VideoPlayerFullscreen(
+            videoPlayerController: videoPlayerController,
+            videoController: videoController,
+            systemUiOverlay: systemUiOverlay,
+          ),
         );
       },
     ));
 
+    // 退出全屏后执行操作
     setState(() {
-      isFullscreen = false;
+      showBarrage = videoController.showBarrage;
+      videoController.isFullscreen = false;
     });
 
     SystemChrome.setEnabledSystemUIOverlays(systemUiOverlay);
-    SystemChrome.setPreferredOrientations([]);
+    SystemChrome.setPreferredOrientations(
+        [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
   }
-}
 
-/*
-* 弹幕视图
-* */
-class BarrageListView extends StatefulWidget {
-  final VideoController videoController;
-  final List<Text> initialData;
-
-  const BarrageListView({Key key, this.videoController, this.initialData})
-      : super(key: key);
-
-  @override
-  _BarrageListViewState createState() => _BarrageListViewState();
-}
-
-class _BarrageListViewState extends State<BarrageListView> {
-  VideoController get videoController => widget.videoController;
-
-  List<Text> barrageData = new List();
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-
-    if (widget.initialData != null) {
-      barrageData = widget.initialData;
-    }
-
-    videoController.addListener(() {
-      if (!mounted) return;
-      print('监听发送的弹幕');
-      print(videoController.showBarrage);
-      if (videoController.showBarrage) {
-        setState(() {
-          barrageData.addAll(videoController.barrageList);
-        });
-      } else {
-        setState(() {
-          barrageData.clear();
-        });
+  // 延时自动隐藏控制条
+  void hideControl() {
+    setState(() {
+      showLayerWidget = false;
+      showDefinitionList = false;
+      if (isFullscreen) {
+        SystemChrome.setEnabledSystemUIOverlays([]);
       }
     });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    print(barrageData.length);
-    return Positioned.fill(
-        child: Stack(
-          children: List.generate(barrageData.length, (index) {
-            return Barrage(
-              text: barrageData[index],
-              onComplete: (v) {
-                //barrageData.remove(v);
-              },
-            );
-          }),
-        ));
-  }
-}
-
-/*
-*
-* 渲染单个弹幕
-*
-* */
-class Barrage extends StatefulWidget {
-  final Text text;
-  final ValueChanged onComplete;
-  const Barrage({Key key, this.text, this.onComplete}) : super(key: key);
-
-  @override
-  _BarrageState createState() => _BarrageState();
-}
-
-class _BarrageState extends State<Barrage> with SingleTickerProviderStateMixin {
-  AnimationController animationController;
-
-  Animation animation;
-
-  Text get text => widget.text;
-
-  ValueChanged get onComplete => widget.onComplete;
-
-  double top = Random().nextDouble() * 200;
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-
-    animationController =
-    AnimationController(vsync: this, duration: Duration(seconds: 8))
-      ..forward()
-      ..addListener(() {
-        if (!mounted) return;
-        if (animationController.isCompleted) {
-          onComplete(text);
-        }
-      });
-
-    animation = Tween(begin: Offset(1.0, 0.0), end: Offset(-1.0, 0.0)).animate(
-        CurvedAnimation(parent: animationController, curve: Curves.linear));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    double clientWidth = MediaQuery
-        .of(context)
-        .size
-        .width;
-
-    return Positioned(
-      top: top,
-      width: clientWidth,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(0.0),
-        child: AnimatedBuilder(
-          animation: animationController.view,
-          builder: (context, child) {
-            return SlideTransition(
-              position: animation,
-              child: child,
-            );
-          },
-          child: text,
-        ),
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    animationController.dispose();
-    // TODO: implement dispose
-    super.dispose();
-  }
-}
-
-// 进度条
-class VideoProgressBar extends StatefulWidget {
-  final controller;
-
-  const VideoProgressBar({Key key, this.controller}) : super(key: key);
-
-  @override
-  _VideoProgressBarState createState() => _VideoProgressBarState();
-}
-
-class _VideoProgressBarState extends State<VideoProgressBar> {
-  VideoPlayerController get controller => widget.controller;
-
-  double progress = 0.0;
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-
-    // 视频总时长
-    int duration = controller.value.duration.inMicroseconds;
-
-    controller.addListener(() {
-      double width = 100;
-      int position = controller.value.position.inMicroseconds;
-      double currentProgress = position / duration * width;
-
-      if (currentProgress > progress) {
-        setState(() {
-          progress = currentProgress;
-        });
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Slider(
-        value: progress,
-        min: 0,
-        max: 100,
-        activeColor: Color.fromRGBO(0, 170, 255, 1),
-        inactiveColor: Colors.white,
-        onChanged: (v) {
-          setState(() {
-            progress = v;
-            int milliSeconds =
-                controller.value.duration.inMilliseconds * v ~/ 100;
-            controller.seekTo(Duration(milliseconds: milliSeconds));
-          });
-        });
-  }
-
-  @override
-  void dispose() {
-    // TODO: implement dispose
-    controller.dispose();
-    super.dispose();
   }
 }
 
 // 全屏窗口播放
 class VideoPlayerFullscreen extends StatefulWidget {
-  final controller;
+  final VideoPlayerController videoPlayerController;
+  final VideoController videoController;
+  final List<SystemUiOverlay> systemUiOverlay;
 
-  const VideoPlayerFullscreen({Key key, this.controller}) : super(key: key);
+  const VideoPlayerFullscreen({Key key,
+    this.videoPlayerController,
+    this.videoController,
+    this.systemUiOverlay})
+      : super(key: key);
 
   @override
   _VideoPlayerFullscreenState createState() => _VideoPlayerFullscreenState();
 }
 
 class _VideoPlayerFullscreenState extends State<VideoPlayerFullscreen> {
-  VideoPlayerController get _controller => widget.controller;
+  VideoPlayerController get videoPlayerController =>
+      widget.videoPlayerController;
 
-  List<SystemUiOverlay> systemUiOverlay;
+  VideoController get videoController => widget.videoController;
 
-  bool cleanMode = false;
+  List<SystemUiOverlay> get systemUiOverlay => widget.systemUiOverlay;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    SystemChrome.setEnabledSystemUIOverlays([SystemUiOverlay.top]);
+
+    // 设置横屏播放
     SystemChrome.setPreferredOrientations(
         [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
   }
@@ -806,162 +928,26 @@ class _VideoPlayerFullscreenState extends State<VideoPlayerFullscreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Hero(
-        tag: "videoPlayer",
+      backgroundColor: Colors.black,
+      body: Container(
         child: Stack(
           children: <Widget>[
-            GestureDetector(
-              child: VideoPlayer(_controller),
-              onTap: () {
-                setState(() {
-                  cleanMode = !cleanMode;
-                  if (cleanMode) {
-                    SystemChrome.setEnabledSystemUIOverlays([]);
-                  } else {
-                    SystemChrome.setEnabledSystemUIOverlays(systemUiOverlay);
-                  }
-                });
-              },
+            Container(
+              child: Center(
+                child: AspectRatio(
+                  child: VideoPlayer(videoPlayerController),
+                  aspectRatio: videoPlayerController.value.aspectRatio,
+                ),
+              ),
             ),
-            cleanMode
-                ? Container()
-                : Positioned(
-              child: playerTitle(),
-              left: 0,
-              right: 0,
-              top: 0,
-            ),
-            cleanMode
-                ? Container()
-                : Positioned(
-              child: playerControllerBar(),
-              left: 0,
-              right: 0,
-              bottom: 0,
-            ),
+            Positioned.fill(
+                child: VideoAdvancedUI(
+                  videoPlayerController: videoPlayerController,
+                  videoController: videoController,
+                ))
           ],
         ),
       ),
     );
-  }
-
-  Widget playerTitle() {
-    //double statusBarHeight = MediaQuery.of(context).padding.top;
-    double statusBarHeight = 25.0;
-    return Container(
-      padding: EdgeInsets.only(top: statusBarHeight),
-      child: Row(
-        children: <Widget>[
-          IconButton(
-              icon: Icon(
-                Icons.arrow_back,
-                color: Colors.white,
-              ),
-              onPressed: () {
-                Navigator.pop(context);
-                // 退出全屏
-              }),
-        ],
-      ),
-      decoration: BoxDecoration(color: Color.fromRGBO(0, 0, 0, 0.6)),
-    );
-  }
-
-  // 播放器的底部控制条
-  Widget playerControllerBar() {
-    return BackdropFilter(
-      filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-      child: Container(
-        color: Color.fromRGBO(0, 0, 0, 0.3),
-        child: Column(
-          children: <Widget>[
-//            VideoProgressBar(
-//              controller: _controller,
-//            ), // 进度条
-            Padding(
-              padding:
-              const EdgeInsets.symmetric(horizontal: 5.0, vertical: 2.0),
-              child: Row(
-                children: <Widget>[
-                  _playAndPauseBtn(), // 播放|暂停按钮
-                  VideoProgressBar(
-                    controller: _controller,
-                  ),
-                  Expanded(
-                    child: Container(),
-                  ),
-                  //barrageBtn(),
-                  fullscreenBtn()
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  GestureDetector _playAndPauseBtn() {
-    return GestureDetector(
-      child: Icon(
-        _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
-        size: 35,
-        color: Colors.white,
-      ),
-      onTap: () {
-        setState(() {
-          _controller.value.isPlaying
-              ? _controller.pause()
-              : _controller.play();
-        });
-      },
-    );
-  }
-
-  Widget fullscreenBtn() {
-    return GestureDetector(
-      child: Icon(
-        Icons.fullscreen_exit,
-        size: 35,
-        color: Colors.white,
-      ),
-      onTap: () {
-        Navigator.pop(context);
-      },
-    );
-  }
-}
-
-/*
-* 自定义视频控制器
-*
-* */
-class VideoController extends ChangeNotifier {
-  bool showBarrage = false;
-  List<Text> barrageList = new List<Text>();
-
-  void sendBarrage(text) {
-    barrageList = [text];
-    notifyListeners();
-  }
-
-  void removeBarrage(text) {
-    barrageList.remove(text);
-  }
-
-  void clear() {
-    barrageList.clear();
-    notifyListeners();
-  }
-}
-
-/*
-* 视频播放标题
-*
-* */
-class VideoTitle extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container();
   }
 }
