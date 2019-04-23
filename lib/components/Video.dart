@@ -400,6 +400,12 @@ class _VideoProgressBarState extends State<VideoProgressBar> {
 
       double width = 100;
       int position = controller.value.position.inMicroseconds;
+
+      if (position >= duration) {
+        controller.pause();
+        return;
+      }
+
       double currentProgress = position / duration * width;
 
       setState(() {
@@ -710,6 +716,13 @@ class _VideoAdvancedUIState extends State<VideoAdvancedUI>
         color: Colors.white,
       ),
       onTap: () {
+        // 判断视频是否已经播完
+
+        if (videoPlayerController.value.position.inMilliseconds >=
+            videoPlayerController.value.duration.inMilliseconds) {
+          videoPlayerController.seekTo(Duration(milliseconds: 0));
+        }
+
         setState(() {
           videoPlayerController.value.isPlaying
               ? videoPlayerController.pause()
