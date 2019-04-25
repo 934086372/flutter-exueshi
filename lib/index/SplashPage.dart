@@ -25,9 +25,6 @@ class _SplashPageState extends State<SplashPage> {
   // 是否第一次使用
   bool isFirstUse;
 
-  // 初始选择的地区以及考试项目数据
-  Map initialSetting;
-
   @override
   void initState() {
     // TODO: implement initState
@@ -102,11 +99,9 @@ class _SplashPageState extends State<SplashPage> {
   void getInitialData() async {
     // 获取本地缓存数据
     SharedPreferences _pref = await SharedPreferences.getInstance();
-
     isFirstUse = _pref.getBool('isFirstUse');
-
-    String _initialSetting = _pref.getString('initialSetting');
-    if (_initialSetting != null) initialSetting = json.decode(_initialSetting);
+    print(isFirstUse);
+    setState(() {});
 
     Ajax ajax = new Ajax();
     var userData = _pref.get('userData');
@@ -136,7 +131,5 @@ class _SplashPageState extends State<SplashPage> {
         _pref.setString('cityData', json.encode(response3.data['data']));
       }
     }
-
-    setState(() {});
   }
 }

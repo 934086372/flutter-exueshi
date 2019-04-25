@@ -104,7 +104,7 @@ class _GuidePageState extends State<GuidePage> {
   void navigateToMain() async {
     // 记录用户已经第一次进入了应用
     SharedPreferences _pref = await SharedPreferences.getInstance();
-    _pref.setBool('isFirstUsse', false);
+    _pref.setBool('isFirstUse', false);
     // 导航到主页
     Navigator.of(context).push(PageRouter(InitialSetting(
       projectList: projectList,
