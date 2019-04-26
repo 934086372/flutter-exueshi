@@ -8,7 +8,6 @@ import 'package:flutter_exueshi/components/Video.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LivingRoom extends StatefulWidget {
-
   final product;
 
   const LivingRoom({Key key, this.product}) : super(key: key);
@@ -18,12 +17,13 @@ class LivingRoom extends StatefulWidget {
 }
 
 class _LivingRoomState extends State<LivingRoom> {
-
   get product => widget.product;
 
   int pageLoadStatus = 1;
   String _channelID;
   var liveDetail;
+
+  VideoController videoController = new VideoController();
 
   @override
   void initState() {
@@ -42,8 +42,7 @@ class _LivingRoomState extends State<LivingRoom> {
           centerTitle: true,
           title: Text('直播间'),
         ),
-        body: renderPage()
-    );
+        body: renderPage());
   }
 
   Widget renderPage() {
@@ -70,6 +69,7 @@ class _LivingRoomState extends State<LivingRoom> {
                     child: Video(
                       url: liveUrl,
                       isLive: true,
+                      videoController: videoController,
                     ),
                   ),
                 )
@@ -101,10 +101,8 @@ class _LivingRoomState extends State<LivingRoom> {
     var userID = user['userID'];
 
     Ajax ajax = new Ajax();
-    Response response = await ajax.post('/api/Live/getLive', data: {
-      'channelID': _channelID,
-      'userID': userID
-    });
+    Response response = await ajax.post('/api/Live/getLive',
+        data: {'channelID': _channelID, 'userID': userID});
 
     print(response);
     int _status = 1;
@@ -126,5 +124,4 @@ class _LivingRoomState extends State<LivingRoom> {
       pageLoadStatus = _status;
     });
   }
-
 }

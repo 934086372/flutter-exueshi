@@ -5,8 +5,6 @@ import 'package:flutter/cupertino.dart';
 import "package:flutter/material.dart";
 import 'package:flutter_exueshi/common/Ajax.dart';
 import 'package:flutter_exueshi/common/PageRouter.dart';
-import 'package:flutter_exueshi/common/UserModalRoute.dart';
-import 'package:flutter_exueshi/components/Button.dart';
 import 'package:flutter_exueshi/components/LabelList.dart';
 import 'package:flutter_exueshi/components/SlideSheet.dart';
 import 'package:flutter_exueshi/product/Cart.dart';
@@ -27,7 +25,7 @@ class Page extends State<ProductIndex>
   int pageLoadStatus = 1; // 页面加载状态
 
   TabController _tabController;
-  ScrollController _scrollController = ScrollController();
+  ScrollController _scrollController = new ScrollController();
 
   int _page = 1;
 
@@ -70,6 +68,7 @@ class Page extends State<ProductIndex>
 
     // 监听页面滚动到底部
     _scrollController.addListener(() {
+      if (!mounted) return;
       if (_scrollController.position.pixels ==
           _scrollController.position.maxScrollExtent) {
         setState(() {
@@ -89,6 +88,13 @@ class Page extends State<ProductIndex>
         CurvedAnimation(parent: _animationController, curve: Curves.linear));
 
     _getProductList();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    // TODO: implement dispose
+    super.dispose();
   }
 
   @override
@@ -147,7 +153,13 @@ class Page extends State<ProductIndex>
                     isScrollable: true,
                   ),
                 ),
-                renderMenu()
+                GestureDetector(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                    child: Icon(Icons.menu),
+                  ),
+                  onTap: showModalSheet,
+                )
               ],
             ),
           ),
@@ -250,25 +262,15 @@ class Page extends State<ProductIndex>
     );
   }
 
-  Widget renderMenu() {
-    return IconButton(
-      icon: Icon(Icons.menu),
-      onPressed: showModalSheet,
-    );
-  }
-
   void showModalSheet() {
     RenderBox _box = _childKey.currentContext.findRenderObject();
 
-    /*
-        * 计算顶部透明区域大小
-        * */
+    // 计算顶部透明区域大小
     double _topHeight =
         kToolbarHeight + MediaQuery
             .of(context)
             .padding
             .top + _box.size.height;
-
     double _defaultHeight = MediaQuery
         .of(context)
         .size
@@ -292,6 +294,7 @@ class Page extends State<ProductIndex>
 
   Widget renderMenuContent() {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Expanded(

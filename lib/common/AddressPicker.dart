@@ -6,14 +6,10 @@ class AddressPicker extends StatefulWidget {
 }
 
 class _AddressPickerState extends State<AddressPicker> {
-  TextEditingController textEditingController = new TextEditingController();
-
-  bool _showClearBtn = false;
-
   var data = {
     "topCitys": [
       {"id": 100000, "city": "全国", "pinyin": "全国"},
-      {"city": "重庆", "id": 500000, "pinyin": "chongqing"},
+      {"id": 500000, "city": "重庆", "pinyin": "chongqing"},
       {"id": 530000, "city": "云南", "pinyin": "yunnan"},
       {"id": 520000, "city": "贵州", "pinyin": "guizhou"},
       {"id": 510000, "city": "四川", "pinyin": "sichuan"}
@@ -56,52 +52,34 @@ class _AddressPickerState extends State<AddressPicker> {
     ]
   };
 
-  ScrollController scrollController = ScrollController();
+  ScrollController scrollController;
+  TextEditingController textEditingController;
+  bool showClearIcon = false;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-
-    textEditingController.addListener(() {
-      print(textEditingController.text);
-      _showClearBtn = textEditingController.text != '';
-      setState(() {});
-    });
+    // 格式化数据
     formatData();
+
+    scrollController =
+        ScrollController(keepScrollOffset: true, debugLabel: 'addressScroller');
+
+    // 监听文本框
+    textEditingController = new TextEditingController()
+      ..addListener(() {
+        showClearIcon = textEditingController.text != '';
+        setState(() {});
+      });
   }
 
-  List formatData() {
-    var result = [];
-
-    var list0 = [];
-    data['topCitys'].forEach((item) {
-      print(item);
-      list0.add(item['city']);
-    });
-    result.add({'label': '热门城市', 'list': list0});
-    Set indexSet = new Set();
-    data['citys'].forEach((item) {
-      String firstChar = item['pinyin'].toString().substring(0, 1);
-      indexSet.add(firstChar);
-    });
-    List _tmpList = indexSet.toList();
-    _tmpList.sort((left, right) => left.compareTo(right));
-
-    _tmpList.forEach((index) {
-      var groupList = [];
-      data['citys'].forEach((item) {
-        String firstChar = item['pinyin'].toString().substring(0, 1);
-        indexSet.add(firstChar);
-        if (firstChar == index) {
-          groupList.add(item['city']);
-        }
-      });
-      result.add({'label': index.toString().toUpperCase(), 'list': groupList});
-    });
-
-    print(result);
-    return result;
+  @override
+  void dispose() {
+    textEditingController.dispose();
+    scrollController.dispose();
+    // TODO: implement dispose
+    super.dispose();
   }
 
   @override
@@ -140,7 +118,7 @@ class _AddressPickerState extends State<AddressPicker> {
                     },
                   ),
                 ),
-                _showClearBtn
+                showClearIcon
                     ? GestureDetector(
                         onTap: () {
                           textEditingController.clear();
@@ -218,10 +196,8 @@ class _AddressPickerState extends State<AddressPicker> {
                   // 计算偏移
                   double offset = index * 40.0;
                   for (int i = 0; i < index; i++) {
-                    print(addressList[i].length);
                     offset += addressList[i]['list'].length * 45.0;
                   }
-
                   scrollController.animateTo(offset,
                       duration: Duration(milliseconds: 300),
                       curve: Curves.linear);
@@ -236,5 +212,35 @@ class _AddressPickerState extends State<AddressPicker> {
         )
       ],
     );
+  }
+
+  List formatData() {
+    var result = [];
+
+    var list0 = [];
+    data['topCitys'].forEach((item) {
+      list0.add(item['city']);
+    });
+    result.add({'label': '热门城市', 'list': list0});
+    Set indexSet = new Set();
+    data['citys'].forEach((item) {
+      String firstChar = item['pinyin'].toString().substring(0, 1);
+      indexSet.add(firstChar);
+    });
+    List _tmpList = indexSet.toList();
+    _tmpList.sort((left, right) => left.compareTo(right));
+
+    _tmpList.forEach((index) {
+      var groupList = [];
+      data['citys'].forEach((item) {
+        String firstChar = item['pinyin'].toString().substring(0, 1);
+        indexSet.add(firstChar);
+        if (firstChar == index) {
+          groupList.add(item['city']);
+        }
+      });
+      result.add({'label': index.toString().toUpperCase(), 'list': groupList});
+    });
+    return result;
   }
 }

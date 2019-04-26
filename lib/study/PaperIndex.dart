@@ -211,7 +211,10 @@ class _PaperIndexState extends State<PaperIndex> {
     showModalBottomSheet(
         context: context,
         builder: (context) {
-          return Comment();
+          return Comment(
+            targetTypeName: '试卷',
+            targetID: paperID,
+          );
         });
   }
 
@@ -255,4 +258,3 @@ class _PaperIndexState extends State<PaperIndex> {
     setState(() {});
   }
 }
-

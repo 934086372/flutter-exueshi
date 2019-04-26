@@ -93,6 +93,7 @@ class Page extends State<UserIndex> with AutomaticKeepAliveClientMixin {
         elevation: 0.0,
         title: Text('个人中心'),
         centerTitle: true,
+        automaticallyImplyLeading: false,
         actions: <Widget>[
           IconButton(
               icon: Icon(Icons.message),

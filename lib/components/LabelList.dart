@@ -66,7 +66,7 @@ class _LabelListState extends State<LabelList> {
             } else {
               // 单选
               selectedItem = data[index];
-              onChanged(selectedItem);
+              if (onChanged != null) onChanged(selectedItem);
             }
             print(selectedItem);
             setState(() {});
@@ -104,7 +104,7 @@ class _LabelListState extends State<LabelList> {
             } else {
               selectedItem.remove(data[index]);
             }
-            onChanged(selectedItem);
+            if (onChanged != null) onChanged(selectedItem);
           },
           text: data[index],
           isActive: isActive,

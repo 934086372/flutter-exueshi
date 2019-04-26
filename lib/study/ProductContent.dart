@@ -7,8 +7,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_exueshi/common/Ajax.dart';
 import 'package:flutter_exueshi/common/PageRouter.dart';
+import 'package:flutter_exueshi/components/ModalDialog.dart';
 import 'package:flutter_exueshi/components/MyIcons.dart';
 import 'package:flutter_exueshi/components/Video.dart';
+import 'package:flutter_exueshi/study/Comment.dart';
 import 'package:flutter_exueshi/study/DocumentStudy.dart';
 import 'package:flutter_exueshi/study/PaperIndex.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -113,6 +115,8 @@ class _ProductContentState extends State<ProductContent>
       ),
       body: renderPage(),
       backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: true,
+      resizeToAvoidBottomPadding: true,
     );
   }
 
@@ -359,13 +363,59 @@ class _ProductContentState extends State<ProductContent>
             child: Center(child: SwitchBtn()),
           ),
           Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[Icon(Icons.edit), Text('评价')],
+            child: GestureDetector(
+              onTap: () {
+                // 打开评价窗口
+                showModalBottomSheet(
+                    context: context,
+                    builder: (context) {
+                      return SingleChildScrollView(
+                        child: Column(
+                          children: <Widget>[
+                            Comment(
+                              targetTypeName: '视频',
+                              targetID: activeVideoItem['videoID'],
+                            ),
+                            Comment(
+                              targetTypeName: '教师',
+                              targetID: activeVideoItem['videoID'],
+                              showCloseIcon: false,
+                            )
+                          ],
+                        ),
+                      );
+                    });
+              },
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[Icon(Icons.edit), Text('评价')],
+              ),
             ),
           ),
           Expanded(
-            child: Center(child: Text('标记为已学习')),
+            child: GestureDetector(
+                onTap: () {
+                  Size clientSize = MediaQuery
+                      .of(context)
+                      .size;
+                  double maxWidth = clientSize.width * 0.8;
+                  double maxHeight = clientSize.height * 0.8;
+
+                  ModalDialog.show(context, (context) {
+                    return ConstrainedBox(
+                      constraints: BoxConstraints(
+                          maxWidth: maxWidth, maxHeight: maxHeight),
+                      child: Container(
+                        color: Colors.white,
+                        child: Center(child: Text('加载中')),
+                      ),
+                    );
+                  });
+                  Future.delayed(Duration(seconds: 2), () {
+                    ModalDialog.dismiss();
+                  });
+                },
+                child: Center(child: Text('标记为已学习'))),
           )
         ],
       ),
@@ -619,11 +669,12 @@ class _SwitchBtnState extends State<SwitchBtn> {
               ? Icon(
             MyIcons.like,
             size: iconSize,
-            color: Color.fromRGBO(68, 68, 68, 1),
+            color: Color.fromRGBO(255, 0, 0, 1),
           )
               : Icon(
             MyIcons.like_border,
             size: iconSize,
+            color: Color.fromRGBO(68, 68, 68, 1),
           ),
           Padding(
             padding: EdgeInsets.only(left: 5.0),

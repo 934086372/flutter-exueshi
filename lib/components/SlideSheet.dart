@@ -4,7 +4,6 @@ class SlideSheet {
   static SlideSheetView slideSheetView;
 
   static show(BuildContext context, double paddingTop, Widget widget) {
-    print(slideSheetView.context);
 
     /*
     * 检查是否已有打开窗口，有则先关闭当前已经打开的窗口
